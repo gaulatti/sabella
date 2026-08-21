@@ -11,7 +11,7 @@ The goal is behavioral and visual convergence, not DOM emulation. Native platfor
 - Feedback: Alert, StatusBadge, NotificationBadge, Progress, LoadingSpinner, LoadingOverlay, EmptyState
 - Navigation: BrandLockup, SidebarItem, PageHeader, SectionHeader, Breadcrumb, Tabs, Pagination, Accordion
 - Data display: Avatar, IconBadge, Metric, StatCard, DataList, Timeline, FilterChip, Kbd
-- Layout: DashboardGrid, DashboardSection, AppShell/AdminShell primitive, PanelLayout, Header, Footer
+- Layout: DashboardGrid, DashboardSection, desktop AppShell, mobile safe-area AppShell with bottom tabs, adaptive AdminShell with compact drawer, PanelLayout, Header, Footer
 - Overlays: Modal, Tooltip/help, DropdownMenu/ContextMenu primitive, CommandSpotlight
 - Charts: Line, Area, Bar, Pie, Donut, Scatter, Sparkline via Swift Charts
 
@@ -25,3 +25,13 @@ The goal is behavioral and visual convergence, not DOM emulation. Native platfor
 ## Convergence rule
 
 When Bleecker changes a platform-neutral token or public contract, update Sabella in the same change and extend the parity tests. Platform-specific behavior may diverge only to preserve keyboard navigation, focus, accessibility, menu conventions, or remote interaction.
+
+## Catalog release gate
+
+Every public visual Sabella type is registered in the separate
+`SabellaCatalogSupport` target and rendered by a gallery in `SabellaCatalog`.
+`swift test` discovers public `View`, `ButtonStyle`, and `ToggleStyle` types and
+fails when registration falls behind the library surface. The tvOS catalog
+records `BleeckerDateRangePicker` and `BleeckerFileInput` as explicit platform
+exceptions because their underlying native APIs are unavailable there; all
+other visual contracts are exercised on macOS, iPhone, iPad, and Apple TV.

@@ -41,7 +41,7 @@ public enum BleeckerTypography {
     }
 
     public static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom("IBM Plex Mono", size: size).weight(weight)
+        .system(size: size, weight: weight, design: .monospaced)
     }
 }
 

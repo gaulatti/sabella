@@ -1,4 +1,7 @@
 import Testing
+import SwiftUI
+import Foundation
+import SabellaCatalogSupport
 @testable import Sabella
 
 @Test func tokensMatchBleeckerSource() {
@@ -20,4 +23,48 @@ import Testing
     let option = BleeckerSelectOption(value: 42, label: "Answer")
     #expect(option.id == 42)
     #expect(!option.disabled)
+}
+
+@Test func mobileTabsUseDestinationIdentity() {
+    let tab = BleeckerAppTab("inbox", label: "Inbox", systemImage: "tray", badge: 3)
+    #expect(tab.id == "inbox")
+    #expect(tab.badge == 3)
+}
+
+@Test func catalogCoversEveryPublicVisualComponent() throws {
+    let testFile = URL(fileURLWithPath: #filePath)
+    let sourceDirectory = testFile
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("Sources/Sabella")
+    let expression = try NSRegularExpression(
+        pattern: #"public struct (Bleecker[A-Za-z0-9]+)(?:<[^\n]+>)?: (?:View|ButtonStyle|ToggleStyle)"#
+    )
+    let files = try FileManager.default.contentsOfDirectory(
+        at: sourceDirectory,
+        includingPropertiesForKeys: nil
+    ).filter { $0.pathExtension == "swift" }
+    var publicComponents = Set<String>()
+
+    for file in files {
+        let source = try String(contentsOf: file, encoding: .utf8)
+        let range = NSRange(source.startIndex..., in: source)
+        for match in expression.matches(in: source, range: range) {
+            guard let nameRange = Range(match.range(at: 1), in: source) else { continue }
+            publicComponents.insert(String(source[nameRange]))
+        }
+    }
+
+    #expect(
+        SabellaCatalogCoverage.missingComponents(publicComponents: publicComponents).isEmpty
+    )
+}
+
+@Test func catalogCoverageGateDetectsAnOmittedFixture() {
+    let missing = SabellaCatalogCoverage.missingComponents(
+        publicComponents: ["BleeckerButton", "BleeckerDeliberatelyOmitted"],
+        registeredComponents: ["BleeckerButton"]
+    )
+    #expect(missing == ["BleeckerDeliberatelyOmitted"])
 }

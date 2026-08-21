@@ -25,3 +25,13 @@ The goal is behavioral and visual convergence, not DOM emulation. Native platfor
 ## Convergence rule
 
 When Bleecker changes a platform-neutral token or public contract, update Sabella in the same change and extend the parity tests. Platform-specific behavior may diverge only to preserve keyboard navigation, focus, accessibility, menu conventions, or remote interaction.
+
+## Catalog release gate
+
+Every public visual Sabella type is registered in the separate
+`SabellaCatalogSupport` target and rendered by a gallery in `SabellaCatalog`.
+`swift test` discovers public `View`, `ButtonStyle`, and `ToggleStyle` types and
+fails when registration falls behind the library surface. The tvOS catalog
+records `BleeckerDateRangePicker` and `BleeckerFileInput` as explicit platform
+exceptions because their underlying native APIs are unavailable there; all
+other visual contracts are exercised on macOS, iPhone, iPad, and Apple TV.

@@ -19,28 +19,6 @@ Button("Sync") { sync() }
 
 Components keep the `Bleecker` prefix so product code reads identically across design-system implementations while the module name (`Sabella`) identifies the platform library.
 
-## Mobile application shell
-
-Thompson's native tab and adaptive drawer patterns are available as SwiftUI-native components:
-
-```swift
-@State private var tab = "home"
-
-BleeckerMobileAppShell(
-    selection: $tab,
-    tabs: [
-        BleeckerAppTab("home", label: "Home", systemImage: "house"),
-        BleeckerAppTab("account", label: "Account", systemImage: "person"),
-    ]
-) {
-    BleeckerHeader { EmptyView() } center: { Text("Sabella") } trailing: { EmptyView() }
-} content: {
-    Text("Selected: \(tab)")
-}
-```
-
-Use `BleeckerAdminShell` for persistent wide navigation that becomes a modal drawer below its configurable breakpoint. The caller owns the drawer binding, so routing can close it after a selection.
-
 ## Component catalog
 
 `SabellaCatalog` is the canonical visual release gate for every supported Apple

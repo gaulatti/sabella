@@ -1,15 +1,18 @@
+import Sabella
 import SwiftUI
 
-/// A value-backed destination displayed by ``BleeckerAppTabBar``.
-public struct BleeckerAppTab<Value: Hashable>: Identifiable {
-    public let value: Value
-    public let label: String
-    public let systemImage: String
-    public let badge: Int?
+// Catalog-only fixtures for the Thompson mobile contracts. G-176 owns the
+// reusable Sabella application-shell API; these stay out of the library target.
+/// A value-backed destination displayed by ``CatalogAppTabBar``.
+struct CatalogAppTab<Value: Hashable>: Identifiable {
+    let value: Value
+    let label: String
+    let systemImage: String
+    let badge: Int?
 
-    public var id: Value { value }
+    var id: Value { value }
 
-    public init(_ value: Value, label: String, systemImage: String, badge: Int? = nil) {
+    init(_ value: Value, label: String, systemImage: String, badge: Int? = nil) {
         self.value = value
         self.label = label
         self.systemImage = systemImage
@@ -18,17 +21,17 @@ public struct BleeckerAppTab<Value: Hashable>: Identifiable {
 }
 
 /// Thompson's bottom-tab navigation, expressed with native SwiftUI buttons.
-public struct BleeckerAppTabBar<Value: Hashable>: View {
+struct CatalogAppTabBar<Value: Hashable>: View {
     @Environment(\.colorScheme) private var scheme
     @Binding private var selection: Value
-    private let tabs: [BleeckerAppTab<Value>]
+    private let tabs: [CatalogAppTab<Value>]
 
-    public init(selection: Binding<Value>, tabs: [BleeckerAppTab<Value>]) {
+    init(selection: Binding<Value>, tabs: [CatalogAppTab<Value>]) {
         _selection = selection
         self.tabs = tabs
     }
 
-    public var body: some View {
+    var body: some View {
         let palette = BleeckerPalette.resolve(scheme)
         HStack(spacing: 0) {
             ForEach(tabs) { tab in
@@ -69,16 +72,16 @@ public struct BleeckerAppTabBar<Value: Hashable>: View {
 }
 
 /// A safe-area-aware application shell with optional mobile bottom tabs.
-public struct BleeckerMobileAppShell<Value: Hashable, Header: View, Content: View, Footer: View>: View {
+struct CatalogMobileAppShell<Value: Hashable, Header: View, Content: View, Footer: View>: View {
     @Binding private var selection: Value
-    private let tabs: [BleeckerAppTab<Value>]
+    private let tabs: [CatalogAppTab<Value>]
     @ViewBuilder private let header: Header
     @ViewBuilder private let content: Content
     @ViewBuilder private let footer: Footer
 
-    public init(
+    init(
         selection: Binding<Value>,
-        tabs: [BleeckerAppTab<Value>] = [],
+        tabs: [CatalogAppTab<Value>] = [],
         @ViewBuilder header: () -> Header,
         @ViewBuilder footer: () -> Footer,
         @ViewBuilder content: () -> Content
@@ -90,7 +93,7 @@ public struct BleeckerMobileAppShell<Value: Hashable, Header: View, Content: Vie
         self.content = content()
     }
 
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 0) {
             header
             content.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -98,16 +101,16 @@ public struct BleeckerMobileAppShell<Value: Hashable, Header: View, Content: Vie
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !tabs.isEmpty {
-                BleeckerAppTabBar(selection: $selection, tabs: tabs)
+                CatalogAppTabBar(selection: $selection, tabs: tabs)
             }
         }
     }
 }
 
-public extension BleeckerMobileAppShell where Footer == EmptyView {
+extension CatalogMobileAppShell where Footer == EmptyView {
     init(
         selection: Binding<Value>,
-        tabs: [BleeckerAppTab<Value>] = [],
+        tabs: [CatalogAppTab<Value>] = [],
         @ViewBuilder header: () -> Header,
         @ViewBuilder content: () -> Content
     ) {
@@ -116,7 +119,7 @@ public extension BleeckerMobileAppShell where Footer == EmptyView {
 }
 
 /// An adaptive administration shell: persistent navigation when wide, a drawer when compact.
-public struct BleeckerAdminShell<Sidebar: View, Header: View, Content: View>: View {
+struct CatalogAdminShell<Sidebar: View, Header: View, Content: View>: View {
     @Environment(\.colorScheme) private var scheme
     @Binding private var navigationPresented: Bool
     private let breakpoint: CGFloat
@@ -125,7 +128,7 @@ public struct BleeckerAdminShell<Sidebar: View, Header: View, Content: View>: Vi
     @ViewBuilder private let header: Header
     @ViewBuilder private let content: Content
 
-    public init(
+    init(
         navigationPresented: Binding<Bool>,
         breakpoint: CGFloat = 768,
         sidebarWidth: CGFloat = 300,
@@ -141,7 +144,7 @@ public struct BleeckerAdminShell<Sidebar: View, Header: View, Content: View>: Vi
         self.content = content()
     }
 
-    public var body: some View {
+    var body: some View {
         GeometryReader { proxy in
             if proxy.size.width >= breakpoint {
                 wideLayout

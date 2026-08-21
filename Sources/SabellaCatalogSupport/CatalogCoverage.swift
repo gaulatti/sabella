@@ -2,10 +2,8 @@ public enum SabellaCatalogCoverage {
     public static let registeredComponents: Set<String> = [
         "BleeckerAccordion",
         "BleeckerActivityItem",
-        "BleeckerAdminShell",
         "BleeckerAlert",
         "BleeckerAppShell",
-        "BleeckerAppTabBar",
         "BleeckerAvatar",
         "BleeckerBarChart",
         "BleeckerBauhausBackground",
@@ -40,7 +38,6 @@ public enum SabellaCatalogCoverage {
         "BleeckerLoadingSpinner",
         "BleeckerMediaLibrary",
         "BleeckerMetric",
-        "BleeckerMobileAppShell",
         "BleeckerModal",
         "BleeckerNotificationBadge",
         "BleeckerOTPInput",

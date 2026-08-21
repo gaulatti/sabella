@@ -242,18 +242,18 @@ struct MobileGallery: View {
     @State private var tab = "home"
     @State private var drawer = false
 
-    private var tabs: [BleeckerAppTab<String>] {
-        [BleeckerAppTab("home", label: "Home", systemImage: "house"), BleeckerAppTab("inbox", label: "Inbox", systemImage: "tray", badge: 4), BleeckerAppTab("profile", label: "Profile", systemImage: "person")]
+    private var tabs: [CatalogAppTab<String>] {
+        [CatalogAppTab("home", label: "Home", systemImage: "house"), CatalogAppTab("inbox", label: "Inbox", systemImage: "tray", badge: 4), CatalogAppTab("profile", label: "Profile", systemImage: "person")]
     }
 
     var body: some View {
 #if os(tvOS)
         CatalogSection("Remote tab navigation", note: "Every destination is reachable with focus and select.") {
-            BleeckerAppTabBar(selection: $tab, tabs: tabs)
+            CatalogAppTabBar(selection: $tab, tabs: tabs)
                 .frame(maxWidth: 900)
         }
         CatalogSection("Television application shell") {
-            BleeckerAdminShell(navigationPresented: $drawer, breakpoint: 700, sidebarWidth: 260) {
+            CatalogAdminShell(navigationPresented: $drawer, breakpoint: 700, sidebarWidth: 260) {
                 VStack(spacing: 18) {
                     BleeckerBrandLockup(name: "Sabella TV")
                     BleeckerSidebarItem("Overview", systemImage: "square.grid.2x2", selected: true) { }
@@ -275,10 +275,10 @@ struct MobileGallery: View {
             .clipShape(RoundedRectangle(cornerRadius: 20))
         }
 #else
-        CatalogSection("Bottom tab bar") { BleeckerAppTabBar(selection: $tab, tabs: tabs).frame(maxWidth: 430) }
+        CatalogSection("Bottom tab bar") { CatalogAppTabBar(selection: $tab, tabs: tabs).frame(maxWidth: 430) }
         CatalogSection("Mobile application shell") {
             deviceFrame {
-                BleeckerMobileAppShell(selection: $tab, tabs: tabs) {
+                CatalogMobileAppShell(selection: $tab, tabs: tabs) {
                     BleeckerHeader { Text("9:41").font(.caption) } center: { Text("Sabella").font(.headline) } trailing: { BleeckerAvatar(name: "Ada", size: .xs) }.padding(.horizontal, 14)
                 } content: {
                     VStack(spacing: 18) { BleeckerStatCard("Sessions", value: 18400, format: .compact, delta: 0.14); BleeckerEmptyState(title: "You're all caught up", message: "New activity will appear here.") { EmptyView() }; Spacer() }.padding(16)
@@ -286,7 +286,7 @@ struct MobileGallery: View {
             }
         }
         CatalogSection("Adaptive admin shell") {
-            BleeckerAdminShell(navigationPresented: $drawer, breakpoint: 540, sidebarWidth: 180) {
+            CatalogAdminShell(navigationPresented: $drawer, breakpoint: 540, sidebarWidth: 180) {
                 VStack { BleeckerBrandLockup(name: "Admin"); BleeckerSidebarItem("Overview", systemImage: "square.grid.2x2", selected: true) { }; Spacer() }.padding(16)
             } header: {
                 BleeckerHeader { EmptyView() } center: { Text("Dashboard").font(.headline) } trailing: { BleeckerAvatar(name: "Ada", size: .sm) }.padding(.horizontal, 14)

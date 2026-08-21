@@ -25,12 +25,6 @@ import SabellaCatalogSupport
     #expect(!option.disabled)
 }
 
-@Test func mobileTabsUseDestinationIdentity() {
-    let tab = BleeckerAppTab("inbox", label: "Inbox", systemImage: "tray", badge: 3)
-    #expect(tab.id == "inbox")
-    #expect(tab.badge == 3)
-}
-
 @Test func catalogCoversEveryPublicVisualComponent() throws {
     let testFile = URL(fileURLWithPath: #filePath)
     let sourceDirectory = testFile

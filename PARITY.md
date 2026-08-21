@@ -11,7 +11,7 @@ The goal is behavioral and visual convergence, not DOM emulation. Native platfor
 - Feedback: Alert, StatusBadge, NotificationBadge, Progress, LoadingSpinner, LoadingOverlay, EmptyState
 - Navigation: BrandLockup, SidebarItem, PageHeader, SectionHeader, Breadcrumb, Tabs, Pagination, Accordion
 - Data display: Avatar, IconBadge, Metric, StatCard, DataList, Timeline, FilterChip, Kbd
-- Layout: DashboardGrid, DashboardSection, desktop AppShell, mobile safe-area AppShell with bottom tabs, adaptive AdminShell with compact drawer, PanelLayout, Header, Footer
+- Layout: DashboardGrid, DashboardSection, AppShell/AdminShell primitive, PanelLayout, Header, Footer
 - Overlays: Modal, Tooltip/help, DropdownMenu/ContextMenu primitive, CommandSpotlight
 - Charts: Line, Area, Bar, Pie, Donut, Scatter, Sparkline via Swift Charts
 

@@ -25,6 +25,35 @@ import SabellaCatalogSupport
     #expect(!option.disabled)
 }
 
+@Test func applicationTabsPreserveDestinationIdentityAndAccessibility() {
+    let tab = BleeckerAppTab(
+        "inbox",
+        label: "Inbox",
+        systemImage: "tray",
+        badge: 3,
+        accessibilityLabel: "Editorial inbox"
+    )
+    #expect(tab.id == "inbox")
+    #expect(tab.badge == 3)
+    #expect(tab.accessibilityLabel == "Editorial inbox")
+    #expect(!tab.disabled)
+}
+
+@Test func shellLayoutAdaptsByAvailableWidthAndPlatform() {
+    #expect(BleeckerShellLayout.adminPresentation(width: 390, platform: .iOS) == .drawer)
+    #expect(BleeckerShellLayout.adminPresentation(width: 600, platform: .iPadOS) == .drawer)
+    #expect(BleeckerShellLayout.adminPresentation(width: 1024, platform: .iPadOS) == .sidebar)
+    #expect(BleeckerShellLayout.adminPresentation(width: 500, platform: .macOS) == .sidebar)
+    #expect(BleeckerShellLayout.adminPresentation(width: 1920, platform: .tvOS) == .television)
+}
+
+@Test func tabNavigationUsesPlatformNativePlacement() {
+    #expect(BleeckerShellLayout.tabPresentation(platform: .iOS) == .bottomBar)
+    #expect(BleeckerShellLayout.tabPresentation(platform: .iPadOS) == .bottomBar)
+    #expect(BleeckerShellLayout.tabPresentation(platform: .macOS) == .toolbar)
+    #expect(BleeckerShellLayout.tabPresentation(platform: .tvOS) == .television)
+}
+
 @Test func catalogCoversEveryPublicVisualComponent() throws {
     let testFile = URL(fileURLWithPath: #filePath)
     let sourceDirectory = testFile

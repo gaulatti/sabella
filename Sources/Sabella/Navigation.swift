@@ -17,17 +17,68 @@ public struct BleeckerBrandLockup: View {
 
 public struct BleeckerSidebarItem: View {
     @Environment(\.colorScheme) private var scheme
+#if os(tvOS)
+    @FocusState private var focused: Bool
+#endif
     let title: String; let systemImage: String; let selected: Bool; let action: () -> Void
     public init(_ title: String, systemImage: String, selected: Bool, action: @escaping () -> Void) { self.title = title; self.systemImage = systemImage; self.selected = selected; self.action = action }
     public init(title: String, systemImage: String, selected: Bool, action: @escaping () -> Void) { self.init(title, systemImage: systemImage, selected: selected, action: action) }
     public var body: some View {
+#if os(tvOS)
+        sidebarButton.focused($focused)
+#else
+        sidebarButton
+#endif
+    }
+
+    private var sidebarButton: some View {
         let p = BleeckerPalette.resolve(scheme)
-        Button(action: action) {
-            HStack(spacing: BleeckerSpacing.control) { Image(systemName: systemImage).font(.system(size: 15, weight: .medium)).frame(width: 20); Text(title).font(BleeckerTypography.primary(14, weight: .medium)); Spacer() }
-                .foregroundStyle(selected ? p.sea : p.textSecondary).padding(.horizontal, BleeckerSpacing.control).frame(height: 40)
-                .background(selected ? p.muted.opacity(0.8) : .clear).clipShape(RoundedRectangle(cornerRadius: BleeckerRadius.ui))
+        return Button(action: action) {
+            HStack(spacing: BleeckerSpacing.control) { Image(systemName: systemImage).font(.system(size: sidebarIconSize, weight: .medium)).frame(width: sidebarIconWidth); Text(title).font(BleeckerTypography.primary(sidebarTextSize, weight: .medium)); Spacer() }
+                .foregroundStyle(selected ? p.sea : p.textSecondary).padding(.horizontal, BleeckerSpacing.control).frame(minHeight: sidebarHeight)
+                .background(isHighlighted ? p.muted.opacity(0.8) : .clear).clipShape(RoundedRectangle(cornerRadius: BleeckerRadius.ui))
                 .overlay(alignment: .leading) { if selected { Rectangle().fill(p.sea).frame(width: 2, height: 24) } }.contentShape(Rectangle())
         }.buttonStyle(.plain)
+    }
+
+    private var isHighlighted: Bool {
+#if os(tvOS)
+        selected || focused
+#else
+        selected
+#endif
+    }
+
+    private var sidebarHeight: CGFloat {
+#if os(tvOS)
+        72
+#else
+        40
+#endif
+    }
+
+    private var sidebarIconSize: CGFloat {
+#if os(tvOS)
+        22
+#else
+        15
+#endif
+    }
+
+    private var sidebarIconWidth: CGFloat {
+#if os(tvOS)
+        30
+#else
+        20
+#endif
+    }
+
+    private var sidebarTextSize: CGFloat {
+#if os(tvOS)
+        20
+#else
+        14
+#endif
     }
 }
 

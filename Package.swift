@@ -10,11 +10,20 @@ let package = Package(
     ],
     products: [
         .library(name: "Sabella", targets: ["Sabella"]),
+        .executable(name: "SabellaCatalog", targets: ["SabellaCatalog"]),
         .executable(name: "SabellaShellExamples", targets: ["SabellaShellExamples"]),
     ],
     targets: [
         .target(name: "Sabella"),
+        .target(name: "SabellaCatalogSupport"),
+        .executableTarget(
+            name: "SabellaCatalog",
+            dependencies: ["Sabella", "SabellaCatalogSupport"]
+        ),
         .executableTarget(name: "SabellaShellExamples", dependencies: ["Sabella"]),
-        .testTarget(name: "SabellaTests", dependencies: ["Sabella"]),
+        .testTarget(
+            name: "SabellaTests",
+            dependencies: ["Sabella", "SabellaCatalogSupport"]
+        ),
     ]
 )

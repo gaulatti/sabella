@@ -19,6 +19,33 @@ Button("Sync") { sync() }
 
 Components keep the `Bleecker` prefix so product code reads identically across design-system implementations while the module name (`Sabella`) identifies the platform library.
 
+## Private package consumption
+
+Sabella is distributed as a private Swift package. The initial release is
+`0.1.0`; authorized consumers should accept compatible `0.1.x` fixes while
+excluding the next potentially breaking pre-1.0 minor:
+
+```swift
+.package(
+    url: "https://github.com/gaulatti/sabella.git",
+    .upToNextMinor(from: "0.1.0")
+)
+```
+
+Application targets link only `.product(name: "Sabella", package: "Sabella")`.
+The equivalent version range is `>= 0.1.0, < 0.2.0`. Compatible fixes use
+`0.1.x`; breaking public API changes before 1.0 use a new `0.x.0` minor. Release
+tags are immutable, so a faulty release is corrected with a new version instead
+of moving an existing tag.
+
+The repository remains private. Developers and CI use their existing authorized
+GitHub credentials to resolve it; never embed a token, deploy key, or other
+credential in source, Xcode projects, workflow logs, or documentation.
+
+Sabella uses Swift tools 6.0 and supports macOS 14+, iOS/iPadOS 17+, and tvOS
+17+. `SabellaCatalog` and `SabellaShellExamples` are development and release-gate
+executables, not dependencies of the application library.
+
 ## Component catalog
 
 `SabellaCatalog` is the canonical visual release gate for every supported Apple
@@ -54,6 +81,27 @@ public Sabella `View`, `ButtonStyle`, and `ToggleStyle` from library source and
 compares it with `SabellaCatalogCoverage.registeredComponents`. The suite also
 contains a deliberately omitted fake component to prove that the gate fails on
 missing registration.
+
+## Release gate
+
+Every pull request and update to `main` runs the macOS package release gate. It
+validates the manifest, builds the `Sabella` product, runs all tests, builds the
+catalog and shell executables, and compiles a clean temporary consumer that
+imports representative controls and an application shell through only the
+`Sabella` library product.
+
+Run the same gate locally:
+
+```shell
+scripts/validate-release.sh
+```
+
+After a reviewed release commit lands on remote `main`, create its immutable
+semantic-version tag. The tag workflow verifies that the commit belongs to
+remote `main`, resolves the private package as an external consumer using the
+tagged compatible range, and only then publishes the private GitHub Release
+from `docs/releases/<version>.md`. Release `0.1.0` uses
+[`docs/releases/0.1.0.md`](docs/releases/0.1.0.md).
 
 ## Adaptive application shells
 

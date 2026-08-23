@@ -35,3 +35,9 @@ fails when registration falls behind the library surface. The tvOS catalog
 records `BleeckerDateRangePicker` and `BleeckerFileInput` as explicit platform
 exceptions because their underlying native APIs are unavailable there; all
 other visual contracts are exercised on macOS, iPhone, iPad, and Apple TV.
+
+The application-facing `Sabella` library has no dependency on
+`SabellaCatalog`, `SabellaCatalogSupport`, or `SabellaShellExamples`. The package
+release gate builds those development products independently, then compiles a
+temporary external-style consumer through only the library product so catalog
+and example support cannot become an accidental transitive requirement.

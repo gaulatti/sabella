@@ -198,7 +198,12 @@ public struct SabellaTVLivePlayer: View {
 
     public var body: some View {
         ZStack {
-            if playback.isRadio {
+            if playback.hasFailed {
+                // A failed automatic stream has no trustworthy medium. Keep the
+                // failure state visually quiet instead of exposing a stale or
+                // provisional radio presentation beneath the guide.
+                Color.black
+            } else if playback.isRadio {
                 SabellaTVRadioNowPlaying(
                     station: selectedChannel.name,
                     title: selectedChannel.now,
@@ -214,7 +219,7 @@ public struct SabellaTVLivePlayer: View {
                     .transition(.opacity)
             }
 
-            if playback.hasFailed {
+            if playback.hasFailed, !guideVisible {
                 SabellaTVPlaybackFailure(
                     title: selectedChannel.name,
                     message: "The live signal could not be loaded."

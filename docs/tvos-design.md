@@ -75,6 +75,12 @@ The guide uses a narrow vertical tuning rail, expands the focused row, places
 current-program context near the visual center, and keeps Up Next independent at
 the trailing edge. It only displays remote instructions backed by implemented
 actions: Up and Down browse the lineup, and Select tunes the focused channel.
+Moving focus changes the preview metadata but never retunes playback; the green
+on-air indicator remains on the tuned row until Select commits the highlighted
+channel. Reopening the guide restores focus to that tuned row. Imported channel
+and program names are always line-limited and clipped to their assigned regions,
+and a failed stream's full-screen error chrome is suppressed while the guide is
+open so it cannot compete with selector content.
 The live guide uses a neutral full-picture dimmer, a stronger leading scrim for
 the channel rail, and a bottom scrim for metadata. Current and next program
 details remain unboxed over the picture. The focused channel alone expands and

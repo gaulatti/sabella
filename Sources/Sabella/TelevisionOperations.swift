@@ -407,10 +407,17 @@ public struct SabellaTVRadioNowPlaying: View {
                         Text(station)
                             .font(BleeckerTypography.primary(58, weight: .bold))
                             .tracking(-1)
+                            .lineLimit(2)
+                            .truncationMode(.tail)
+                            .allowsTightening(true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         if let title, !title.isEmpty {
                             Text(title)
                                 .font(BleeckerTypography.secondary(31, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.76))
+                                .lineLimit(2)
+                                .truncationMode(.tail)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         HStack(spacing: 10) {
                             Circle()
@@ -422,7 +429,8 @@ public struct SabellaTVRadioNowPlaying: View {
                         .foregroundStyle(.white.opacity(0.68))
                         .padding(.top, 12)
                     }
-                    .frame(width: 650, alignment: .leading)
+                    .frame(width: 650, height: 390, alignment: .leading)
+                    .clipped()
                 }
             }
         }
@@ -449,7 +457,13 @@ public struct SabellaTVPlaybackFailure: View {
             VStack(spacing: 22) {
                 Image(systemName: "antenna.radiowaves.left.and.right.slash").font(.system(size: 64))
                 SabellaTVSectionLabel("Signal unavailable")
-                Text(title).font(BleeckerTypography.primary(48, weight: .bold)).multilineTextAlignment(.center)
+                Text(title)
+                    .font(BleeckerTypography.primary(48, weight: .bold))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
+                    .allowsTightening(true)
+                    .frame(maxWidth: 920)
                 Text(message).font(BleeckerTypography.secondary(24)).foregroundStyle(.white.opacity(0.72))
                 Button("Retry", action: retry).buttonStyle(SabellaTVPrimaryButtonStyle())
             }

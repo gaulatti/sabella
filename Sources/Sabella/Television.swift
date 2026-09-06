@@ -330,9 +330,9 @@ public struct SabellaTVChannelGuide: View {
         GeometryReader { proxy in
             let channel = highlightedChannel
             ZStack(alignment: .topLeading) {
-                Color.black.opacity(0.34)
+                Color.black.opacity(0.52)
                 LinearGradient(
-                    colors: [.black.opacity(0.72), .black.opacity(0.34), .clear],
+                    colors: [.black.opacity(0.9), .black.opacity(0.58), .black.opacity(0.16)],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
@@ -343,12 +343,18 @@ public struct SabellaTVChannelGuide: View {
                 )
 
                 VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 14) {
+                    HStack(spacing: 14) {
                         Image(systemName: "chevron.left").foregroundStyle(BleeckerPalette.dark.sea)
-                        Text(title).foregroundStyle(BleeckerPalette.dark.textPrimary)
-                    Text("\(channels.count)").foregroundStyle(BleeckerPalette.dark.sea)
+                        Text(title)
+                            .foregroundStyle(BleeckerPalette.dark.textPrimary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Text("\(channels.count)")
+                            .foregroundStyle(BleeckerPalette.dark.sea)
+                            .fixedSize()
                     }
                     .font(BleeckerTypography.primary(30, weight: .semibold))
+                    .frame(maxWidth: 760, alignment: .leading)
                     Text("TV + Radio · Up / Down to browse · Select to tune")
                         .font(BleeckerTypography.secondary(17))
                         .foregroundStyle(.white.opacity(0.52))
@@ -387,8 +393,9 @@ public struct SabellaTVChannelGuide: View {
                         .padding(.vertical, 320)
                     }
                     .scrollIndicators(.hidden)
-                    .frame(width: 390, height: min(proxy.size.height - 190, 760))
-                    .position(x: 195, y: proxy.size.height * 0.69)
+                    .frame(width: 410, height: min(proxy.size.height - 190, 760))
+                    .clipped()
+                    .position(x: 205, y: proxy.size.height * 0.69)
                     .task {
                         highlightedID = selection
                         scrollProxy.scrollTo(selection, anchor: .center)
@@ -403,14 +410,22 @@ public struct SabellaTVChannelGuide: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(channel.now)
+                    Text(guideHeadline(for: channel))
                         .font(BleeckerTypography.primary(48, weight: .medium))
                         .tracking(-0.7)
                         .foregroundStyle(BleeckerPalette.dark.textPrimary)
                         .lineLimit(2)
-                    Text(channel.name)
-                        .font(BleeckerTypography.secondary(25, weight: .medium))
-                        .foregroundStyle(channel.tone.color)
+                        .truncationMode(.tail)
+                        .allowsTightening(true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if shouldShowStation(for: channel) {
+                        Text(channel.name)
+                            .font(BleeckerTypography.secondary(25, weight: .medium))
+                            .foregroundStyle(channel.tone.color)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     Text(mediumLabel(for: channel))
                         .font(BleeckerTypography.mono(14, weight: .bold))
                         .tracking(1.4)
@@ -440,8 +455,9 @@ public struct SabellaTVChannelGuide: View {
                         .padding(.top, 16)
                     }
                 }
-                .frame(width: 620, alignment: .leading)
-                .position(x: 740, y: proxy.size.height * 0.55)
+                .frame(width: 640, height: 360, alignment: .leading)
+                .clipped()
+                .position(x: 790, y: proxy.size.height * 0.55)
                 .id(channel.id)
                 .transition(.opacity)
 
@@ -496,6 +512,20 @@ public struct SabellaTVChannelGuide: View {
         }
     }
 
+    private func guideHeadline(for channel: SabellaTVChannel) -> String {
+        channel.now.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? channel.name : channel.now
+    }
+
+    private func shouldShowStation(for channel: SabellaTVChannel) -> Bool {
+        let headline = guideHeadline(for: channel)
+        return headline.compare(
+            channel.name,
+            options: [.caseInsensitive, .diacriticInsensitive],
+            range: nil,
+            locale: .current
+        ) != .orderedSame
+    }
+
     private func guideAction(_ label: String, systemImage: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
@@ -518,27 +548,27 @@ private struct SabellaTVChannelRow: View {
 
     var body: some View {
         Button(action: select) {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Text(channel.number)
                     .font(BleeckerTypography.mono(17, weight: .semibold))
                     .foregroundStyle(.white.opacity(focused ? 0.92 : 0.52))
-                    .frame(width: 52)
+                    .frame(width: 46)
                 Text(channel.mark)
                     .font(BleeckerTypography.primary(focused ? 24 : 20, weight: .bold))
                     .tracking(-0.4)
                     .foregroundStyle(channel.tone.color)
-                    .frame(width: focused ? 76 : 68)
+                    .frame(width: focused ? 58 : 54)
                 Image(systemName: mediumIcon)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white.opacity(focused ? 0.8 : 0.38))
                     .frame(width: 22)
                 if focused {
-                    VStack(alignment: .leading) {
-                        Text(channel.name)
-                            .font(BleeckerTypography.secondary(20, weight: .semibold))
-                            .foregroundStyle(BleeckerPalette.dark.textPrimary)
-                            .lineLimit(1)
-                    }
+                    Text(channel.name)
+                        .font(BleeckerTypography.secondary(20, weight: .semibold))
+                        .foregroundStyle(BleeckerPalette.dark.textPrimary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(width: 132, alignment: .leading)
                 }
                 Spacer(minLength: 0)
                 if tuned {
@@ -550,6 +580,7 @@ private struct SabellaTVChannelRow: View {
             }
             .padding(.horizontal, 14)
             .frame(width: focused ? 380 : 230, height: focused ? 118 : 86, alignment: .leading)
+            .clipped()
             .background(focused ? .black.opacity(0.46) : .black.opacity(0.28), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10)

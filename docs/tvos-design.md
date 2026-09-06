@@ -62,6 +62,11 @@ The guide uses a narrow vertical tuning rail, expands the focused row, places
 current-program context near the visual center, and keeps Up Next independent at
 the trailing edge. It only displays remote instructions backed by implemented
 actions: Up and Down browse the lineup, and Select tunes the focused channel.
+The visual treatment uses deep-sea scrims to preserve video context, sea blue
+for navigation and focus, desert for editorial hierarchy, terracotta for the
+next-program boundary, and green only for live status. Translucent information
+surfaces must remain quieter than the underlying program and avoid system focus
+effects that overpower channel identity.
 Playback itself is edge-to-edge and sits outside the browse/header container.
 Menu reveals the guide over uninterrupted video; pressing Menu again exits to
 Browse. Global navigation must never remain visible during full-screen viewing.

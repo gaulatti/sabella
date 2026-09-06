@@ -116,26 +116,32 @@ public struct SabellaTVChannelGuide: View {
             let channel = highlightedChannel
             ZStack(alignment: .topLeading) {
                 LinearGradient(
-                    colors: [.black.opacity(0.72), .black.opacity(0.18), .clear],
+                    colors: [BleeckerPalette.dark.deepSea.opacity(0.96), BleeckerPalette.dark.deepSea.opacity(0.44), .clear],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
                 LinearGradient(
-                    colors: [.clear, .black.opacity(0.74)],
+                    colors: [.clear, BleeckerPalette.dark.lightSand.opacity(0.86)],
                     startPoint: .center,
                     endPoint: .bottom
                 )
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Label("All Channels (\(channels.count))", systemImage: "chevron.left")
-                        .font(BleeckerTypography.primary(30, weight: .bold))
-                    Text("Up / Down to browse · Select to tune")
-                        .font(BleeckerTypography.secondary(19))
-                        .foregroundStyle(.white.opacity(0.62))
-                        .padding(.leading, 38)
+                VStack(alignment: .leading, spacing: 7) {
+                    HStack(spacing: 10) {
+                        Circle().fill(BleeckerPalette.dark.live).frame(width: 10, height: 10)
+                        Text("LIVE TELEVISION")
+                            .font(BleeckerTypography.primary(15, weight: .bold))
+                            .tracking(2.2)
+                            .foregroundStyle(BleeckerPalette.dark.desert)
+                    }
+                    Text("All channels")
+                        .font(BleeckerTypography.primary(34, weight: .bold))
+                    Text("\(channels.count) available  ·  Up / Down to browse  ·  Select to tune")
+                        .font(BleeckerTypography.secondary(18, weight: .medium))
+                        .foregroundStyle(BleeckerPalette.dark.textSecondary)
                 }
-                .padding(.top, 54)
-                .padding(.leading, 42)
+                .padding(.top, 48)
+                .padding(.leading, 48)
 
                 ScrollViewReader { scrollProxy in
                     ScrollView(.vertical) {
@@ -153,8 +159,8 @@ public struct SabellaTVChannelGuide: View {
                         .padding(.vertical, 120)
                     }
                     .scrollIndicators(.hidden)
-                    .frame(width: 320, height: min(proxy.size.height - 190, 700))
-                    .position(x: 160, y: proxy.size.height * 0.61)
+                    .frame(width: 352, height: min(proxy.size.height - 190, 700))
+                    .position(x: 176, y: proxy.size.height * 0.61)
                     .onChange(of: highlightedID) { _, id in
                         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.28)) {
                             scrollProxy.scrollTo(id, anchor: .center)
@@ -162,37 +168,54 @@ public struct SabellaTVChannelGuide: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 10) {
+                        Text(channel.number)
+                        Text(channel.name.uppercased())
+                    }
+                    .font(BleeckerTypography.mono(16, weight: .bold))
+                    .foregroundStyle(BleeckerPalette.dark.sea)
                     Text(channel.now)
-                        .font(BleeckerTypography.primary(43, weight: .bold))
-                    Text(channel.name)
-                        .font(BleeckerTypography.secondary(25, weight: .semibold))
-                    Text("Live now")
-                        .font(BleeckerTypography.mono(20, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.72))
+                        .font(BleeckerTypography.primary(46, weight: .bold))
+                        .lineLimit(2)
                     HStack(spacing: 18) {
                         SabellaTVContextBadge("SELECT TO WATCH", systemImage: "play.fill")
                         SabellaTVContextBadge("LIVE", systemImage: "dot.radiowaves.left.and.right")
                     }
                     .padding(.top, 12)
                 }
-                .frame(width: 650, alignment: .leading)
+                .padding(28)
+                .frame(width: 680, alignment: .leading)
+                .background(.black.opacity(0.38), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(.white.opacity(0.08)) }
                 .position(x: proxy.size.width * 0.48, y: proxy.size.height * 0.72)
                 .id(channel.id)
                 .transition(.opacity)
 
                 VStack(alignment: .leading, spacing: 7) {
                     Text("UP NEXT")
-                        .font(BleeckerTypography.secondary(18, weight: .semibold))
+                        .font(BleeckerTypography.primary(15, weight: .bold))
+                        .tracking(1.8)
+                        .foregroundStyle(BleeckerPalette.dark.desert)
                     Text(channel.next)
-                        .font(BleeckerTypography.primary(24, weight: .bold))
+                        .font(BleeckerTypography.primary(25, weight: .bold))
                     Text("Following this program")
                         .font(BleeckerTypography.secondary(18))
-                    ProgressView(value: min(max(channel.progress, 0), 1))
-                        .tint(.white)
-                        .frame(width: 220)
+                        .foregroundStyle(BleeckerPalette.dark.textSecondary)
+                    GeometryReader { bar in
+                        Capsule().fill(.white.opacity(0.15))
+                        Capsule().fill(BleeckerPalette.dark.sea)
+                            .frame(width: bar.size.width * min(max(channel.progress, 0), 1))
+                    }
+                    .frame(width: 220, height: 5)
+                    .padding(.top, 10)
                 }
-                .frame(width: 260, alignment: .leading)
+                .padding(24)
+                .frame(width: 286, alignment: .leading)
+                .background(.black.opacity(0.46), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(alignment: .leading) {
+                    Capsule().fill(BleeckerPalette.dark.terracotta).frame(width: 4).padding(.vertical, 20)
+                }
                 .position(x: proxy.size.width - 190, y: proxy.size.height * 0.67)
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.24), value: highlightedID)
@@ -217,11 +240,22 @@ private struct SabellaTVChannelRow: View {
         Button(action: select) {
             HStack(spacing: 16) {
                 Text(channel.number)
-                    .font(BleeckerTypography.mono(17, weight: .bold))
-                    .frame(width: 54)
+                    .font(BleeckerTypography.mono(16, weight: .bold))
+                    .foregroundStyle(focused ? BleeckerPalette.dark.sea : .white.opacity(0.55))
+                    .frame(width: 48)
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(focused ? BleeckerPalette.dark.sea.opacity(0.2) : .white.opacity(0.08))
+                    .frame(width: 48, height: 48)
+                    .overlay {
+                        Text(channel.name.prefix(2).uppercased())
+                            .font(BleeckerTypography.primary(14, weight: .bold))
+                            .foregroundStyle(focused ? BleeckerPalette.dark.sea : .white.opacity(0.66))
+                    }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(channel.name)
-                        .font(BleeckerTypography.primary(focused ? 23 : 19, weight: .bold))
+                        .font(BleeckerTypography.primary(focused ? 22 : 18, weight: .bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
                     if focused {
                         Text(channel.now)
                             .font(BleeckerTypography.secondary(17, weight: .medium))
@@ -229,22 +263,36 @@ private struct SabellaTVChannelRow: View {
                     }
                 }
                 Spacer(minLength: 0)
-                if tuned { Circle().fill(BleeckerPalette.dark.sea).frame(width: 10, height: 10) }
+                if tuned {
+                    Circle()
+                        .fill(BleeckerPalette.dark.live)
+                        .frame(width: 9, height: 9)
+                        .accessibilityLabel("On air")
+                }
             }
-            .padding(.horizontal, 18)
-            .frame(width: focused ? 300 : 210, height: focused ? 104 : 72, alignment: .leading)
-            .background(focused ? .black.opacity(0.82) : .black.opacity(0.36), in: RoundedRectangle(cornerRadius: 18))
+            .padding(.horizontal, 16)
+            .frame(width: focused ? 332 : 248, height: focused ? 96 : 68, alignment: .leading)
+            .background(focused ? BleeckerPalette.dark.sand.opacity(0.94) : .black.opacity(0.28), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .strokeBorder(focused ? .white.opacity(0.9) : .clear, lineWidth: 3)
+                RoundedRectangle(cornerRadius: 14)
+                    .strokeBorder(focused ? BleeckerPalette.dark.sea : .white.opacity(0.05), lineWidth: focused ? 2 : 1)
             }
+            .shadow(color: focused ? .black.opacity(0.42) : .clear, radius: 22, y: 12)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SabellaTVChannelButtonStyle())
         .focusEffectDisabled()
         .focused($focused)
         .foregroundStyle(.white)
         .onChange(of: focused) { _, value in if value { highlight() } }
         .animation(.easeOut(duration: 0.22), value: focused)
+    }
+}
+
+private struct SabellaTVChannelButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .opacity(configuration.isPressed ? 0.9 : 1)
     }
 }
 

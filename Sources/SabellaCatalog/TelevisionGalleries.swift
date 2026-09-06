@@ -31,6 +31,8 @@ struct SabellaTelevisionCatalog: View {
                         items: TelevisionPage.allCases.map { SabellaTVNavigationItem($0, title: $0.rawValue) }
                     )
                     Spacer()
+                    Button { } label: { Label("Search", systemImage: "magnifyingglass") }
+                        .buttonStyle(SabellaTVPrimaryButtonStyle())
                     BleeckerStatusBadge("TV native", variant: .live)
                 }
 
@@ -65,8 +67,28 @@ struct SabellaTelevisionCatalog: View {
                     Button { page = .detail } label: { Label("Details", systemImage: "info.circle") }
                         .buttonStyle(SabellaTVPrimaryButtonStyle())
                 }
-                SabellaTVShelf("Continue watching", items: content) { item in card(item) }
-                SabellaTVShelf("Because you watched The Archive", items: Array(content.reversed())) { item in card(item) }
+                SabellaTVShelf("Continue watching", items: content) { item in
+                    SabellaTVCard(
+                        title: item.title,
+                        subtitle: item.subtitle,
+                        context: item.id == "coast" ? "Episode 3" : nil,
+                        progress: progress(for: item.id)
+                    ) { } artwork: { artwork(item) }
+                }
+                SabellaTVEditorialRail(
+                    eyebrow: "Tonight's edit",
+                    title: "Slow stories, vivid places",
+                    summary: "A human-curated collection for winding down—fewer choices, with a clear point of view.",
+                    items: Array(content.reversed())
+                ) { item in
+                    SabellaTVCard(
+                        title: item.title,
+                        subtitle: item.subtitle,
+                        width: 230,
+                        artworkRatio: .poster,
+                        context: recommendation(for: item.id)
+                    ) { } artwork: { artwork(item) }
+                }
             }
             .padding(.bottom, 80)
         }
@@ -117,9 +139,30 @@ struct SabellaTelevisionCatalog: View {
     }
 
     private func card(_ item: SabellaTVContent) -> some View {
-        SabellaTVCard(title: item.title, subtitle: item.subtitle) { } artwork: {
-            LinearGradient(colors: [color(for: item.id), BleeckerPalette.dark.deepSea], startPoint: .topLeading, endPoint: .bottomTrailing)
-                .overlay { Image(systemName: item.systemImage).font(.system(size: 74)).foregroundStyle(.white.opacity(0.7)) }
+        SabellaTVCard(title: item.title, subtitle: item.subtitle, context: recommendation(for: item.id)) { } artwork: { artwork(item) }
+    }
+
+    private func artwork(_ item: SabellaTVContent) -> some View {
+        LinearGradient(colors: [color(for: item.id), BleeckerPalette.dark.deepSea], startPoint: .topLeading, endPoint: .bottomTrailing)
+            .overlay { Image(systemName: item.systemImage).font(.system(size: 74)).foregroundStyle(.white.opacity(0.7)) }
+    }
+
+    private func progress(for id: String) -> Double {
+        switch id {
+        case "coast": 0.51
+        case "city": 0.18
+        case "signal": 0.72
+        default: 0.08
+        }
+    }
+
+    private func recommendation(for id: String) -> String {
+        switch id {
+        case "coast": "Because you watch travel"
+        case "city": "Top 10 today"
+        case "signal": "Critics' pick"
+        case "kitchen": "New this week"
+        default: "Award winner"
         }
     }
 

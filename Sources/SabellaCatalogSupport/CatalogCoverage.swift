@@ -1,6 +1,8 @@
 public enum SabellaCatalogCoverage {
     public static let registeredTelevisionComponents: Set<String> = [
         "SabellaTVCard",
+        "SabellaTVContextBadge",
+        "SabellaTVEditorialRail",
         "SabellaTVHero",
         "SabellaTVNavigationBar",
         "SabellaTVPlaybackOverlay",

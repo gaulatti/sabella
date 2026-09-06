@@ -83,10 +83,14 @@ for example `SIMULATOR_NAME="iPad mini (A17 Pro)" scripts/run-catalog.sh ipad`.
   TV state surfaces through the reusable `SabellaTV*` APIs.
 
 The television surface includes `SabellaTVScreen`, `SabellaTVNavigationBar`,
-`SabellaTVHero`, `SabellaTVCard`, `SabellaTVShelf`,
+`SabellaTVHero`, `SabellaTVCard`, `SabellaTVContextBadge`,
+`SabellaTVShelf`, `SabellaTVEditorialRail`,
 `SabellaTVPrimaryButtonStyle`, and `SabellaTVPlaybackOverlay`. These APIs exist
 only when compiling for tvOS so application code cannot accidentally treat the
 television interaction model as a desktop or touch layout.
+
+See [`docs/tvos-design.md`](docs/tvos-design.md) for the product patterns behind
+the API and guidance on focus, artwork, discovery, playback, and accessibility.
 
 Run `swift test` before release. The catalog coverage test discovers every
 public Sabella `View`, `ButtonStyle`, and `ToggleStyle` from library source and

@@ -15,8 +15,21 @@ public struct SabellaTVContent: Identifiable, Hashable, Sendable {
     }
 }
 
+public enum SabellaTVArtworkRatio: Sendable {
+    case landscape
+    case poster
+
+    fileprivate var ratio: CGFloat {
+        switch self {
+        case .landscape: 0.5625
+        case .poster: 1.5
+        }
+    }
+}
+
 public struct SabellaTVScreen<Content: View>: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @ViewBuilder private let content: Content
 
     public init(@ViewBuilder content: () -> Content) {
@@ -27,7 +40,7 @@ public struct SabellaTVScreen<Content: View>: View {
         let palette = BleeckerPalette.resolve(scheme)
         ZStack {
             LinearGradient(
-                colors: [palette.background, palette.deepSea.opacity(0.7), .black],
+                colors: [palette.background, palette.deepSea.opacity(reduceTransparency ? 1 : 0.7), .black],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -37,6 +50,28 @@ public struct SabellaTVScreen<Content: View>: View {
                 .safeAreaPadding(.vertical, 44)
         }
         .foregroundStyle(palette.textPrimary)
+    }
+}
+
+public struct SabellaTVContextBadge: View {
+    private let text: String
+    private let systemImage: String?
+
+    public init(_ text: String, systemImage: String? = nil) {
+        self.text = text
+        self.systemImage = systemImage
+    }
+
+    public var body: some View {
+        HStack(spacing: 7) {
+            if let systemImage { Image(systemName: systemImage) }
+            Text(text)
+        }
+        .font(BleeckerTypography.secondary(16, weight: .semibold))
+        .padding(.horizontal, 12)
+        .frame(minHeight: 32)
+        .background(.black.opacity(0.72), in: Capsule())
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -171,6 +206,9 @@ public struct SabellaTVCard<Artwork: View>: View {
     private let title: String
     private let subtitle: String
     private let width: CGFloat
+    private let artworkRatio: SabellaTVArtworkRatio
+    private let context: String?
+    private let progress: Double?
     private let action: () -> Void
     @ViewBuilder private let artwork: Artwork
 
@@ -178,12 +216,18 @@ public struct SabellaTVCard<Artwork: View>: View {
         title: String,
         subtitle: String,
         width: CGFloat = 330,
+        artworkRatio: SabellaTVArtworkRatio = .landscape,
+        context: String? = nil,
+        progress: Double? = nil,
         action: @escaping () -> Void,
         @ViewBuilder artwork: () -> Artwork
     ) {
         self.title = title
         self.subtitle = subtitle
         self.width = width
+        self.artworkRatio = artworkRatio
+        self.context = context
+        self.progress = progress
         self.action = action
         self.artwork = artwork()
     }
@@ -192,12 +236,34 @@ public struct SabellaTVCard<Artwork: View>: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 12) {
                 artwork
-                    .frame(width: width, height: width * 0.56)
+                    .frame(width: width, height: width * artworkRatio.ratio)
                     .clipped()
                     .overlay(alignment: .bottomLeading) {
                         LinearGradient(colors: [.clear, .black.opacity(0.5)], startPoint: .top, endPoint: .bottom)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .overlay(alignment: .topLeading) {
+                        if let context {
+                            SabellaTVContextBadge(context)
+                                .padding(14)
+                        }
+                    }
+                    .overlay(alignment: .bottom) {
+                        if let progress {
+                            GeometryReader { geometry in
+                                Capsule()
+                                    .fill(.white.opacity(0.32))
+                                    .overlay(alignment: .leading) {
+                                        Capsule()
+                                            .fill(BleeckerPalette.dark.sea)
+                                            .frame(width: geometry.size.width * min(max(progress, 0), 1))
+                                    }
+                            }
+                            .frame(height: 7)
+                            .padding(.horizontal, 14)
+                            .padding(.bottom, 12)
+                        }
+                    }
                 Text(title)
                     .font(BleeckerTypography.primary(24, weight: .semibold))
                     .lineLimit(1)
@@ -217,6 +283,52 @@ public struct SabellaTVCard<Artwork: View>: View {
         .zIndex(focused ? 1 : 0)
         .animation(reduceMotion ? nil : .easeOut(duration: BleeckerDuration.enter), value: focused)
         .accessibilityLabel("\(title), \(subtitle)")
+    }
+}
+
+public struct SabellaTVEditorialRail<Item: Identifiable, Card: View>: View {
+    private let eyebrow: String
+    private let title: String
+    private let summary: String
+    private let items: [Item]
+    private let card: (Item) -> Card
+
+    public init(
+        eyebrow: String,
+        title: String,
+        summary: String,
+        items: [Item],
+        @ViewBuilder card: @escaping (Item) -> Card
+    ) {
+        self.eyebrow = eyebrow
+        self.title = title
+        self.summary = summary
+        self.items = items
+        self.card = card
+    }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text(eyebrow.uppercased())
+                .font(BleeckerTypography.primary(16, weight: .bold))
+                .tracking(2)
+                .foregroundStyle(BleeckerPalette.dark.desert)
+            Text(title).font(BleeckerTypography.primary(38, weight: .bold))
+            Text(summary)
+                .font(BleeckerTypography.secondary(20))
+                .foregroundStyle(.white.opacity(0.68))
+                .frame(maxWidth: 780, alignment: .leading)
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 30) { ForEach(items) { item in card(item) } }
+                    .scrollTargetLayout()
+                    .padding(.vertical, 30)
+                    .padding(.horizontal, 12)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .scrollIndicators(.hidden)
+            .scrollClipDisabled()
+            .focusSection()
+        }
     }
 }
 

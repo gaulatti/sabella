@@ -62,12 +62,16 @@ xcodebuild \
   build
 
 executable="$derived_data/Build/Products/Debug-$sdk/SabellaCatalog"
+resource_bundle="$derived_data/Build/Products/Debug-$sdk/Sabella_Sabella.bundle"
 app_bundle="$derived_data/SabellaCatalog.app"
 bundle_identifier="com.gaulatti.sabella.catalog.$platform"
 
 test -x "$executable"
+test -d "$resource_bundle"
 mkdir -p "$app_bundle"
 cp "$executable" "$app_bundle/SabellaCatalog"
+rm -rf "$app_bundle/Sabella_Sabella.bundle"
+cp -R "$resource_bundle" "$app_bundle/Sabella_Sabella.bundle"
 
 plutil -create xml1 "$app_bundle/Info.plist"
 plutil -insert CFBundleDisplayName -string "Sabella Catalog" "$app_bundle/Info.plist"

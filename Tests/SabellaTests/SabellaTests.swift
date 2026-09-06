@@ -12,6 +12,14 @@ import SabellaCatalogSupport
     #expect(BleeckerDuration.control == 0.19)
 }
 
+@Test func bundledBrandFontsRegisterWithoutSubstitution() {
+    SabellaFonts.register()
+
+    for postScriptName in SabellaFonts.postScriptNames {
+        #expect(SabellaFonts.isRegistered(postScriptName: postScriptName))
+    }
+}
+
 @Test func publicContractsRemainComplete() {
     #expect(BleeckerButtonVariant.allCases.count == 7)
     #expect(BleeckerCardVariant.allCases.count == 5)

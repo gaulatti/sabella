@@ -46,6 +46,12 @@ Sabella uses Swift tools 6.0 and supports macOS 14+, iOS/iPadOS 17+, and tvOS
 17+. `SabellaCatalog` and `SabellaShellExamples` are development and release-gate
 executables, not dependencies of the application library.
 
+Sabella bundles static Thin-through-Black faces for the Encode Sans and Libre
+Franklin typefaces used by its typography tokens and registers them from the
+package resource bundle on first use. Consumers do not need to install fonts or
+add `UIAppFonts` entries. The font files are distributed under the SIL Open Font
+License included beside the assets in `Sources/Sabella/Resources/Fonts`.
+
 ## Component catalog
 
 `SabellaCatalog` is the canonical visual release gate for every supported Apple

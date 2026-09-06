@@ -14,7 +14,10 @@ let package = Package(
         .executable(name: "SabellaShellExamples", targets: ["SabellaShellExamples"]),
     ],
     targets: [
-        .target(name: "Sabella"),
+        .target(
+            name: "Sabella",
+            resources: [.copy("Resources/Fonts")]
+        ),
         .target(name: "SabellaCatalogSupport"),
         .executableTarget(
             name: "SabellaCatalog",

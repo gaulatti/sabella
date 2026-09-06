@@ -33,15 +33,45 @@ public enum BleeckerDuration {
 
 public enum BleeckerTypography {
     public static func primary(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom("Encode Sans", size: size).weight(weight)
+        SabellaFonts.register()
+        return .custom(encodeSansName(for: weight), size: size)
     }
 
     public static func secondary(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom("Libre Franklin", size: size).weight(weight)
+        SabellaFonts.register()
+        return .custom(libreFranklinName(for: weight), size: size)
     }
 
     public static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
+    }
+
+    private static func encodeSansName(for weight: Font.Weight) -> String {
+        if weight == .ultraLight { return "EncodeSans-Th" }
+        if weight == .thin { return "EncodeSans-XLt" }
+        if weight == .light { return "EncodeSans-Lt" }
+        if weight == .medium { return "EncodeSans-Md" }
+        if weight == .semibold { return "EncodeSans-SmBold" }
+        if weight == .bold { return "EncodeSans-Bold" }
+        if weight == .heavy { return "EncodeSans-XBd" }
+        if weight == .black { return "EncodeSans-Black" }
+        return "EncodeSans-Regular"
+    }
+
+    private static func libreFranklinName(for weight: Font.Weight) -> String {
+        "LibreFranklin-\(weightName(for: weight))"
+    }
+
+    private static func weightName(for weight: Font.Weight) -> String {
+        if weight == .ultraLight { return "Thin" }
+        if weight == .thin { return "ExtraLight" }
+        if weight == .light { return "Light" }
+        if weight == .medium { return "Medium" }
+        if weight == .semibold { return "SemiBold" }
+        if weight == .bold { return "Bold" }
+        if weight == .heavy { return "ExtraBold" }
+        if weight == .black { return "Black" }
+        return "Regular"
     }
 }
 

@@ -51,7 +51,8 @@ let package = Package(
         .executableTarget(name: "SabellaShellExamples", dependencies: ["Sabella"]),
         .testTarget(
             name: "SabellaTests",
-            dependencies: ["Sabella", "SabellaCatalogSupport"]
+            dependencies: ["Sabella", "SabellaCatalogSupport"],
+            resources: [.copy("Snapshots")]
         ),
     ]
 )

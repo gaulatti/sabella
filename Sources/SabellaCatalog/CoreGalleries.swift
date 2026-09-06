@@ -73,6 +73,17 @@ struct ButtonsGallery: View {
                 }
             }
         }
+        CatalogSection(
+            "Kolibri 0.1.0 contract proof",
+            note: "The pinned button.primary fixture maps to Sabella-owned native interaction, accessibility, appearance, and state behavior."
+        ) {
+            FlowLayout(spacing: 12) {
+                BleeckerButton { } label: { Text("Continue") }
+                BleeckerButton(loading: true) { } label: { Text("Continue") }
+                BleeckerButton { } label: { Text("Continue") }
+                    .disabled(true)
+            }
+        }
         CatalogSection("Sizes and states") {
             VStack(alignment: .leading, spacing: 16) {
                 FlowLayout(spacing: 12) {

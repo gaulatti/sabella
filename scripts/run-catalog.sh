@@ -69,13 +69,15 @@ bundle_identifier="com.gaulatti.sabella.catalog.$platform"
 
 test -x "$executable"
 test -d "$resource_bundle"
-test -d "$ksplayer_resource_bundle"
 mkdir -p "$app_bundle"
 cp "$executable" "$app_bundle/SabellaCatalog"
 rm -rf "$app_bundle/Sabella_Sabella.bundle"
 cp -R "$resource_bundle" "$app_bundle/Sabella_Sabella.bundle"
-rm -rf "$app_bundle/KSPlayer_KSPlayer.bundle"
-cp -R "$ksplayer_resource_bundle" "$app_bundle/KSPlayer_KSPlayer.bundle"
+if [ "$platform" = "tvos" ]; then
+  test -d "$ksplayer_resource_bundle"
+  rm -rf "$app_bundle/KSPlayer_KSPlayer.bundle"
+  cp -R "$ksplayer_resource_bundle" "$app_bundle/KSPlayer_KSPlayer.bundle"
+fi
 
 plutil -create xml1 "$app_bundle/Info.plist"
 plutil -insert CFBundleDisplayName -string "Sabella Catalog" "$app_bundle/Info.plist"
@@ -95,4 +97,7 @@ codesign --force --sign - "$app_bundle"
 xcrun simctl boot "$simulator_id" 2>/dev/null || true
 xcrun simctl bootstatus "$simulator_id" -b
 xcrun simctl install "$simulator_id" "$app_bundle"
+if [ -n "${SABELLA_CATALOG_PAGE:-}" ]; then
+  export SIMCTL_CHILD_SABELLA_CATALOG_PAGE="$SABELLA_CATALOG_PAGE"
+fi
 xcrun simctl launch --terminate-running-process "$simulator_id" "$bundle_identifier"

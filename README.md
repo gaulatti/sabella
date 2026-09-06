@@ -19,6 +19,11 @@ Button("Sync") { sync() }
 
 Components keep the `Bleecker` prefix so product code reads identically across design-system implementations while the module name (`Sabella`) identifies the platform library.
 
+The bounded [Kolibri primary-button contract
+decision](docs/kolibri-primary-button-contract.md) pins the private neutral
+0.1.0 bundle, validates its checksums and schema, and records deterministic
+macOS, iOS/iPadOS, and tvOS mappings without making Kolibri a runtime dependency.
+
 Bleecker, Sabella, and Thompson are proprietary parts of the Gaulatti identity
 system for Gaulatti products and websites. They are not white-label or fungible
 themes. Brand components therefore ship the authoritative Gaulatti artwork and
@@ -102,6 +107,11 @@ public Sabella `View`, `ButtonStyle`, and `ToggleStyle` from library source and
 compares it with `SabellaCatalogCoverage.registeredComponents`. The suite also
 contains a deliberately omitted fake component to prove that the gate fails on
 missing registration.
+
+The catalog's primary-button fixture is also the visual acceptance surface for
+the pinned Kolibri proof. Its platform snapshots and negative Dynamic Type gap
+are test-owned; native focus, remote input, and accessibility remain owned by
+Sabella rather than generated from the neutral manifest.
 
 ## Release gate
 

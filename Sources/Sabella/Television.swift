@@ -21,6 +21,7 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
     public let number: String
     public let name: String
     public let mark: String
+    public let tone: SabellaTVChannelTone
     public let now: String
     public let next: String
     public let progress: Double
@@ -33,6 +34,7 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
         number: String,
         name: String,
         mark: String? = nil,
+        tone: SabellaTVChannelTone = .sea,
         now: String,
         next: String,
         progress: Double,
@@ -44,11 +46,28 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
         self.number = number
         self.name = name
         self.mark = mark ?? String(name.prefix(3)).uppercased()
+        self.tone = tone
         self.now = now
         self.next = next
         self.progress = progress
         self.currentTime = currentTime
         self.nextTime = nextTime
+    }
+}
+
+public enum SabellaTVChannelTone: Hashable, Sendable {
+    case sea
+    case red
+    case gold
+    case terracotta
+
+    fileprivate var color: Color {
+        switch self {
+        case .sea: BleeckerPalette.dark.sea
+        case .red: BleeckerPalette.dark.accentRed
+        case .gold: BleeckerPalette.dark.accentGold
+        case .terracotta: BleeckerPalette.dark.terracotta
+        }
     }
 }
 
@@ -161,8 +180,12 @@ public struct SabellaTVChannelGuide: View {
                 )
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Label("All Channels (\(channels.count))", systemImage: "chevron.left")
-                        .font(BleeckerTypography.primary(30, weight: .semibold))
+                    HStack(spacing: 14) {
+                        Image(systemName: "chevron.left").foregroundStyle(BleeckerPalette.dark.sea)
+                        Text("All Channels").foregroundStyle(BleeckerPalette.dark.textPrimary)
+                        Text("\(channels.count)").foregroundStyle(BleeckerPalette.dark.sea)
+                    }
+                    .font(BleeckerTypography.primary(30, weight: .semibold))
                     Text("Up / Down to browse · Select to tune")
                         .font(BleeckerTypography.secondary(17))
                         .foregroundStyle(.white.opacity(0.52))
@@ -201,9 +224,11 @@ public struct SabellaTVChannelGuide: View {
                     Text(channel.now)
                         .font(BleeckerTypography.primary(48, weight: .medium))
                         .tracking(-0.7)
+                        .foregroundStyle(BleeckerPalette.dark.textPrimary)
                         .lineLimit(2)
                     Text(channel.name)
                         .font(BleeckerTypography.secondary(25, weight: .medium))
+                        .foregroundStyle(channel.tone.color)
                     if let currentTime = channel.currentTime {
                         Text(currentTime)
                             .font(BleeckerTypography.secondary(20, weight: .regular))
@@ -238,8 +263,10 @@ public struct SabellaTVChannelGuide: View {
                     Text("UP NEXT")
                         .font(BleeckerTypography.primary(16, weight: .semibold))
                         .tracking(0.7)
+                        .foregroundStyle(BleeckerPalette.dark.desert)
                     Text(channel.next)
                         .font(BleeckerTypography.primary(24, weight: .semibold))
+                        .foregroundStyle(BleeckerPalette.dark.textPrimary)
                         .lineLimit(2)
                     if let nextTime = channel.nextTime {
                         Text(nextTime)
@@ -248,7 +275,7 @@ public struct SabellaTVChannelGuide: View {
                     }
                     GeometryReader { bar in
                         Capsule().fill(.white.opacity(0.15))
-                        Capsule().fill(.white)
+                        Capsule().fill(BleeckerPalette.dark.desert)
                             .frame(width: bar.size.width * min(max(channel.progress, 0), 1))
                     }
                     .frame(width: 220, height: 5)
@@ -296,11 +323,13 @@ private struct SabellaTVChannelRow: View {
                 Text(channel.mark)
                     .font(BleeckerTypography.primary(focused ? 24 : 20, weight: .bold))
                     .tracking(-0.4)
+                    .foregroundStyle(channel.tone.color)
                     .frame(width: focused ? 76 : 68)
                 if focused {
                     VStack(alignment: .leading) {
                         Text(channel.name)
                             .font(BleeckerTypography.secondary(20, weight: .semibold))
+                            .foregroundStyle(BleeckerPalette.dark.textPrimary)
                             .lineLimit(1)
                     }
                 }
@@ -317,7 +346,12 @@ private struct SabellaTVChannelRow: View {
             .background(focused ? .black.opacity(0.46) : .black.opacity(0.28), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10)
-                    .strokeBorder(focused ? .white.opacity(0.9) : .white.opacity(0.04), lineWidth: focused ? 3 : 1)
+                    .strokeBorder(focused ? BleeckerPalette.dark.sea : .white.opacity(0.04), lineWidth: focused ? 3 : 1)
+            }
+            .overlay(alignment: .leading) {
+                if focused {
+                    Capsule().fill(channel.tone.color).frame(width: 4).padding(.vertical, 18)
+                }
             }
             .shadow(color: focused ? .black.opacity(0.42) : .clear, radius: 18, y: 10)
         }

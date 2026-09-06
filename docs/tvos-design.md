@@ -67,6 +67,10 @@ the channel rail, and a bottom scrim for metadata. Current and next program
 details remain unboxed over the picture. The focused channel alone expands and
 gains a thin high-contrast outline; unfocused channels recede into compact,
 partially cropped tiles. Green is reserved for actual live status.
+Color is semantic rather than decorative: sea blue identifies navigation and
+focus, desert identifies future programming, muted blue-gray supports metadata,
+and each channel tone is confined to its mark and a narrow identity accent. The
+current program title remains the only dominant near-white text.
 Playback itself is edge-to-edge and sits outside the browse/header container.
 Menu reveals the guide over uninterrupted video; pressing Menu again exits to
 Browse. Global navigation must never remain visible during full-screen viewing.

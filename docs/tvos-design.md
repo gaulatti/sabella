@@ -74,10 +74,14 @@ current program title remains the only dominant near-white text.
 Playback itself is edge-to-edge and sits outside the browse/header container.
 Menu reveals the guide over uninterrupted video; pressing Menu again exits to
 Browse. Global navigation must never remain visible during full-screen viewing.
+Once a channel is tuned, live viewing is entirely unobstructed. Do not persist a
+VOD transport card, implementation labels, duplicate channel metadata, or a
+fabricated timeline over linear video. The remote Play/Pause command remains
+active, and Menu restores the guide.
 
 Playback changes use a restrained ease-in-out transition: the catalog dissolves
-into full-screen video, while the guide enters from the leading edge and the
-transport enters from below. Reduce Motion removes these spatial transitions.
+into full-screen video, while the guide enters from the leading edge. Reduce
+Motion removes this spatial transition.
 
 The Bleecker mark uses the authoritative transparent `gaulatti.png` brand
 master. Its square canvas includes the mark's optical spacing, so tvOS renders

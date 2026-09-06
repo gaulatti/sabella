@@ -34,7 +34,7 @@ struct SabellaTelevisionCatalog: View {
     var body: some View {
         Group {
             if page == .playback {
-                CatalogPlayback(title: selectedContent.title) { page = .browse }
+                CatalogPlayback { page = .browse }
                     .transition(.opacity)
             } else {
                 SabellaTVScreen {
@@ -279,7 +279,6 @@ private struct CatalogPlayback: View {
     @State private var isMuted = false
     @State private var guideVisible = true
     @State private var selectedChannelID = "sky-news"
-    private let title: String
     private let close: () -> Void
     private let channels = [
         SabellaTVChannel(
@@ -333,10 +332,9 @@ private struct CatalogPlayback: View {
         ),
     ]
 
-    init(title: String, close: @escaping () -> Void) {
+    init(close: @escaping () -> Void) {
         let source = "https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/v1/master/6404a5d732e04991ed59ac7790b61cc065c9aabd/prod-gb-lin-skynews-hls-25-web/master.m3u8?ads.cdn=https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com&ads.csid=sitesection:SkyNews:Web&manifest.mthost=7a38d30e7dd84cd0872ab4f691c38f58&manifest.region=mediatailor.eu-west-1.amazonaws.com"
         guard let url = URL(string: source) else { preconditionFailure("Sky News playback URL is invalid") }
-        self.title = title
         self.close = close
         _player = State(initialValue: AVPlayer(url: url))
     }
@@ -360,17 +358,6 @@ private struct CatalogPlayback: View {
                     isPlaying = true
                 }
                 .transition(.move(edge: .leading).combined(with: .opacity))
-            } else {
-                SabellaTVPlaybackOverlay(
-                    title: channels.first { $0.id == selectedChannelID }?.name ?? "Live TV",
-                    subtitle: "Live HLS playback · \(title) demo surface",
-                    isPlaying: $isPlaying,
-                    elapsed: 0,
-                    duration: 0,
-                    isLive: true
-                )
-                .padding(54)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .ignoresSafeArea()
@@ -378,6 +365,7 @@ private struct CatalogPlayback: View {
         .onDisappear { player.pause() }
         .onChange(of: isPlaying) { _, playing in playing ? player.play() : player.pause() }
         .onChange(of: isMuted) { _, muted in player.isMuted = muted }
+        .onPlayPauseCommand { isPlaying.toggle() }
         .onExitCommand {
             if guideVisible {
                 close()

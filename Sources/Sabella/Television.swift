@@ -97,51 +97,154 @@ public struct SabellaTVContextBadge: View {
 }
 
 public struct SabellaTVChannelGuide: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let channels: [SabellaTVChannel]
     private let selection: String
     private let select: (SabellaTVChannel) -> Void
+    @State private var highlightedID: String
 
     public init(channels: [SabellaTVChannel], selection: String, select: @escaping (SabellaTVChannel) -> Void) {
+        precondition(!channels.isEmpty, "SabellaTVChannelGuide requires at least one channel")
         self.channels = channels
         self.selection = selection
         self.select = select
+        _highlightedID = State(initialValue: selection)
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack {
-                Text("Live TV").font(BleeckerTypography.primary(34, weight: .bold))
-                Spacer()
-                Text("Now / Next").font(BleeckerTypography.secondary(18)).foregroundStyle(.white.opacity(0.62))
-            }
-            ForEach(channels) { channel in
-                Button { select(channel) } label: {
-                    HStack(spacing: 18) {
-                        Text(channel.number)
-                            .font(BleeckerTypography.mono(19, weight: .bold))
-                            .frame(width: 52)
-                        VStack(alignment: .leading, spacing: 7) {
-                            HStack {
-                                Text(channel.name).font(BleeckerTypography.primary(24, weight: .bold))
-                                if selection == channel.id { SabellaTVContextBadge("ON NOW") }
+        GeometryReader { proxy in
+            let channel = highlightedChannel
+            ZStack(alignment: .topLeading) {
+                LinearGradient(
+                    colors: [.black.opacity(0.72), .black.opacity(0.18), .clear],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.74)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("All Channels (\(channels.count))", systemImage: "chevron.left")
+                        .font(BleeckerTypography.primary(30, weight: .bold))
+                    Text("Up / Down to browse · Select to tune")
+                        .font(BleeckerTypography.secondary(19))
+                        .foregroundStyle(.white.opacity(0.62))
+                        .padding(.leading, 38)
+                }
+                .padding(.top, 54)
+                .padding(.leading, 42)
+
+                ScrollViewReader { scrollProxy in
+                    ScrollView(.vertical) {
+                        LazyVStack(alignment: .leading, spacing: 12) {
+                            ForEach(channels) { item in
+                                SabellaTVChannelRow(
+                                    channel: item,
+                                    tuned: selection == item.id,
+                                    highlight: { highlightedID = item.id },
+                                    select: { select(item) }
+                                )
+                                .id(item.id)
                             }
-                            Text(channel.now).font(BleeckerTypography.secondary(20, weight: .medium))
-                            ProgressView(value: min(max(channel.progress, 0), 1)).tint(BleeckerPalette.dark.sea)
-                            Text("Next · \(channel.next)")
-                                .font(BleeckerTypography.secondary(17))
-                                .foregroundStyle(.white.opacity(0.62))
+                        }
+                        .padding(.vertical, 120)
+                    }
+                    .scrollIndicators(.hidden)
+                    .frame(width: 320, height: min(proxy.size.height - 190, 700))
+                    .position(x: 160, y: proxy.size.height * 0.61)
+                    .onChange(of: highlightedID) { _, id in
+                        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.28)) {
+                            scrollProxy.scrollTo(id, anchor: .center)
                         }
                     }
-                    .padding(18)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.plain)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(channel.now)
+                        .font(BleeckerTypography.primary(43, weight: .bold))
+                    Text(channel.name)
+                        .font(BleeckerTypography.secondary(25, weight: .semibold))
+                    Text("Live now")
+                        .font(BleeckerTypography.mono(20, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.72))
+                    HStack(spacing: 18) {
+                        SabellaTVContextBadge("SELECT TO WATCH", systemImage: "play.fill")
+                        SabellaTVContextBadge("LIVE", systemImage: "dot.radiowaves.left.and.right")
+                    }
+                    .padding(.top, 12)
+                }
+                .frame(width: 650, alignment: .leading)
+                .position(x: proxy.size.width * 0.48, y: proxy.size.height * 0.72)
+                .id(channel.id)
+                .transition(.opacity)
+
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("UP NEXT")
+                        .font(BleeckerTypography.secondary(18, weight: .semibold))
+                    Text(channel.next)
+                        .font(BleeckerTypography.primary(24, weight: .bold))
+                    Text("Following this program")
+                        .font(BleeckerTypography.secondary(18))
+                    ProgressView(value: min(max(channel.progress, 0), 1))
+                        .tint(.white)
+                        .frame(width: 220)
+                }
+                .frame(width: 260, alignment: .leading)
+                .position(x: proxy.size.width - 190, y: proxy.size.height * 0.67)
+            }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.24), value: highlightedID)
+        }
+        .accessibilityElement(children: .contain)
+        .focusSection()
+    }
+
+    private var highlightedChannel: SabellaTVChannel {
+        channels.first { $0.id == highlightedID } ?? channels.first { $0.id == selection } ?? channels[0]
+    }
+}
+
+private struct SabellaTVChannelRow: View {
+    @FocusState private var focused: Bool
+    let channel: SabellaTVChannel
+    let tuned: Bool
+    let highlight: () -> Void
+    let select: () -> Void
+
+    var body: some View {
+        Button(action: select) {
+            HStack(spacing: 16) {
+                Text(channel.number)
+                    .font(BleeckerTypography.mono(17, weight: .bold))
+                    .frame(width: 54)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(channel.name)
+                        .font(BleeckerTypography.primary(focused ? 23 : 19, weight: .bold))
+                    if focused {
+                        Text(channel.now)
+                            .font(BleeckerTypography.secondary(17, weight: .medium))
+                            .lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 0)
+                if tuned { Circle().fill(BleeckerPalette.dark.sea).frame(width: 10, height: 10) }
+            }
+            .padding(.horizontal, 18)
+            .frame(width: focused ? 300 : 210, height: focused ? 104 : 72, alignment: .leading)
+            .background(focused ? .black.opacity(0.82) : .black.opacity(0.36), in: RoundedRectangle(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .strokeBorder(focused ? .white.opacity(0.9) : .clear, lineWidth: 3)
             }
         }
-        .padding(30)
-        .frame(width: 620)
-        .background(.black.opacity(0.86), in: RoundedRectangle(cornerRadius: 28))
-        .focusSection()
+        .buttonStyle(.plain)
+        .focusEffectDisabled()
+        .focused($focused)
+        .foregroundStyle(.white)
+        .onChange(of: focused) { _, value in if value { highlight() } }
+        .animation(.easeOut(duration: 0.22), value: focused)
     }
 }
 

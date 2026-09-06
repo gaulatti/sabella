@@ -58,6 +58,10 @@ next programs, schedule progress, and the selected channel. Selecting a channel
 returns to unobstructed video; Menu toggles between full-screen playback and the
 guide without stopping the stream. Applications provide the channel lineup,
 schedule, entitlement, and stream URLs from their authoritative services.
+The guide uses a narrow vertical tuning rail, expands the focused row, places
+current-program context near the visual center, and keeps Up Next independent at
+the trailing edge. It only displays remote instructions backed by implemented
+actions: Up and Down browse the lineup, and Select tunes the focused channel.
 Playback itself is edge-to-edge and sits outside the browse/header container.
 Menu reveals the guide over uninterrupted video; pressing Menu again exits to
 Browse. Global navigation must never remain visible during full-screen viewing.

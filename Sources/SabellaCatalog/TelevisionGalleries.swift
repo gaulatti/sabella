@@ -338,7 +338,6 @@ private struct CatalogPlayback: View {
                     player.play()
                     isPlaying = true
                 }
-                .padding(46)
                 .transition(.move(edge: .leading).combined(with: .opacity))
             } else {
                 SabellaTVPlaybackOverlay(

@@ -83,6 +83,15 @@ background stops both picture and sound, then foreground activation resumes only
 if playback had been active. Audio-first radio channels may explicitly opt into
 `.audio`; never infer background-audio permission from a channel name or URL.
 
+Television and radio belong to one linear lineup. Declare the medium with
+`SabellaTVChannel.medium`: television retains the full-bleed video plane, while
+radio replaces an absent picture with a branded, low-motion now-playing surface.
+The shared guide keeps tuning behavior consistent and marks each row with its
+medium. Radio visualization communicates station identity, current programming,
+live/paused state, and sound without fabricating video or a seekable timeline.
+The catalog enables the tvOS `audio` background mode solely so channels that
+explicitly declare `.audio` can continue playing after the app backgrounds.
+
 Playback changes use a restrained ease-in-out transition: the catalog dissolves
 into full-screen video, while the guide enters from the leading edge. Reduce
 Motion removes this spatial transition.

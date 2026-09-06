@@ -1,5 +1,6 @@
 #if os(tvOS)
 import AVKit
+import AVFAudio
 import Sabella
 import SwiftUI
 import UIKit
@@ -281,6 +282,7 @@ private struct CatalogPlayback: View {
     @State private var guideVisible = true
     @State private var selectedChannelID = "sky-news"
     @State private var resumePlaybackWhenActive = false
+    @State private var audioSessionError: String?
     private let close: () -> Void
     private let channels = [
         SabellaTVChannel(
@@ -307,6 +309,34 @@ private struct CatalogPlayback: View {
             next: "Schedule from provider",
             progress: 0.58,
             currentTime: "Live coverage"
+        ),
+        SabellaTVChannel(
+            id: "radio-paradise",
+            streamURL: URL(string: "https://stream.radioparadise.com/aac-320")!,
+            number: "201",
+            name: "Radio Paradise",
+            mark: "rp",
+            tone: .terracotta,
+            now: "Main Mix",
+            next: "Listener-supported eclectic radio",
+            progress: 1,
+            currentTime: "Live · 320 kbps AAC",
+            backgroundPlayback: .audio,
+            medium: .radio
+        ),
+        SabellaTVChannel(
+            id: "groove-salad",
+            streamURL: URL(string: "https://somafm.com/m3u/groovesalad130.m3u")!,
+            number: "202",
+            name: "Groove Salad",
+            mark: "gs",
+            tone: .sea,
+            now: "Ambient + downtempo",
+            next: "A nicely chilled plate of ambient beats",
+            progress: 1,
+            currentTime: "Live · SomaFM",
+            backgroundPlayback: .audio,
+            medium: .radio
         ),
         SabellaTVChannel(
             id: "rtl-1025",
@@ -343,7 +373,13 @@ private struct CatalogPlayback: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            CatalogPlayerSurface(player: player)
+            if selectedChannel.medium == .radio {
+                CatalogRadioSurface(channel: selectedChannel, isPlaying: isPlaying)
+                    .transition(.opacity)
+            } else {
+                CatalogPlayerSurface(player: player)
+                    .transition(.opacity)
+            }
             if guideVisible {
                 SabellaTVChannelGuide(
                     channels: channels,
@@ -363,7 +399,10 @@ private struct CatalogPlayback: View {
             }
         }
         .ignoresSafeArea()
-        .onAppear { if isPlaying { player.play() } }
+        .onAppear {
+            configureAudioSession()
+            if isPlaying { player.play() }
+        }
         .onDisappear { player.pause() }
         .onChange(of: isPlaying) { _, playing in playing ? player.play() : player.pause() }
         .onChange(of: isMuted) { _, muted in player.isMuted = muted }
@@ -377,6 +416,14 @@ private struct CatalogPlayback: View {
             } else {
                 withAnimation(playbackAnimation) { guideVisible = true }
             }
+        }
+        .alert("Playback unavailable", isPresented: Binding(
+            get: { audioSessionError != nil },
+            set: { if !$0 { audioSessionError = nil } }
+        )) {
+            Button("OK", role: .cancel) { audioSessionError = nil }
+        } message: {
+            Text(audioSessionError ?? "The audio session could not be configured.")
         }
     }
 
@@ -405,6 +452,92 @@ private struct CatalogPlayback: View {
         }
     }
 
+    private func configureAudioSession() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .moviePlayback)
+            try session.setActive(true)
+        } catch {
+            isPlaying = false
+            audioSessionError = error.localizedDescription
+        }
+    }
+
+}
+
+private struct CatalogRadioSurface: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let channel: SabellaTVChannel
+    let isPlaying: Bool
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion || !isPlaying)) { timeline in
+            let phase = timeline.date.timeIntervalSinceReferenceDate
+            ZStack {
+                LinearGradient(
+                    colors: [BleeckerPalette.dark.deepSea, channelColor.opacity(0.72), .black],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Canvas { context, size in
+                    for index in 0..<7 {
+                        let offset = CGFloat(index) * 68
+                        let pulse = reduceMotion ? 0.5 : (sin(phase * 1.25 + Double(index) * 0.8) + 1) / 2
+                        let diameter = min(size.width, size.height) * (0.28 + CGFloat(pulse) * 0.18) + offset
+                        let rect = CGRect(x: size.width * 0.72 - diameter / 2, y: size.height * 0.5 - diameter / 2, width: diameter, height: diameter)
+                        context.stroke(Path(ellipseIn: rect), with: .color(.white.opacity(0.045)), lineWidth: 18)
+                    }
+                }
+                .blur(radius: 1)
+
+                HStack(spacing: 72) {
+                    ZStack {
+                        Circle().fill(.black.opacity(0.34))
+                        Circle().stroke(.white.opacity(0.14), lineWidth: 2)
+                        Text(channel.mark)
+                            .font(BleeckerTypography.primary(94, weight: .bold))
+                            .tracking(-3)
+                            .foregroundStyle(channelColor)
+                    }
+                    .frame(width: 330, height: 330)
+                    .shadow(color: .black.opacity(0.45), radius: 48, y: 24)
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        Label("LIVE RADIO", systemImage: "waveform")
+                            .font(BleeckerTypography.mono(17, weight: .bold))
+                            .tracking(2)
+                            .foregroundStyle(BleeckerPalette.dark.accentGold)
+                        Text(channel.name)
+                            .font(BleeckerTypography.primary(58, weight: .bold))
+                            .tracking(-1)
+                        Text(channel.now)
+                            .font(BleeckerTypography.secondary(31, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.76))
+                        HStack(spacing: 10) {
+                            Circle().fill(isPlaying ? BleeckerPalette.dark.live : BleeckerPalette.dark.desert).frame(width: 10, height: 10)
+                            Text(isPlaying ? "ON AIR" : "PAUSED")
+                        }
+                        .font(BleeckerTypography.mono(15, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.68))
+                        .padding(.top, 12)
+                    }
+                    .frame(width: 650, alignment: .leading)
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(channel.name), live radio, \(channel.now), \(isPlaying ? "playing" : "paused")")
+    }
+
+    private var channelColor: Color {
+        switch channel.tone {
+        case .sea: BleeckerPalette.dark.sea
+        case .red: BleeckerPalette.dark.accentRed
+        case .gold: BleeckerPalette.dark.accentGold
+        case .terracotta: BleeckerPalette.dark.terracotta
+        }
+    }
 }
 
 private struct CatalogPlayerSurface: UIViewRepresentable {

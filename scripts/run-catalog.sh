@@ -83,6 +83,9 @@ plutil -insert CFBundleShortVersionString -string 1.0 "$app_bundle/Info.plist"
 plutil -insert CFBundleVersion -string 1 "$app_bundle/Info.plist"
 plutil -insert LSRequiresIPhoneOS -bool true "$app_bundle/Info.plist"
 plutil -insert UIDeviceFamily -json "[$family]" "$app_bundle/Info.plist"
+if [ "$platform" = "tvos" ]; then
+  plutil -insert UIBackgroundModes -json '["audio"]' "$app_bundle/Info.plist"
+fi
 codesign --force --sign - "$app_bundle"
 
 xcrun simctl boot "$simulator_id" 2>/dev/null || true

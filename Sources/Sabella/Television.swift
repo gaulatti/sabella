@@ -28,6 +28,7 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
     public let currentTime: String?
     public let nextTime: String?
     public let backgroundPlayback: SabellaTVBackgroundPlayback
+    public let medium: SabellaTVChannelMedium
 
     public init(
         id: String,
@@ -41,7 +42,8 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
         progress: Double,
         currentTime: String? = nil,
         nextTime: String? = nil,
-        backgroundPlayback: SabellaTVBackgroundPlayback = .suspend
+        backgroundPlayback: SabellaTVBackgroundPlayback = .suspend,
+        medium: SabellaTVChannelMedium = .television
     ) {
         self.id = id
         self.streamURL = streamURL
@@ -55,7 +57,13 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
         self.currentTime = currentTime
         self.nextTime = nextTime
         self.backgroundPlayback = backgroundPlayback
+        self.medium = medium
     }
+}
+
+public enum SabellaTVChannelMedium: Hashable, Sendable {
+    case television
+    case radio
 }
 
 public enum SabellaTVBackgroundPlayback: Hashable, Sendable {
@@ -192,13 +200,13 @@ public struct SabellaTVChannelGuide: View {
                 )
 
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 14) {
+                HStack(spacing: 14) {
                         Image(systemName: "chevron.left").foregroundStyle(BleeckerPalette.dark.sea)
                         Text("All Channels").foregroundStyle(BleeckerPalette.dark.textPrimary)
-                        Text("\(channels.count)").foregroundStyle(BleeckerPalette.dark.sea)
+                    Text("\(channels.count)").foregroundStyle(BleeckerPalette.dark.sea)
                     }
                     .font(BleeckerTypography.primary(30, weight: .semibold))
-                    Text("Up / Down to browse · Select to tune")
+                    Text("TV + Radio · Up / Down to browse · Select to tune")
                         .font(BleeckerTypography.secondary(17))
                         .foregroundStyle(.white.opacity(0.52))
                         .padding(.leading, 38)
@@ -241,6 +249,10 @@ public struct SabellaTVChannelGuide: View {
                     Text(channel.name)
                         .font(BleeckerTypography.secondary(25, weight: .medium))
                         .foregroundStyle(channel.tone.color)
+                    Text(channel.medium == .radio ? "LIVE RADIO" : "LIVE TELEVISION")
+                        .font(BleeckerTypography.mono(14, weight: .bold))
+                        .tracking(1.4)
+                        .foregroundStyle(channel.medium == .radio ? BleeckerPalette.dark.accentGold : BleeckerPalette.dark.live)
                     if let currentTime = channel.currentTime {
                         Text(currentTime)
                             .font(BleeckerTypography.secondary(20, weight: .regular))
@@ -337,6 +349,10 @@ private struct SabellaTVChannelRow: View {
                     .tracking(-0.4)
                     .foregroundStyle(channel.tone.color)
                     .frame(width: focused ? 76 : 68)
+                Image(systemName: channel.medium == .radio ? "waveform" : "play.tv.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white.opacity(focused ? 0.8 : 0.38))
+                    .frame(width: 22)
                 if focused {
                     VStack(alignment: .leading) {
                         Text(channel.name)

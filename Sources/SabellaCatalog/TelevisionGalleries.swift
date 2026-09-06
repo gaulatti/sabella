@@ -304,6 +304,7 @@ struct SabellaTelevisionCatalog: View {
 private struct CatalogPlayback: View {
     @State private var guideVisible = true
     @State private var selectedChannelID = "sky-news"
+    @State private var playbackActivities: [SabellaTVPlaybackActivity] = []
     private let close: () -> Void
     private let channels = [
         SabellaTVChannel(
@@ -390,13 +391,53 @@ private struct CatalogPlayback: View {
     }
 
     var body: some View {
-        SabellaTVLivePlayer(
-            channels: channels,
-            selection: $selectedChannelID,
-            guideVisible: $guideVisible,
-            guideTitle: "Catalog channels",
-            onExit: close
-        )
+        ZStack(alignment: .topTrailing) {
+            SabellaTVLivePlayer(
+                channels: channels,
+                selection: $selectedChannelID,
+                guideVisible: $guideVisible,
+                guideTitle: "Catalog channels",
+                onPlaybackActivityChanged: record,
+                onExit: close
+            )
+
+            if !playbackActivities.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("PLAYBACK ACTIVITY CALLBACK")
+                        .font(BleeckerTypography.secondary(15, weight: .bold))
+                        .foregroundStyle(BleeckerPalette.dark.sea)
+
+                    ForEach(Array(playbackActivities.suffix(4).enumerated()), id: \.offset) { _, activity in
+                        HStack(spacing: 8) {
+                            Text(activity.channelID)
+                                .foregroundStyle(.white.opacity(0.72))
+                            Text(activity.state.rawValue.uppercased())
+                                .foregroundStyle(.white)
+                        }
+                        .font(BleeckerTypography.secondary(18, weight: .semibold))
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(BleeckerPalette.dark.sea.opacity(0.7), lineWidth: 1)
+                }
+                .padding(.top, 54)
+                .padding(.trailing, 56)
+                .allowsHitTesting(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("sabella-playback-activity")
+            }
+        }
+    }
+
+    private func record(_ activity: SabellaTVPlaybackActivity) {
+        playbackActivities.append(activity)
+        if playbackActivities.count > 8 {
+            playbackActivities.removeFirst(playbackActivities.count - 8)
+        }
     }
 }
 

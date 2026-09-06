@@ -95,9 +95,12 @@ for example `SIMULATOR_NAME="iPad mini (A17 Pro)" scripts/run-catalog.sh ipad`.
 The television surface includes `SabellaTVScreen`, `SabellaTVNavigationBar`,
 `SabellaTVHero`, `SabellaTVCard`, `SabellaTVContextBadge`,
 `SabellaTVShelf`, `SabellaTVEditorialRail`, `SabellaTVChannelGuide`,
-`SabellaTVPrimaryButtonStyle`, and `SabellaTVPlaybackOverlay`. These APIs exist
-only when compiling for tvOS so application code cannot accidentally treat the
-television interaction model as a desktop or touch layout.
+`SabellaTVPrimaryButtonStyle`, `SabellaTVPlaybackOverlay`, and
+`SabellaTVLivePlayer`. Live-player consumers may observe the additive
+`onPlaybackActivityChanged` callback for coalesced, `Sendable` channel activity;
+only the `.playing` state represents advancing media. These APIs exist only when
+compiling for tvOS so application code cannot accidentally treat the television
+interaction model as a desktop or touch layout.
 
 See [`docs/tvos-design.md`](docs/tvos-design.md) for the product patterns behind
 the API and guidance on focus, artwork, discovery, playback, and accessibility.

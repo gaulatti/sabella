@@ -160,13 +160,16 @@ public struct SabellaTVSinglePlayback<Media: View>: View {
 /// Sabella's complete live-channel playback contract. The consuming product
 /// supplies channel data; Sabella owns media presentation, focus, remote
 /// commands, channel tuning, loading/failure states, and TV/radio behavior.
+/// `onPlaybackActivityChanged` reports coalesced semantic changes on the main
+/// actor. `.playing` is emitted only after the selected engine reports that
+/// media is advancing.
 @MainActor
 public struct SabellaTVLivePlayer: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Binding private var selection: String
     @Binding private var guideVisible: Bool
-    @StateObject private var playback = SabellaTVLivePlaybackModel()
+    @StateObject private var playback: SabellaTVLivePlaybackModel
 
     private let channels: [SabellaTVChannel]
     private let guideTitle: String
@@ -185,6 +188,7 @@ public struct SabellaTVLivePlayer: View {
         loadingMoreChannels: Bool = false,
         loadMoreChannels: @escaping () -> Void = {},
         onSelectionChanged: @escaping (SabellaTVChannel) -> Void = { _ in },
+        onPlaybackActivityChanged: @escaping @MainActor @Sendable (SabellaTVPlaybackActivity) -> Void = { _ in },
         onExit: @escaping () -> Void
     ) {
         precondition(!channels.isEmpty, "SabellaTVLivePlayer requires at least one channel")
@@ -196,6 +200,11 @@ public struct SabellaTVLivePlayer: View {
         self.loadingMoreChannels = loadingMoreChannels
         self.loadMoreChannels = loadMoreChannels
         self.onSelectionChanged = onSelectionChanged
+        _playback = StateObject(
+            wrappedValue: SabellaTVLivePlaybackModel(
+                onPlaybackActivityChanged: onPlaybackActivityChanged
+            )
+        )
         self.onExit = onExit
     }
 
@@ -281,6 +290,7 @@ public struct SabellaTVLivePlayer: View {
             if guideVisible {
                 withAnimation(playbackAnimation) { guideVisible = false }
             } else {
+                playback.stop()
                 onExit()
             }
         }
@@ -317,8 +327,14 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
     private var recoveryTask: Task<Void, Never>?
     private var recoveryAttempt = 0
     private var resumeWhenActive = false
+    private var playbackRequested = false
+    private var activityCoordinator = SabellaTVPlaybackActivityCoordinator()
+    private let onPlaybackActivityChanged: @MainActor @Sendable (SabellaTVPlaybackActivity) -> Void
 
-    init() {
+    init(
+        onPlaybackActivityChanged: @escaping @MainActor @Sendable (SabellaTVPlaybackActivity) -> Void
+    ) {
+        self.onPlaybackActivityChanged = onPlaybackActivityChanged
         SabellaInstallKSPlayerWorkaround()
         let ksOptions = KSOptions()
         ksOptions.userAgent = Self.streamUserAgent
@@ -336,8 +352,14 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
 
     func tune(_ channel: SabellaTVChannel) {
         guard channelID != channel.id || hasFailed else { return }
+        if channelID == channel.id {
+            publish(activityCoordinator.beginRecovery(channelID: channel.id))
+        } else {
+            publish(activityCoordinator.tune(to: channel.id))
+        }
         channelID = channel.id
         recoveryAttempt = 0
+        playbackRequested = true
         start(channel)
     }
 
@@ -345,9 +367,6 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
         guard channelID == channel.id else { return }
         tearDownCurrentEngine()
         isRadio = effectiveMedium(for: channel) == .radio
-        isBuffering = true
-        hasFailed = false
-        isPlaying = true
 
         switch SabellaTVPlaybackEnginePolicy.engine(for: channel.streamURL) {
         case .ffmpeg:
@@ -380,6 +399,7 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
         guard channelID == channel.id else { return }
         currentURL = channel.streamURL
         isUsingKSPlayer = false
+        publish(activityCoordinator.selectEngine(.avPlayer, for: channel.id))
 
         let asset = AVURLAsset(
             url: channel.streamURL,
@@ -405,8 +425,43 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
                     self.scheduleRecovery(for: channel)
                     return
                 case .readyToPlay:
-                    self.isBuffering = self.player.timeControlStatus == .waitingToPlayAtSpecifiedRate
-                    self.isPlaying = self.player.rate != 0 || self.player.timeControlStatus == .waitingToPlayAtSpecifiedRate
+                    switch self.player.timeControlStatus {
+                    case .playing where self.player.rate > 0:
+                        self.publish(
+                            self.activityCoordinator.receive(
+                                .advancing,
+                                from: .avPlayer,
+                                for: channel.id
+                            )
+                        )
+                    case .waitingToPlayAtSpecifiedRate:
+                        self.publish(
+                            self.activityCoordinator.receive(
+                                .buffering,
+                                from: .avPlayer,
+                                for: channel.id
+                            )
+                        )
+                    case .paused:
+                        let signal: SabellaTVPlaybackActivitySignal = self.playbackRequested
+                            ? .buffering
+                            : .paused
+                        self.publish(
+                            self.activityCoordinator.receive(
+                                signal,
+                                from: .avPlayer,
+                                for: channel.id
+                            )
+                        )
+                    default:
+                        self.publish(
+                            self.activityCoordinator.receive(
+                                .buffering,
+                                from: .avPlayer,
+                                for: channel.id
+                            )
+                        )
+                    }
                     if channel.medium == .automatic,
                        self.resolvedMedia[channel.id] == .radio,
                        item.presentationSize.width > 0 {
@@ -433,6 +488,7 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
         currentURL = channel.streamURL
         isUsingKSPlayer = true
         playbackID = UUID()
+        publish(activityCoordinator.selectEngine(.ksPlayer, for: channel.id))
 
         let coordinator = KSVideoPlayer.Coordinator()
         coordinator.isMuted = isMuted
@@ -456,39 +512,51 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
         guard channelID == channel.id else { return }
         switch state {
         case .preparing, .buffering, .initialized:
-            isBuffering = true
-            isPlaying = true
-        case .readyToPlay, .bufferFinished:
-            isBuffering = false
-            isPlaying = true
+            publish(activityCoordinator.receive(.buffering, from: .ksPlayer, for: channel.id))
+        case .readyToPlay:
+            publish(activityCoordinator.receive(.buffering, from: .ksPlayer, for: channel.id))
+        case .bufferFinished:
+            let mediaIsAdvancing = ksCoordinator?.playerLayer?.player.isPlaying == true
+                && ksCoordinator?.playerLayer?.player.playbackState == .playing
+            publish(
+                activityCoordinator.receive(
+                    mediaIsAdvancing ? .advancing : .buffering,
+                    from: .ksPlayer,
+                    for: channel.id
+                )
+            )
             if channel.medium == .automatic, classificationTask == nil {
                 classificationTask = Task { @MainActor [weak self] in
                     await self?.classifyKSPlayer(channelID: channel.id)
                 }
             }
         case .paused:
-            isBuffering = false
-            isPlaying = false
+            playbackRequested = false
+            publish(activityCoordinator.receive(.paused, from: .ksPlayer, for: channel.id))
         case .playedToTheEnd, .error:
             scheduleRecovery(for: channel)
         }
     }
 
     func togglePlayback() {
-        if isPlaying {
+        guard let channelID else { return }
+        if playbackRequested {
+            playbackRequested = false
             if isUsingKSPlayer {
                 ksCoordinator?.playerLayer?.pause()
             } else {
                 player.pause()
             }
-            isPlaying = false
+            let engine: SabellaTVPlaybackActivityEngine = isUsingKSPlayer ? .ksPlayer : .avPlayer
+            publish(activityCoordinator.receive(.paused, from: engine, for: channelID))
         } else {
+            playbackRequested = true
+            publish(activityCoordinator.resume(channelID: channelID))
             if isUsingKSPlayer {
                 ksCoordinator?.playerLayer?.play()
             } else {
                 player.play()
             }
-            isPlaying = true
         }
     }
 
@@ -507,22 +575,25 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
             case .audio: false
             }
             guard shouldSuspend else { return }
-            resumeWhenActive = isPlaying
+            resumeWhenActive = playbackRequested
+            playbackRequested = false
             if isUsingKSPlayer {
                 ksCoordinator?.playerLayer?.pause()
             } else {
                 player.pause()
             }
-            isPlaying = false
+            let engine: SabellaTVPlaybackActivityEngine = isUsingKSPlayer ? .ksPlayer : .avPlayer
+            publish(activityCoordinator.receive(.paused, from: engine, for: channel.id))
         case .active:
             guard resumeWhenActive else { return }
             resumeWhenActive = false
+            playbackRequested = true
+            publish(activityCoordinator.resume(channelID: channel.id))
             if isUsingKSPlayer {
                 ksCoordinator?.playerLayer?.play()
             } else {
                 player.play()
             }
-            isPlaying = true
         case .inactive:
             break
         @unknown default:
@@ -531,10 +602,13 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
     }
 
     func stop() {
+        publish(activityCoordinator.stop())
         tearDownCurrentEngine()
         channelID = nil
         currentURL = nil
         recoveryAttempt = 0
+        playbackRequested = false
+        resumeWhenActive = false
     }
 
     private func effectiveMedium(for channel: SabellaTVChannel) -> SabellaTVChannelMedium {
@@ -602,12 +676,13 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
     private func scheduleRecovery(for channel: SabellaTVChannel) {
         guard channelID == channel.id, recoveryTask == nil else { return }
         guard recoveryAttempt < Self.maximumRecoveryAttempts else {
-            isBuffering = false
-            hasFailed = true
-            isPlaying = false
+            playbackRequested = false
+            publish(activityCoordinator.fail(channelID: channel.id))
             return
         }
 
+        let engine: SabellaTVPlaybackActivityEngine = isUsingKSPlayer ? .ksPlayer : .avPlayer
+        publish(activityCoordinator.receive(.buffering, from: engine, for: channel.id))
         let delay = Self.recoveryDelays[recoveryAttempt]
         recoveryAttempt += 1
         Self.log.notice("retry=\(self.recoveryAttempt, privacy: .public) channel=\(channel.id, privacy: .public)")
@@ -617,8 +692,38 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
             }
             guard let self, !Task.isCancelled, self.channelID == channel.id else { return }
             self.recoveryTask = nil
+            self.publish(self.activityCoordinator.beginRecovery(channelID: channel.id))
             self.start(channel)
         }
+    }
+
+    private func publish(_ activities: [SabellaTVPlaybackActivity]) {
+        for activity in activities {
+            publish(activity)
+        }
+    }
+
+    private func publish(_ activity: SabellaTVPlaybackActivity?) {
+        guard let activity else { return }
+        switch activity.state {
+        case .starting, .buffering:
+            isBuffering = true
+            isPlaying = false
+            hasFailed = false
+        case .playing:
+            isBuffering = false
+            isPlaying = true
+            hasFailed = false
+        case .paused, .stopped:
+            isBuffering = false
+            isPlaying = false
+            hasFailed = false
+        case .failed:
+            isBuffering = false
+            isPlaying = false
+            hasFailed = true
+        }
+        onPlaybackActivityChanged(activity)
     }
 
     private func tearDownCurrentEngine() {

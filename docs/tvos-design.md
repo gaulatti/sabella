@@ -62,6 +62,14 @@ Playback itself is edge-to-edge and sits outside the browse/header container.
 Menu reveals the guide over uninterrupted video; pressing Menu again exits to
 Browse. Global navigation must never remain visible during full-screen viewing.
 
+Playback changes use a restrained ease-in-out transition: the catalog dissolves
+into full-screen video, while the guide enters from the leading edge and the
+transport enters from below. Reduce Motion removes these spatial transitions.
+
+The Bleecker mark remains sourced from the canonical brand SVG. The Apple asset
+catalog consumes antialiased 1x, 2x, and 3x template rasters generated from that
+source because CoreSVG does not reliably render the source path data on tvOS.
+
 ## Catalog acceptance
 
 The tvOS catalog demonstrates browse, details, playback, and state surfaces.

@@ -16,6 +16,7 @@ private enum TelevisionPage: String, Hashable {
 }
 
 struct SabellaTelevisionCatalog: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var page = TelevisionPage.browse
     @State private var selectedContentID = "coast"
     @State private var query = ""
@@ -34,6 +35,7 @@ struct SabellaTelevisionCatalog: View {
         Group {
             if page == .playback {
                 CatalogPlayback(title: selectedContent.title) { page = .browse }
+                    .transition(.opacity)
             } else {
                 SabellaTVScreen {
                     VStack(alignment: .leading, spacing: 30) {
@@ -72,8 +74,10 @@ struct SabellaTelevisionCatalog: View {
                         .id(page)
                     }
                 }
+                .transition(.opacity.combined(with: .scale(scale: 0.985)))
             }
         }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: page)
         .preferredColorScheme(.dark)
     }
 
@@ -269,6 +273,7 @@ struct SabellaTelevisionCatalog: View {
 }
 
 private struct CatalogPlayback: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var player: AVPlayer
     @State private var isPlaying = true
     @State private var guideVisible = true
@@ -329,11 +334,12 @@ private struct CatalogPlayback: View {
                 SabellaTVChannelGuide(channels: channels, selection: selectedChannelID) { channel in
                     selectedChannelID = channel.id
                     player.replaceCurrentItem(with: AVPlayerItem(url: channel.streamURL))
-                    guideVisible = false
+                    withAnimation(playbackAnimation) { guideVisible = false }
                     player.play()
                     isPlaying = true
                 }
                 .padding(46)
+                .transition(.move(edge: .leading).combined(with: .opacity))
             } else {
                 SabellaTVPlaybackOverlay(
                     title: channels.first { $0.id == selectedChannelID }?.name ?? "Live TV",
@@ -344,6 +350,7 @@ private struct CatalogPlayback: View {
                     isLive: true
                 )
                 .padding(54)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .ignoresSafeArea()
@@ -351,8 +358,16 @@ private struct CatalogPlayback: View {
         .onDisappear { player.pause() }
         .onChange(of: isPlaying) { _, playing in playing ? player.play() : player.pause() }
         .onExitCommand {
-            if guideVisible { close() } else { guideVisible = true }
+            if guideVisible {
+                close()
+            } else {
+                withAnimation(playbackAnimation) { guideVisible = true }
+            }
         }
+    }
+
+    private var playbackAnimation: Animation? {
+        reduceMotion ? nil : .easeInOut(duration: 0.38)
     }
 
 }

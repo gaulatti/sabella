@@ -53,6 +53,19 @@ fabricated duration and seeking controls because the feed does not advertise a
 DVR contract.
 
 Linear television keeps playback behind a remote-navigable channel guide.
+Authenticated television homes use `SabellaTVChannelGroupBrowser` beneath
+the pinned header in `SabellaTVChannelHome` to present the viewer's authoritative
+groups with the same cinematic hero, focus shelf, typography, and motion as the
+Sabella Browse surface. Product apps map their state into this component instead
+of rebuilding home chrome, navigation, group cards, or loading and failure
+states. Selecting a group enters edge-to-edge playback with
+`SabellaTVChannelGuide`; Menu returns to the group browser. Empty and failed
+group loads must remain explicit rather than substituting demo channels.
+`SabellaTVLivePlayer` owns the complete live TV and radio surface: playback,
+buffering and failure states, media-specific presentation, focus, remote
+commands, foreground/background behavior, tuning, and the guide. Product apps
+only supply authoritative channel data and observe selection; they must not
+overlay their own controls or gesture capture on the component.
 `SabellaTVChannelGuide` presents channel number and identity, the current and
 next programs, schedule progress, and the selected channel. Selecting a channel
 returns to unobstructed video; Menu toggles between full-screen playback and the
@@ -78,10 +91,15 @@ Once a channel is tuned, live viewing is entirely unobstructed. Do not persist a
 VOD transport card, implementation labels, duplicate channel metadata, or a
 fabricated timeline over linear video. The remote Play/Pause command remains
 active, and Menu restores the guide.
-Television channels use `.suspend` background playback by default: entering the
-background stops both picture and sound, then foreground activation resumes only
-if playback had been active. Audio-first radio channels may explicitly opt into
-`.audio`; never infer background-audio permission from a channel name or URL.
+Channels use `.automatic` medium and background behavior by default so large
+lineups do not require a manual TV/radio migration. Sabella begins on the video
+surface and classifies only after the player item is ready: any video signal wins
+immediately, while radio requires repeated successful checks with no video and
+can still correct itself if video arrives later. Automatically resolved radio
+may continue audio in the background; automatically resolved television stops
+picture and sound, then resumes only if playback had been active. Products may
+use `.television`, `.radio`, `.suspend`, or `.audio` only as explicit overrides;
+never infer the medium from a channel name, group, logo, or URL.
 
 Television and radio belong to one linear lineup. Declare the medium with
 `SabellaTVChannel.medium`: television retains the full-bleed video plane, while

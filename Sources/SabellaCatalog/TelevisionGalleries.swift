@@ -1,19 +1,17 @@
 #if os(tvOS)
-import AVKit
-import AVFAudio
 import Sabella
 import SwiftUI
-import UIKit
 
 private enum TelevisionPage: String, Hashable {
     case browse = "Browse"
+    case groups = "Channels"
     case detail = "Details"
     case playback = "Live TV"
     case states = "States"
     case search
     case profiles
 
-    static let navigation: [TelevisionPage] = [.browse, .detail, .playback, .states]
+    static let navigation: [TelevisionPage] = [.browse, .groups, .detail, .playback, .states]
 }
 
 struct SabellaTelevisionCatalog: View {
@@ -31,6 +29,18 @@ struct SabellaTelevisionCatalog: View {
         SabellaTVContent(id: "kitchen", title: "Sunday Table", subtitle: "Food · New episode", systemImage: "fork.knife"),
         SabellaTVContent(id: "archive", title: "The Archive", subtitle: "Documentary · 52 min", systemImage: "archivebox"),
     ]
+
+    init() {
+        let requestedPage = ProcessInfo.processInfo.environment["SABELLA_CATALOG_PAGE"]
+        let initialPage: TelevisionPage = if requestedPage == "channels" {
+            .groups
+        } else if requestedPage == "live-tv" {
+            .playback
+        } else {
+            .browse
+        }
+        _page = State(initialValue: initialPage)
+    }
 
     var body: some View {
         Group {
@@ -65,6 +75,7 @@ struct SabellaTelevisionCatalog: View {
                         Group {
                             switch page {
                             case .browse: browse
+                            case .groups: groups
                             case .detail: detail
                             case .states: states
                             case .search: search
@@ -155,6 +166,17 @@ struct SabellaTelevisionCatalog: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .focusSection()
+    }
+
+    private var groups: some View {
+        SabellaTVChannelGroupBrowser(groups: [
+            SabellaTVChannelGroupSummary(id: "news", name: "World news", channelCount: 12),
+            SabellaTVChannelGroupSummary(id: "italy", name: "Italy", channelCount: 24),
+            SabellaTVChannelGroupSummary(id: "radio", name: "Live radio", channelCount: 8, systemImage: "radio.fill"),
+            SabellaTVChannelGroupSummary(id: "empty", name: "Weekend", channelCount: 0),
+        ]) { _ in
+            page = .playback
+        }
     }
 
     private var search: some View {
@@ -274,15 +296,8 @@ struct SabellaTelevisionCatalog: View {
 }
 
 private struct CatalogPlayback: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var player: AVPlayer
-    @State private var isPlaying = true
-    @State private var isMuted = false
     @State private var guideVisible = true
     @State private var selectedChannelID = "sky-news"
-    @State private var resumePlaybackWhenActive = false
-    @State private var audioSessionError: String?
     private let close: () -> Void
     private let channels = [
         SabellaTVChannel(
@@ -365,198 +380,18 @@ private struct CatalogPlayback: View {
     ]
 
     init(close: @escaping () -> Void) {
-        let source = "https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/v1/master/6404a5d732e04991ed59ac7790b61cc065c9aabd/prod-gb-lin-skynews-hls-25-web/master.m3u8?ads.cdn=https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com&ads.csid=sitesection:SkyNews:Web&manifest.mthost=7a38d30e7dd84cd0872ab4f691c38f58&manifest.region=mediatailor.eu-west-1.amazonaws.com"
-        guard let url = URL(string: source) else { preconditionFailure("Sky News playback URL is invalid") }
         self.close = close
-        _player = State(initialValue: AVPlayer(url: url))
     }
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            if selectedChannel.medium == .radio {
-                CatalogRadioSurface(channel: selectedChannel, isPlaying: isPlaying)
-                    .transition(.opacity)
-            } else {
-                CatalogPlayerSurface(player: player)
-                    .transition(.opacity)
-            }
-            if guideVisible {
-                SabellaTVChannelGuide(
-                    channels: channels,
-                    selection: selectedChannelID,
-                    isPlaying: isPlaying,
-                    isMuted: isMuted,
-                    togglePlayback: { isPlaying.toggle() },
-                    toggleMute: { isMuted.toggle() }
-                ) { channel in
-                    selectedChannelID = channel.id
-                    player.replaceCurrentItem(with: AVPlayerItem(url: channel.streamURL))
-                    withAnimation(playbackAnimation) { guideVisible = false }
-                    player.play()
-                    isPlaying = true
-                }
-                .transition(.move(edge: .leading).combined(with: .opacity))
-            }
-        }
-        .ignoresSafeArea()
-        .onAppear {
-            configureAudioSession()
-            if isPlaying { player.play() }
-        }
-        .onDisappear { player.pause() }
-        .onChange(of: isPlaying) { _, playing in playing ? player.play() : player.pause() }
-        .onChange(of: isMuted) { _, muted in player.isMuted = muted }
-        .onPlayPauseCommand { isPlaying.toggle() }
-        .onChange(of: scenePhase) { _, phase in
-            handleScenePhase(phase)
-        }
-        .onExitCommand {
-            if guideVisible {
-                close()
-            } else {
-                withAnimation(playbackAnimation) { guideVisible = true }
-            }
-        }
-        .alert("Playback unavailable", isPresented: Binding(
-            get: { audioSessionError != nil },
-            set: { if !$0 { audioSessionError = nil } }
-        )) {
-            Button("OK", role: .cancel) { audioSessionError = nil }
-        } message: {
-            Text(audioSessionError ?? "The audio session could not be configured.")
-        }
-    }
-
-    private var playbackAnimation: Animation? {
-        reduceMotion ? nil : .easeInOut(duration: 0.38)
-    }
-
-    private var selectedChannel: SabellaTVChannel {
-        channels.first { $0.id == selectedChannelID } ?? channels[0]
-    }
-
-    private func handleScenePhase(_ phase: ScenePhase) {
-        switch phase {
-        case .background:
-            guard selectedChannel.backgroundPlayback == .suspend else { return }
-            resumePlaybackWhenActive = isPlaying
-            isPlaying = false
-        case .active:
-            guard resumePlaybackWhenActive else { return }
-            resumePlaybackWhenActive = false
-            isPlaying = true
-        case .inactive:
-            break
-        @unknown default:
-            break
-        }
-    }
-
-    private func configureAudioSession() {
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .moviePlayback)
-            try session.setActive(true)
-        } catch {
-            isPlaying = false
-            audioSessionError = error.localizedDescription
-        }
-    }
-
-}
-
-private struct CatalogRadioSurface: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let channel: SabellaTVChannel
-    let isPlaying: Bool
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion || !isPlaying)) { timeline in
-            let phase = timeline.date.timeIntervalSinceReferenceDate
-            ZStack {
-                LinearGradient(
-                    colors: [BleeckerPalette.dark.deepSea, channelColor.opacity(0.72), .black],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Canvas { context, size in
-                    for index in 0..<7 {
-                        let offset = CGFloat(index) * 68
-                        let pulse = reduceMotion ? 0.5 : (sin(phase * 1.25 + Double(index) * 0.8) + 1) / 2
-                        let diameter = min(size.width, size.height) * (0.28 + CGFloat(pulse) * 0.18) + offset
-                        let rect = CGRect(x: size.width * 0.72 - diameter / 2, y: size.height * 0.5 - diameter / 2, width: diameter, height: diameter)
-                        context.stroke(Path(ellipseIn: rect), with: .color(.white.opacity(0.045)), lineWidth: 18)
-                    }
-                }
-                .blur(radius: 1)
-
-                HStack(spacing: 72) {
-                    ZStack {
-                        Circle().fill(.black.opacity(0.34))
-                        Circle().stroke(.white.opacity(0.14), lineWidth: 2)
-                        Text(channel.mark)
-                            .font(BleeckerTypography.primary(94, weight: .bold))
-                            .tracking(-3)
-                            .foregroundStyle(channelColor)
-                    }
-                    .frame(width: 330, height: 330)
-                    .shadow(color: .black.opacity(0.45), radius: 48, y: 24)
-
-                    VStack(alignment: .leading, spacing: 14) {
-                        Label("LIVE RADIO", systemImage: "waveform")
-                            .font(BleeckerTypography.mono(17, weight: .bold))
-                            .tracking(2)
-                            .foregroundStyle(BleeckerPalette.dark.accentGold)
-                        Text(channel.name)
-                            .font(BleeckerTypography.primary(58, weight: .bold))
-                            .tracking(-1)
-                        Text(channel.now)
-                            .font(BleeckerTypography.secondary(31, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.76))
-                        HStack(spacing: 10) {
-                            Circle().fill(isPlaying ? BleeckerPalette.dark.live : BleeckerPalette.dark.desert).frame(width: 10, height: 10)
-                            Text(isPlaying ? "ON AIR" : "PAUSED")
-                        }
-                        .font(BleeckerTypography.mono(15, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.68))
-                        .padding(.top, 12)
-                    }
-                    .frame(width: 650, alignment: .leading)
-                }
-            }
-        }
-        .ignoresSafeArea()
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(channel.name), live radio, \(channel.now), \(isPlaying ? "playing" : "paused")")
-    }
-
-    private var channelColor: Color {
-        switch channel.tone {
-        case .sea: BleeckerPalette.dark.sea
-        case .red: BleeckerPalette.dark.accentRed
-        case .gold: BleeckerPalette.dark.accentGold
-        case .terracotta: BleeckerPalette.dark.terracotta
-        }
+        SabellaTVLivePlayer(
+            channels: channels,
+            selection: $selectedChannelID,
+            guideVisible: $guideVisible,
+            guideTitle: "Catalog channels",
+            onExit: close
+        )
     }
 }
 
-private struct CatalogPlayerSurface: UIViewRepresentable {
-    let player: AVPlayer
-
-    func makeUIView(context: Context) -> PlayerView {
-        let view = PlayerView()
-        view.playerLayer.player = player
-        view.playerLayer.videoGravity = .resizeAspectFill
-        return view
-    }
-
-    func updateUIView(_ view: PlayerView, context: Context) {
-        view.playerLayer.player = player
-    }
-
-    final class PlayerView: UIView {
-        override class var layerClass: AnyClass { AVPlayerLayer.self }
-        var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
-    }
-}
 #endif

@@ -2,6 +2,7 @@
 import SwiftUI
 import UIKit
 import AVFoundation
+import Combine
 
 public enum SabellaTVDVRAction: Hashable, Sendable {
     case none, play, pause, rewind, fastForward
@@ -16,6 +17,443 @@ public struct SabellaTVPlayerSurface: UIViewRepresentable {
     public final class PlayerView: UIView {
         public override class var layerClass: AnyClass { AVPlayerLayer.self }
         var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+    }
+}
+
+/// Sabella's complete single-stream playback presentation. Applications may
+/// supply any decoding surface, but Sabella owns every visible state and all
+/// remote interaction around it.
+public struct SabellaTVSinglePlayback<Media: View>: View {
+    private let productName: String
+    private let station: String
+    private let title: String?
+    private let isAudioOnly: Bool
+    private let isBuffering: Bool
+    private let isPlaying: Bool
+    private let isFailed: Bool
+    private let isDemo: Bool
+    private let dvrVisible: Bool
+    private let currentTime: Double
+    private let duration: Double
+    private let quality: String?
+    private let dvrAction: SabellaTVDVRAction
+    private let retry: () -> Void
+    private let select: () -> Void
+    private let restart: () -> Void
+    private let togglePlayback: () -> Void
+    private let skipBackward: () -> Void
+    private let skipForward: () -> Void
+    private let showTransport: () -> Void
+    private let exit: () -> Void
+    @ViewBuilder private let media: Media
+
+    public init(
+        productName: String,
+        station: String,
+        title: String? = nil,
+        isAudioOnly: Bool,
+        isBuffering: Bool,
+        isPlaying: Bool,
+        isFailed: Bool,
+        isDemo: Bool = false,
+        dvrVisible: Bool = false,
+        currentTime: Double = 0,
+        duration: Double = 0,
+        quality: String? = nil,
+        dvrAction: SabellaTVDVRAction = .none,
+        retry: @escaping () -> Void,
+        select: @escaping () -> Void,
+        restart: @escaping () -> Void,
+        togglePlayback: @escaping () -> Void,
+        skipBackward: @escaping () -> Void,
+        skipForward: @escaping () -> Void,
+        showTransport: @escaping () -> Void,
+        exit: @escaping () -> Void,
+        @ViewBuilder media: () -> Media
+    ) {
+        self.productName = productName
+        self.station = station
+        self.title = title
+        self.isAudioOnly = isAudioOnly
+        self.isBuffering = isBuffering
+        self.isPlaying = isPlaying
+        self.isFailed = isFailed
+        self.isDemo = isDemo
+        self.dvrVisible = dvrVisible
+        self.currentTime = currentTime
+        self.duration = duration
+        self.quality = quality
+        self.dvrAction = dvrAction
+        self.retry = retry
+        self.select = select
+        self.restart = restart
+        self.togglePlayback = togglePlayback
+        self.skipBackward = skipBackward
+        self.skipForward = skipForward
+        self.showTransport = showTransport
+        self.exit = exit
+        self.media = media()
+    }
+
+    public var body: some View {
+        ZStack {
+            if isFailed {
+                SabellaTVPlaybackFailure(
+                    title: station,
+                    message: "Could not connect to the stream.",
+                    retry: retry
+                )
+            } else {
+                if !isAudioOnly {
+                    media
+                }
+
+                if isAudioOnly {
+                    SabellaTVRadioNowPlaying(
+                        station: station,
+                        title: title,
+                        buffering: isBuffering,
+                        active: isPlaying
+                    )
+                }
+
+                if isDemo {
+                    SabellaTVDemoOverlay(productName: productName, buffering: isBuffering)
+                }
+
+                if dvrVisible {
+                    SabellaTVDVROverlay(
+                        currentTime: currentTime,
+                        duration: duration,
+                        quality: quality,
+                        action: dvrAction
+                    )
+                }
+
+                if isBuffering, !isAudioOnly {
+                    ProgressView()
+                        .scaleEffect(1.6)
+                        .tint(.white)
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .focusable()
+        .onTapGesture(perform: select)
+        .onLongPressGesture(perform: restart)
+        .onPlayPauseCommand(perform: togglePlayback)
+        .onMoveCommand { direction in
+            switch direction {
+            case .left: skipBackward()
+            case .right: skipForward()
+            case .up, .down: showTransport()
+            default: break
+            }
+        }
+        .onExitCommand(perform: exit)
+    }
+}
+
+/// Sabella's complete live-channel playback contract. The consuming product
+/// supplies channel data; Sabella owns media presentation, focus, remote
+/// commands, channel tuning, loading/failure states, and TV/radio behavior.
+@MainActor
+public struct SabellaTVLivePlayer: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Binding private var selection: String
+    @Binding private var guideVisible: Bool
+    @StateObject private var playback = SabellaTVLivePlaybackModel()
+
+    private let channels: [SabellaTVChannel]
+    private let guideTitle: String
+    private let hasMoreChannels: Bool
+    private let loadingMoreChannels: Bool
+    private let loadMoreChannels: () -> Void
+    private let onSelectionChanged: (SabellaTVChannel) -> Void
+    private let onExit: () -> Void
+
+    public init(
+        channels: [SabellaTVChannel],
+        selection: Binding<String>,
+        guideVisible: Binding<Bool>,
+        guideTitle: String = "All Channels",
+        hasMoreChannels: Bool = false,
+        loadingMoreChannels: Bool = false,
+        loadMoreChannels: @escaping () -> Void = {},
+        onSelectionChanged: @escaping (SabellaTVChannel) -> Void = { _ in },
+        onExit: @escaping () -> Void
+    ) {
+        precondition(!channels.isEmpty, "SabellaTVLivePlayer requires at least one channel")
+        self.channels = channels
+        _selection = selection
+        _guideVisible = guideVisible
+        self.guideTitle = guideTitle
+        self.hasMoreChannels = hasMoreChannels
+        self.loadingMoreChannels = loadingMoreChannels
+        self.loadMoreChannels = loadMoreChannels
+        self.onSelectionChanged = onSelectionChanged
+        self.onExit = onExit
+    }
+
+    public var body: some View {
+        ZStack {
+            if playback.isRadio {
+                SabellaTVRadioNowPlaying(
+                    station: selectedChannel.name,
+                    title: selectedChannel.now,
+                    buffering: playback.isBuffering,
+                    active: playback.isPlaying,
+                    mark: selectedChannel.mark,
+                    tone: selectedChannel.tone
+                )
+                .transition(.opacity)
+            } else {
+                Color.black
+                SabellaTVPlayerSurface(player: playback.player, gravity: .resizeAspectFill)
+                    .transition(.opacity)
+            }
+
+            if playback.hasFailed {
+                SabellaTVPlaybackFailure(
+                    title: selectedChannel.name,
+                    message: "The live signal could not be loaded."
+                ) {
+                    playback.tune(selectedChannel)
+                }
+            } else if playback.isBuffering, !playback.isRadio {
+                ProgressView()
+                    .scaleEffect(1.6)
+                    .tint(.white)
+            }
+
+            if guideVisible {
+                SabellaTVChannelGuide(
+                    channels: channels,
+                    selection: selection,
+                    title: guideTitle,
+                    isPlaying: playback.isPlaying,
+                    isMuted: playback.isMuted,
+                    resolvedMedia: playback.resolvedMedia,
+                    hasMoreChannels: hasMoreChannels,
+                    loadingMoreChannels: loadingMoreChannels,
+                    loadMoreChannels: loadMoreChannels,
+                    togglePlayback: playback.togglePlayback,
+                    toggleMute: playback.toggleMute
+                ) { channel in
+                    selection = channel.id
+                    playback.tune(channel)
+                    onSelectionChanged(channel)
+                    withAnimation(playbackAnimation) { guideVisible = false }
+                }
+                .transition(.move(edge: .leading).combined(with: .opacity))
+            } else {
+                SabellaTVPlaybackRemoteCapture(label: "Show \(guideTitle) channel guide") {
+                    withAnimation(playbackAnimation) { guideVisible = true }
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .task(id: selection) {
+            guard let channel = channels.first(where: { $0.id == selection }) else { return }
+            playback.tune(channel)
+        }
+        .onDisappear { playback.stop() }
+        .onPlayPauseCommand { playback.togglePlayback() }
+        .onChange(of: scenePhase) { _, phase in playback.handleScenePhase(phase, channel: selectedChannel) }
+        .onExitCommand {
+            if guideVisible {
+                withAnimation(playbackAnimation) { guideVisible = false }
+            } else {
+                onExit()
+            }
+        }
+    }
+
+    private var selectedChannel: SabellaTVChannel {
+        channels.first { $0.id == selection } ?? channels[0]
+    }
+
+    private var playbackAnimation: Animation? {
+        reduceMotion ? nil : .easeInOut(duration: 0.34)
+    }
+}
+
+@MainActor
+private final class SabellaTVLivePlaybackModel: ObservableObject {
+    let player = AVPlayer()
+    @Published private(set) var isBuffering = true
+    @Published private(set) var hasFailed = false
+    @Published private(set) var isPlaying = true
+    @Published private(set) var isMuted = false
+    @Published private(set) var isRadio = false
+    @Published private(set) var resolvedMedia: [String: SabellaTVChannelMedium] = [:]
+
+    private var channelID: String?
+    private var monitorTask: Task<Void, Never>?
+    private var classificationTask: Task<Void, Never>?
+    private var resumeWhenActive = false
+
+    init() {
+        player.actionAtItemEnd = .pause
+        player.automaticallyWaitsToMinimizeStalling = true
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .moviePlayback)
+            try session.setActive(true)
+        } catch {
+            hasFailed = true
+        }
+    }
+
+    func tune(_ channel: SabellaTVChannel) {
+        guard channelID != channel.id || hasFailed else { return }
+        channelID = channel.id
+        isRadio = effectiveMedium(for: channel) == .radio
+        isBuffering = true
+        hasFailed = false
+        isPlaying = true
+        monitorTask?.cancel()
+        classificationTask?.cancel()
+        classificationTask = nil
+
+        let item = AVPlayerItem(url: channel.streamURL)
+        player.replaceCurrentItem(with: item)
+        player.isMuted = isMuted
+        player.play()
+
+        monitorTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            while !Task.isCancelled, self.channelID == channel.id {
+                switch item.status {
+                case .failed:
+                    self.isBuffering = false
+                    self.hasFailed = true
+                    self.isPlaying = false
+                    return
+                case .readyToPlay:
+                    self.isBuffering = self.player.timeControlStatus == .waitingToPlayAtSpecifiedRate
+                    self.isPlaying = self.player.rate != 0 || self.player.timeControlStatus == .waitingToPlayAtSpecifiedRate
+                    if channel.medium == .automatic,
+                       self.resolvedMedia[channel.id] == .radio,
+                       item.presentationSize.width > 0 {
+                        self.resolvedMedia[channel.id] = .television
+                        self.isRadio = false
+                    }
+                    if channel.medium == .automatic, self.classificationTask == nil {
+                        self.classificationTask = Task { @MainActor [weak self] in
+                            await self?.classify(item: item, channelID: channel.id)
+                        }
+                    }
+                case .unknown:
+                    self.isBuffering = true
+                @unknown default:
+                    self.isBuffering = true
+                }
+                try? await Task.sleep(for: .milliseconds(250))
+            }
+        }
+    }
+
+    func togglePlayback() {
+        if isPlaying {
+            player.pause()
+            isPlaying = false
+        } else {
+            player.play()
+            isPlaying = true
+        }
+    }
+
+    func toggleMute() {
+        isMuted.toggle()
+        player.isMuted = isMuted
+    }
+
+    func handleScenePhase(_ phase: ScenePhase, channel: SabellaTVChannel) {
+        switch phase {
+        case .background:
+            let shouldSuspend = switch channel.backgroundPlayback {
+            case .automatic: !isRadio
+            case .suspend: true
+            case .audio: false
+            }
+            guard shouldSuspend else { return }
+            resumeWhenActive = isPlaying
+            player.pause()
+            isPlaying = false
+        case .active:
+            guard resumeWhenActive else { return }
+            resumeWhenActive = false
+            player.play()
+            isPlaying = true
+        case .inactive:
+            break
+        @unknown default:
+            break
+        }
+    }
+
+    func stop() {
+        monitorTask?.cancel()
+        monitorTask = nil
+        classificationTask?.cancel()
+        classificationTask = nil
+        player.pause()
+        player.replaceCurrentItem(with: nil)
+        channelID = nil
+    }
+
+    private func effectiveMedium(for channel: SabellaTVChannel) -> SabellaTVChannelMedium {
+        channel.medium == .automatic ? resolvedMedia[channel.id] ?? .automatic : channel.medium
+    }
+
+    private func classify(item: AVPlayerItem, channelID: String) async {
+        var confirmedEmptySamples = 0
+
+        for sample in 0..<3 {
+            guard !Task.isCancelled, self.channelID == channelID else { return }
+
+            let tracks = try? await item.asset.loadTracks(withMediaType: .video)
+            guard !Task.isCancelled, self.channelID == channelID else { return }
+
+            if item.presentationSize.width > 0 || tracks?.isEmpty == false {
+                resolvedMedia[channelID] = .television
+                isRadio = false
+                return
+            }
+
+            if tracks != nil {
+                confirmedEmptySamples += 1
+            }
+
+            if sample < 2 {
+                try? await Task.sleep(for: .milliseconds(750))
+            }
+        }
+
+        guard confirmedEmptySamples == 3, self.channelID == channelID else { return }
+        resolvedMedia[channelID] = .radio
+        isRadio = true
+    }
+}
+
+private struct SabellaTVPlaybackRemoteCapture: View {
+    @FocusState private var focused: Bool
+    let label: String
+    let showGuide: () -> Void
+
+    var body: some View {
+        Color.clear
+        .contentShape(Rectangle())
+        .focusable()
+        .focused($focused)
+        .onAppear { focused = true }
+        .onTapGesture(perform: showGuide)
+        .onMoveCommand { direction in
+            if direction == .up || direction == .down { showGuide() }
+        }
+        .accessibilityLabel(label)
     }
 }
 

@@ -58,6 +58,126 @@ public struct SabellaTVChromeHeader: View {
     }
 }
 
+public struct SabellaTVChromeScreen<Content: View>: View {
+    private let productName: String
+    private let content: Content
+
+    public init(productName: String, @ViewBuilder content: () -> Content) {
+        self.productName = productName
+        self.content = content()
+    }
+
+    public var body: some View {
+        ZStack {
+            SabellaTVAmbientBackground()
+            VStack(spacing: 0) {
+                SabellaTVChromeHeader(productName: productName)
+                    .padding(.horizontal, 84)
+                    .padding(.top, 38)
+                    .padding(.bottom, 22)
+                content
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+    }
+}
+
+public enum SabellaTVChannelHomeState {
+    case loading
+    case failed(message: String)
+    case empty
+    case ready([SabellaTVChannelGroupSummary])
+}
+
+public struct SabellaTVChannelHome: View {
+    private let productName: String
+    private let state: SabellaTVChannelHomeState
+    private let retry: () -> Void
+    private let select: (SabellaTVChannelGroupSummary) -> Void
+
+    public init(
+        productName: String,
+        state: SabellaTVChannelHomeState,
+        retry: @escaping () -> Void,
+        select: @escaping (SabellaTVChannelGroupSummary) -> Void
+    ) {
+        self.productName = productName
+        self.state = state
+        self.retry = retry
+        self.select = select
+    }
+
+    public var body: some View {
+        SabellaTVChromeScreen(productName: productName) {
+            switch state {
+            case .loading:
+                SabellaTVLoadingState("Loading channel groups…")
+            case let .failed(message):
+                SabellaTVChannelHomeMessage(
+                    eyebrow: "Connection",
+                    icon: "wifi.exclamationmark",
+                    title: "Channel groups unavailable",
+                    message: message,
+                    actionTitle: "Try again",
+                    action: retry
+                )
+            case .empty:
+                SabellaTVChannelHomeMessage(
+                    eyebrow: "Your television",
+                    icon: "rectangle.3.group",
+                    title: "No channel groups yet",
+                    message: "Create a channel group in Celesti to start watching.",
+                    actionTitle: nil,
+                    action: retry
+                )
+            case let .ready(groups):
+                SabellaTVChannelGroupBrowser(groups: groups, select: select)
+                    .padding(.horizontal, 84)
+                    .padding(.bottom, 44)
+            }
+        }
+    }
+}
+
+private struct SabellaTVChannelHomeMessage: View {
+    let eyebrow: String
+    let icon: String
+    let title: String
+    let message: String
+    let actionTitle: String?
+    let action: () -> Void
+
+    var body: some View {
+        HStack(spacing: 70) {
+            VStack(alignment: .leading, spacing: 22) {
+                SabellaTVSectionLabel(eyebrow)
+                Text(title)
+                    .font(BleeckerTypography.primary(58, weight: .bold))
+                    .tracking(-1)
+                Text(message)
+                    .font(BleeckerTypography.secondary(26))
+                    .foregroundStyle(BleeckerPalette.dark.textSecondary)
+                    .frame(maxWidth: 720, alignment: .leading)
+                if let actionTitle {
+                    Button(actionTitle, action: action)
+                        .buttonStyle(SabellaTVPrimaryButtonStyle())
+                        .padding(.top, 18)
+                }
+            }
+            Spacer()
+            Image(systemName: icon)
+                .font(.system(size: 190, weight: .ultraLight))
+                .foregroundStyle(BleeckerPalette.dark.sea.opacity(0.48))
+                .frame(width: 440, height: 440)
+                .background(BleeckerPalette.dark.deepSea.opacity(0.46), in: Circle())
+        }
+        .padding(.horizontal, 118)
+        .padding(.bottom, 70)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+}
+
 public struct SabellaTVStatusPill: View {
     private let text: String
     private let color: Color
@@ -218,44 +338,98 @@ public struct SabellaTVSignalVisualizer: View {
 }
 
 public struct SabellaTVRadioNowPlaying: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let station: String
     private let title: String?
     private let buffering: Bool
     private let active: Bool
+    private let mark: String
+    private let tone: SabellaTVChannelTone
 
-    public init(station: String, title: String? = nil, buffering: Bool = false, active: Bool = true) {
+    public init(
+        station: String,
+        title: String? = nil,
+        buffering: Bool = false,
+        active: Bool = true,
+        mark: String? = nil,
+        tone: SabellaTVChannelTone = .gold
+    ) {
         self.station = station
         self.title = title
         self.buffering = buffering
         self.active = active
+        self.mark = mark ?? String(station.prefix(3)).uppercased()
+        self.tone = tone
     }
 
     public var body: some View {
-        ZStack {
-            SabellaTVAmbientBackground()
-            VStack(spacing: 28) {
-                SabellaTVSectionLabel("Live radio")
-                Text(station)
-                    .font(BleeckerTypography.primary(58, weight: .bold))
-                    .multilineTextAlignment(.center)
-                if let title, !title.isEmpty {
-                    Text(title)
-                        .font(BleeckerTypography.secondary(27, weight: .medium))
-                        .foregroundStyle(BleeckerPalette.dark.textSecondary)
-                        .multilineTextAlignment(.center)
+        TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion || !active)) { timeline in
+            let phase = timeline.date.timeIntervalSinceReferenceDate
+            ZStack {
+                LinearGradient(
+                    colors: [BleeckerPalette.dark.deepSea, tone.color.opacity(0.72), .black],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Canvas { context, size in
+                    for index in 0..<7 {
+                        let offset = CGFloat(index) * 68
+                        let pulse = reduceMotion ? 0.5 : (sin(phase * 1.25 + Double(index) * 0.8) + 1) / 2
+                        let diameter = min(size.width, size.height) * (0.28 + CGFloat(pulse) * 0.18) + offset
+                        let rect = CGRect(
+                            x: size.width * 0.72 - diameter / 2,
+                            y: size.height * 0.5 - diameter / 2,
+                            width: diameter,
+                            height: diameter
+                        )
+                        context.stroke(Path(ellipseIn: rect), with: .color(.white.opacity(0.045)), lineWidth: 18)
+                    }
                 }
-                SabellaTVStatusPill(buffering ? "BUFFERING" : active ? "ON AIR" : "PAUSED", color: buffering ? BleeckerPalette.dark.desert : BleeckerPalette.dark.live)
-            }
-            .padding(52)
-            .frame(minWidth: 660, maxWidth: 1120)
-            .sabellatvPanelCompatibility()
-            VStack { Spacer(); SabellaTVSignalVisualizer(active: active, buffering: buffering).frame(height: 190) }
-        }
-    }
-}
+                .blur(radius: 1)
 
-private extension View {
-    func sabellatvPanelCompatibility() -> some View { sabellaTVPanel(radius: 32) }
+                HStack(spacing: 72) {
+                    ZStack {
+                        Circle().fill(.black.opacity(0.34))
+                        Circle().stroke(.white.opacity(0.14), lineWidth: 2)
+                        Text(mark)
+                            .font(BleeckerTypography.primary(94, weight: .bold))
+                            .tracking(-3)
+                            .foregroundStyle(tone.color)
+                    }
+                    .frame(width: 330, height: 330)
+                    .shadow(color: .black.opacity(0.45), radius: 48, y: 24)
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        Label("LIVE RADIO", systemImage: "waveform")
+                            .font(BleeckerTypography.mono(17, weight: .bold))
+                            .tracking(2)
+                            .foregroundStyle(BleeckerPalette.dark.accentGold)
+                        Text(station)
+                            .font(BleeckerTypography.primary(58, weight: .bold))
+                            .tracking(-1)
+                        if let title, !title.isEmpty {
+                            Text(title)
+                                .font(BleeckerTypography.secondary(31, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.76))
+                        }
+                        HStack(spacing: 10) {
+                            Circle()
+                                .fill(buffering ? BleeckerPalette.dark.desert : active ? BleeckerPalette.dark.live : BleeckerPalette.dark.textSecondary)
+                                .frame(width: 10, height: 10)
+                            Text(buffering ? "BUFFERING" : active ? "ON AIR" : "PAUSED")
+                        }
+                        .font(BleeckerTypography.mono(15, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.68))
+                        .padding(.top, 12)
+                    }
+                    .frame(width: 650, alignment: .leading)
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(station), live radio, \(title ?? ""), \(active ? "playing" : "paused")")
+    }
 }
 
 public struct SabellaTVPlaybackFailure: View {

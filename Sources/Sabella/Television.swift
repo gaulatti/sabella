@@ -15,6 +15,125 @@ public struct SabellaTVContent: Identifiable, Hashable, Sendable {
     }
 }
 
+public struct SabellaTVChannelGroupSummary: Identifiable, Hashable, Sendable {
+    public let id: String
+    public let name: String
+    public let channelCount: Int
+    public let systemImage: String
+
+    public init(id: String, name: String, channelCount: Int, systemImage: String = "rectangle.3.group.fill") {
+        self.id = id
+        self.name = name
+        self.channelCount = channelCount
+        self.systemImage = systemImage
+    }
+}
+
+public struct SabellaTVChannelGroupBrowser: View {
+    private let groups: [SabellaTVChannelGroupSummary]
+    private let select: (SabellaTVChannelGroupSummary) -> Void
+
+    public init(groups: [SabellaTVChannelGroupSummary], select: @escaping (SabellaTVChannelGroupSummary) -> Void) {
+        self.groups = groups
+        self.select = select
+    }
+
+    public var body: some View {
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 42) {
+                SabellaTVHero(
+                    eyebrow: "Your television",
+                    title: "Live, organized your way",
+                    synopsis: "Choose a channel group, then move between live television and radio without leaving playback.",
+                    metadata: [
+                        "\(groups.count) group\(groups.count == 1 ? "" : "s")",
+                        "\(channelCount) live channel\(channelCount == 1 ? "" : "s")",
+                    ]
+                ) {
+                    LinearGradient(
+                        colors: [BleeckerPalette.dark.deepSea, BleeckerPalette.dark.sea, BleeckerPalette.dark.terracotta],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .overlay(alignment: .trailing) {
+                        Image(systemName: "play.tv.fill")
+                            .font(.system(size: 230, weight: .ultraLight))
+                            .foregroundStyle(.white.opacity(0.14))
+                            .padding(.trailing, 96)
+                    }
+                } actions: {
+                    if let firstPlayableGroup {
+                        Button { select(firstPlayableGroup) } label: {
+                            Label("Watch live", systemImage: "play.fill")
+                        }
+                        .buttonStyle(SabellaTVPrimaryButtonStyle())
+                    }
+                }
+
+                SabellaTVShelf("Channel groups", items: indexedGroups) { item in
+                    SabellaTVCard(
+                        title: item.group.name,
+                        subtitle: item.group.channelCount == 0
+                            ? "No channels assigned"
+                            : "\(item.group.channelCount) live channel\(item.group.channelCount == 1 ? "" : "s")",
+                        width: 360,
+                        context: item.group.channelCount == 0 ? "EMPTY" : "LIVE",
+                        enabled: item.group.channelCount > 0,
+                        action: { select(item.group) }
+                    ) {
+                        LinearGradient(
+                            colors: artworkColors(for: item.index),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .overlay {
+                            Image(systemName: item.group.systemImage)
+                                .font(.system(size: 112, weight: .light))
+                                .foregroundStyle(.white.opacity(0.2))
+                        }
+                        .overlay(alignment: .bottomTrailing) {
+                            Text(String(format: "%02d", item.index + 1))
+                                .font(BleeckerTypography.mono(24, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.66))
+                                .padding(22)
+                        }
+                    }
+                }
+            }
+            .padding(.bottom, 80)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private var channelCount: Int {
+        groups.reduce(0) { $0 + $1.channelCount }
+    }
+
+    private var firstPlayableGroup: SabellaTVChannelGroupSummary? {
+        groups.first { $0.channelCount > 0 }
+    }
+
+    private var indexedGroups: [IndexedGroup] {
+        groups.enumerated().map { IndexedGroup(index: $0.offset, group: $0.element) }
+    }
+
+    private func artworkColors(for index: Int) -> [Color] {
+        let palettes: [[Color]] = [
+            [BleeckerPalette.dark.sea, BleeckerPalette.dark.deepSea],
+            [BleeckerPalette.dark.terracotta, BleeckerPalette.dark.accentOxblood],
+            [BleeckerPalette.dark.accentGold, BleeckerPalette.dark.deepSea],
+            [BleeckerPalette.dark.accentBlue, BleeckerPalette.dark.sea],
+        ]
+        return palettes[index % palettes.count]
+    }
+
+    private struct IndexedGroup: Identifiable {
+        let index: Int
+        let group: SabellaTVChannelGroupSummary
+        var id: String { group.id }
+    }
+}
+
 public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
     public let id: String
     public let streamURL: URL
@@ -23,7 +142,7 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
     public let mark: String
     public let tone: SabellaTVChannelTone
     public let now: String
-    public let next: String
+    public let next: String?
     public let progress: Double
     public let currentTime: String?
     public let nextTime: String?
@@ -38,12 +157,12 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
         mark: String? = nil,
         tone: SabellaTVChannelTone = .sea,
         now: String,
-        next: String,
+        next: String? = nil,
         progress: Double,
         currentTime: String? = nil,
         nextTime: String? = nil,
-        backgroundPlayback: SabellaTVBackgroundPlayback = .suspend,
-        medium: SabellaTVChannelMedium = .television
+        backgroundPlayback: SabellaTVBackgroundPlayback = .automatic,
+        medium: SabellaTVChannelMedium = .automatic
     ) {
         self.id = id
         self.streamURL = streamURL
@@ -62,11 +181,18 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
 }
 
 public enum SabellaTVChannelMedium: Hashable, Sendable {
+    /// Resolve the medium from the ready media item. This is the default for
+    /// large lineups whose source data does not explicitly distinguish radio.
+    case automatic
     case television
     case radio
 }
 
 public enum SabellaTVBackgroundPlayback: Hashable, Sendable {
+    /// Continue audio only when automatic media detection resolves the tuned
+    /// channel as radio; suspend television playback.
+    case automatic
+
     /// Stop playback when the application leaves the foreground. This is the
     /// default for television and video channels.
     case suspend
@@ -81,7 +207,7 @@ public enum SabellaTVChannelTone: Hashable, Sendable {
     case gold
     case terracotta
 
-    fileprivate var color: Color {
+    var color: Color {
         switch self {
         case .sea: BleeckerPalette.dark.sea
         case .red: BleeckerPalette.dark.accentRed
@@ -156,18 +282,30 @@ public struct SabellaTVChannelGuide: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let channels: [SabellaTVChannel]
     private let selection: String
+    private let title: String
     private let select: (SabellaTVChannel) -> Void
     private let isPlaying: Bool
     private let isMuted: Bool
+    private let resolvedMedia: [String: SabellaTVChannelMedium]
+    private let hasMoreChannels: Bool
+    private let loadingMoreChannels: Bool
+    private let loadMoreChannels: () -> Void
     private let togglePlayback: (() -> Void)?
     private let toggleMute: (() -> Void)?
     @State private var highlightedID: String
+    @FocusState private var focusedChannelID: String?
+    @Namespace private var channelFocus
 
     public init(
         channels: [SabellaTVChannel],
         selection: String,
+        title: String = "All Channels",
         isPlaying: Bool = true,
         isMuted: Bool = false,
+        resolvedMedia: [String: SabellaTVChannelMedium] = [:],
+        hasMoreChannels: Bool = false,
+        loadingMoreChannels: Bool = false,
+        loadMoreChannels: @escaping () -> Void = {},
         togglePlayback: (() -> Void)? = nil,
         toggleMute: (() -> Void)? = nil,
         select: @escaping (SabellaTVChannel) -> Void
@@ -175,8 +313,13 @@ public struct SabellaTVChannelGuide: View {
         precondition(!channels.isEmpty, "SabellaTVChannelGuide requires at least one channel")
         self.channels = channels
         self.selection = selection
+        self.title = title
         self.isPlaying = isPlaying
         self.isMuted = isMuted
+        self.resolvedMedia = resolvedMedia
+        self.hasMoreChannels = hasMoreChannels
+        self.loadingMoreChannels = loadingMoreChannels
+        self.loadMoreChannels = loadMoreChannels
         self.togglePlayback = togglePlayback
         self.toggleMute = toggleMute
         self.select = select
@@ -202,7 +345,7 @@ public struct SabellaTVChannelGuide: View {
                 VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 14) {
                         Image(systemName: "chevron.left").foregroundStyle(BleeckerPalette.dark.sea)
-                        Text("All Channels").foregroundStyle(BleeckerPalette.dark.textPrimary)
+                        Text(title).foregroundStyle(BleeckerPalette.dark.textPrimary)
                     Text("\(channels.count)").foregroundStyle(BleeckerPalette.dark.sea)
                     }
                     .font(BleeckerTypography.primary(30, weight: .semibold))
@@ -220,11 +363,25 @@ public struct SabellaTVChannelGuide: View {
                             ForEach(channels) { item in
                                 SabellaTVChannelRow(
                                     channel: item,
+                                    medium: effectiveMedium(for: item),
                                     tuned: selection == item.id,
+                                    focused: focusedChannelID == item.id,
                                     highlight: { highlightedID = item.id },
                                     select: { select(item) }
                                 )
+                                .focused($focusedChannelID, equals: item.id)
                                 .id(item.id)
+                                .onAppear {
+                                    if item.id == channels.last?.id, hasMoreChannels {
+                                        loadMoreChannels()
+                                    }
+                                }
+                            }
+                            if loadingMoreChannels {
+                                ProgressView()
+                                    .tint(.white)
+                                    .frame(width: 230, height: 86)
+                                    .accessibilityLabel("Loading more channels")
                             }
                         }
                         .padding(.vertical, 320)
@@ -232,7 +389,12 @@ public struct SabellaTVChannelGuide: View {
                     .scrollIndicators(.hidden)
                     .frame(width: 390, height: min(proxy.size.height - 190, 760))
                     .position(x: 195, y: proxy.size.height * 0.69)
-                    .task { scrollProxy.scrollTo(selection, anchor: .center) }
+                    .task {
+                        highlightedID = selection
+                        scrollProxy.scrollTo(selection, anchor: .center)
+                        await Task.yield()
+                        focusedChannelID = selection
+                    }
                     .onChange(of: highlightedID) { _, id in
                         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.28)) {
                             scrollProxy.scrollTo(id, anchor: .center)
@@ -249,10 +411,10 @@ public struct SabellaTVChannelGuide: View {
                     Text(channel.name)
                         .font(BleeckerTypography.secondary(25, weight: .medium))
                         .foregroundStyle(channel.tone.color)
-                    Text(channel.medium == .radio ? "LIVE RADIO" : "LIVE TELEVISION")
+                    Text(mediumLabel(for: channel))
                         .font(BleeckerTypography.mono(14, weight: .bold))
                         .tracking(1.4)
-                        .foregroundStyle(channel.medium == .radio ? BleeckerPalette.dark.accentGold : BleeckerPalette.dark.live)
+                        .foregroundStyle(effectiveMedium(for: channel) == .radio ? BleeckerPalette.dark.accentGold : BleeckerPalette.dark.live)
                     if let currentTime = channel.currentTime {
                         Text(currentTime)
                             .font(BleeckerTypography.secondary(20, weight: .regular))
@@ -283,39 +445,55 @@ public struct SabellaTVChannelGuide: View {
                 .id(channel.id)
                 .transition(.opacity)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("UP NEXT")
-                        .font(BleeckerTypography.primary(16, weight: .semibold))
-                        .tracking(0.7)
-                        .foregroundStyle(BleeckerPalette.dark.desert)
-                    Text(channel.next)
-                        .font(BleeckerTypography.primary(24, weight: .semibold))
-                        .foregroundStyle(BleeckerPalette.dark.textPrimary)
-                        .lineLimit(2)
-                    if let nextTime = channel.nextTime {
-                        Text(nextTime)
-                            .font(BleeckerTypography.secondary(19))
-                            .foregroundStyle(.white.opacity(0.74))
+                if let next = channel.next {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("UP NEXT")
+                            .font(BleeckerTypography.primary(16, weight: .semibold))
+                            .tracking(0.7)
+                            .foregroundStyle(BleeckerPalette.dark.desert)
+                        Text(next)
+                            .font(BleeckerTypography.primary(24, weight: .semibold))
+                            .foregroundStyle(BleeckerPalette.dark.textPrimary)
+                            .lineLimit(2)
+                        if let nextTime = channel.nextTime {
+                            Text(nextTime)
+                                .font(BleeckerTypography.secondary(19))
+                                .foregroundStyle(.white.opacity(0.74))
+                        }
+                        GeometryReader { bar in
+                            Capsule().fill(.white.opacity(0.15))
+                            Capsule().fill(BleeckerPalette.dark.desert)
+                                .frame(width: bar.size.width * min(max(channel.progress, 0), 1))
+                        }
+                        .frame(width: 220, height: 5)
+                        .padding(.top, 12)
                     }
-                    GeometryReader { bar in
-                        Capsule().fill(.white.opacity(0.15))
-                        Capsule().fill(BleeckerPalette.dark.desert)
-                            .frame(width: bar.size.width * min(max(channel.progress, 0), 1))
-                    }
-                    .frame(width: 220, height: 5)
-                    .padding(.top, 12)
+                    .frame(width: 286, alignment: .leading)
+                    .position(x: proxy.size.width - 190, y: proxy.size.height * 0.59)
                 }
-                .frame(width: 286, alignment: .leading)
-                .position(x: proxy.size.width - 190, y: proxy.size.height * 0.59)
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.24), value: highlightedID)
+            .focusScope(channelFocus)
         }
         .accessibilityElement(children: .contain)
         .focusSection()
+        .onChange(of: selection) { _, id in highlightedID = id }
     }
 
     private var highlightedChannel: SabellaTVChannel {
         channels.first { $0.id == highlightedID } ?? channels.first { $0.id == selection } ?? channels[0]
+    }
+
+    private func effectiveMedium(for channel: SabellaTVChannel) -> SabellaTVChannelMedium {
+        channel.medium == .automatic ? resolvedMedia[channel.id] ?? .automatic : channel.medium
+    }
+
+    private func mediumLabel(for channel: SabellaTVChannel) -> String {
+        switch effectiveMedium(for: channel) {
+        case .radio: "LIVE RADIO"
+        case .television: "LIVE TELEVISION"
+        case .automatic: "LIVE"
+        }
     }
 
     private func guideAction(_ label: String, systemImage: String, action: @escaping () -> Void) -> some View {
@@ -331,9 +509,10 @@ public struct SabellaTVChannelGuide: View {
 }
 
 private struct SabellaTVChannelRow: View {
-    @FocusState private var focused: Bool
     let channel: SabellaTVChannel
+    let medium: SabellaTVChannelMedium
     let tuned: Bool
+    let focused: Bool
     let highlight: () -> Void
     let select: () -> Void
 
@@ -349,7 +528,7 @@ private struct SabellaTVChannelRow: View {
                     .tracking(-0.4)
                     .foregroundStyle(channel.tone.color)
                     .frame(width: focused ? 76 : 68)
-                Image(systemName: channel.medium == .radio ? "waveform" : "play.tv.fill")
+                Image(systemName: mediumIcon)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white.opacity(focused ? 0.8 : 0.38))
                     .frame(width: 22)
@@ -385,10 +564,17 @@ private struct SabellaTVChannelRow: View {
         }
         .buttonStyle(SabellaTVChannelButtonStyle())
         .focusEffectDisabled()
-        .focused($focused)
         .foregroundStyle(.white)
         .onChange(of: focused) { _, value in if value { highlight() } }
         .animation(.easeOut(duration: 0.22), value: focused)
+    }
+
+    private var mediumIcon: String {
+        switch medium {
+        case .radio: "waveform"
+        case .television: "play.tv.fill"
+        case .automatic: "antenna.radiowaves.left.and.right"
+        }
     }
 }
 
@@ -534,6 +720,7 @@ public struct SabellaTVCard<Artwork: View>: View {
     private let artworkRatio: SabellaTVArtworkRatio
     private let context: String?
     private let progress: Double?
+    private let enabled: Bool
     private let action: () -> Void
     @ViewBuilder private let artwork: Artwork
 
@@ -544,6 +731,7 @@ public struct SabellaTVCard<Artwork: View>: View {
         artworkRatio: SabellaTVArtworkRatio = .landscape,
         context: String? = nil,
         progress: Double? = nil,
+        enabled: Bool = true,
         action: @escaping () -> Void,
         @ViewBuilder artwork: () -> Artwork
     ) {
@@ -553,6 +741,7 @@ public struct SabellaTVCard<Artwork: View>: View {
         self.artworkRatio = artworkRatio
         self.context = context
         self.progress = progress
+        self.enabled = enabled
         self.action = action
         self.artwork = artwork()
     }
@@ -605,6 +794,8 @@ public struct SabellaTVCard<Artwork: View>: View {
         }
         .buttonStyle(.plain)
         .focused($focused)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.46)
         .frame(width: width + 32)
         .zIndex(focused ? 1 : 0)
         .animation(reduceMotion ? nil : .easeOut(duration: BleeckerDuration.enter), value: focused)

@@ -6,6 +6,7 @@ repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$repository_root"
 
 scripts/validate-package-contract.py
+scripts/validate-kolibri-contract.sh
 swift build --target Sabella
 swift test
 swift build --product SabellaCatalog

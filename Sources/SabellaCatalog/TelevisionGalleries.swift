@@ -38,6 +38,8 @@ struct SabellaTelevisionCatalog: View {
             .groups
         } else if requestedPage == "live-tv" {
             .playback
+        } else if requestedPage == "states" {
+            .states
         } else {
             .browse
         }
@@ -152,10 +154,23 @@ struct SabellaTelevisionCatalog: View {
     }
 
     private var states: some View {
-        HStack(spacing: 36) {
-            stateCard(icon: "wifi.slash", title: "Connection lost", message: "Check the network and try again.", action: "Retry")
-            stateCard(icon: "checkmark.circle", title: "You’re all caught up", message: "New episodes will appear here.", action: "Browse")
-            stateCard(icon: "lock.fill", title: "Subscription required", message: "Choose a plan to keep watching.", action: "View plans")
+        VStack(alignment: .leading, spacing: 42) {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Kolibri 0.1.0 · button.primary")
+                    .font(BleeckerTypography.primary(28, weight: .semibold))
+                HStack(spacing: 24) {
+                    Button("Continue") { }
+                        .buttonStyle(SabellaTVPrimaryButtonStyle())
+                    Button("Disabled") { }
+                        .buttonStyle(SabellaTVPrimaryButtonStyle())
+                        .disabled(true)
+                }
+            }
+            HStack(spacing: 36) {
+                stateCard(icon: "wifi.slash", title: "Connection lost", message: "Check the network and try again.", action: "Retry")
+                stateCard(icon: "checkmark.circle", title: "You’re all caught up", message: "New episodes will appear here.", action: "Browse")
+                stateCard(icon: "lock.fill", title: "Subscription required", message: "Choose a plan to keep watching.", action: "View plans")
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .focusSection()

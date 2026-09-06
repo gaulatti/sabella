@@ -26,6 +26,13 @@ The goal is behavioral and visual convergence, not DOM emulation. Native platfor
 
 When Bleecker changes a platform-neutral token or public contract, update Sabella in the same change and extend the parity tests. Platform-specific behavior may diverge only to preserve keyboard navigation, focus, accessibility, menu conventions, or remote interaction.
 
+The [`button.primary` Kolibri proof](docs/kolibri-primary-button-contract.md)
+applies that rule to the private neutral 0.1.0 release. Structure, semantic
+parts, the event/action pair, and empty assets/behaviors map cleanly; states,
+tokens, appearance, responsive behavior, Dynamic Type scaling, and tvOS loading
+remain explicit native adaptations, exceptions, unsupported behavior, or
+producer gaps rather than implied parity.
+
 ## Television boundary
 
 tvOS is not governed by web-component parity. It shares Sabella’s palette,

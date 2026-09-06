@@ -1,0 +1,26 @@
+adapter-version: 1
+bundle-release: 0.1.0
+bundle-schema: 1.0.0
+component: button.primary
+platform: tvOS
+public-api: Button.buttonStyle(SabellaTVPrimaryButtonStyle())
+activation-inputs: accessibility-activate, remote-select
+mapping: action.submit | exact | emit -> action closure
+mapping: assets | exact | empty -> no assets
+mapping: behaviors | exact | empty -> no ordered behavior
+mapping: event.press | native-adaptation | press -> native remote Select or accessibility activation
+mapping: part.label | native-adaptation | span -> SwiftUI.Text
+mapping: part.root | native-adaptation | button -> SwiftUI.Button + SabellaTVPrimaryButtonStyle
+state: disabled | native-adaptation | SwiftUI disabled environment
+state: enabled | native-adaptation | SwiftUI Button default
+state: focused | platform-exception | native directional focus with visible Sabella focus treatment
+state: loading | unsupported | no loading state on SabellaTVPrimaryButtonStyle
+state: pressed | native-adaptation | ButtonStyle.Configuration.isPressed
+capability: accessibility | native-adaptation | native Button role, label, activation, and disabled state
+capability: appearance | platform-exception | television catalog intentionally dark
+capability: dynamic-type | unsupported | fixed custom font size; catalog exposure only, no scaling claim
+capability: manifest.appearance | producer-defect | field absent from schema 1.0.0
+capability: manifest.responsive | producer-defect | field absent from schema 1.0.0
+capability: manifest.states | producer-defect | field absent from schema 1.0.0
+capability: manifest.tokens | producer-defect | field absent from schema 1.0.0
+capability: responsive-layout | platform-exception | ten-foot spacing and focus target

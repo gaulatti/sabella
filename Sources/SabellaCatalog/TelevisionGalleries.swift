@@ -276,6 +276,7 @@ private struct CatalogPlayback: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var player: AVPlayer
     @State private var isPlaying = true
+    @State private var isMuted = false
     @State private var guideVisible = true
     @State private var selectedChannelID = "sky-news"
     private let title: String
@@ -286,36 +287,45 @@ private struct CatalogPlayback: View {
             streamURL: URL(string: "https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/v1/master/6404a5d732e04991ed59ac7790b61cc065c9aabd/prod-gb-lin-skynews-hls-25-web/master.m3u8?ads.cdn=https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com&ads.csid=sitesection:SkyNews:Web&manifest.mthost=7a38d30e7dd84cd0872ab4f691c38f58&manifest.region=mediatailor.eu-west-1.amazonaws.com")!,
             number: "501",
             name: "Sky News",
+            mark: "sky",
             now: "Sky News Live",
             next: "Headlines and Weather",
-            progress: 0.42
+            progress: 0.42,
+            currentTime: "Live coverage",
+            nextTime: "Following this bulletin"
         ),
         SabellaTVChannel(
             id: "tagesschau24",
             streamURL: URL(string: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8")!,
             number: "024",
             name: "tagesschau24",
+            mark: "t24",
             now: "Live news",
             next: "Schedule from provider",
-            progress: 0.58
+            progress: 0.58,
+            currentTime: "Live coverage"
         ),
         SabellaTVChannel(
             id: "rtl-1025",
             streamURL: URL(string: "https://streamcdnc1-dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S97044836/tbbP8T1ZRPBL/playlist_video.m3u8")!,
             number: "036",
             name: "RTL 102.5",
+            mark: "rtl",
             now: "Radiovisione live",
             next: "Schedule from provider",
-            progress: 0.31
+            progress: 0.31,
+            currentTime: "Live coverage"
         ),
         SabellaTVChannel(
             id: "radio-italia",
             streamURL: URL(string: "https://radioitaliatv.akamaized.net/hls/live/2093117/RadioitaliaTV/master.m3u8")!,
             number: "070",
             name: "Radio Italia TV",
+            mark: "rit",
             now: "Solo musica italiana",
             next: "Schedule from provider",
-            progress: 0.74
+            progress: 0.74,
+            currentTime: "Live coverage"
         ),
     ]
 
@@ -331,7 +341,14 @@ private struct CatalogPlayback: View {
         ZStack(alignment: .bottomLeading) {
             CatalogPlayerSurface(player: player)
             if guideVisible {
-                SabellaTVChannelGuide(channels: channels, selection: selectedChannelID) { channel in
+                SabellaTVChannelGuide(
+                    channels: channels,
+                    selection: selectedChannelID,
+                    isPlaying: isPlaying,
+                    isMuted: isMuted,
+                    togglePlayback: { isPlaying.toggle() },
+                    toggleMute: { isMuted.toggle() }
+                ) { channel in
                     selectedChannelID = channel.id
                     player.replaceCurrentItem(with: AVPlayerItem(url: channel.streamURL))
                     withAnimation(playbackAnimation) { guideVisible = false }
@@ -356,6 +373,7 @@ private struct CatalogPlayback: View {
         .onAppear { player.play() }
         .onDisappear { player.pause() }
         .onChange(of: isPlaying) { _, playing in playing ? player.play() : player.pause() }
+        .onChange(of: isMuted) { _, muted in player.isMuted = muted }
         .onExitCommand {
             if guideVisible {
                 close()

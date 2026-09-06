@@ -27,6 +27,7 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
     public let progress: Double
     public let currentTime: String?
     public let nextTime: String?
+    public let backgroundPlayback: SabellaTVBackgroundPlayback
 
     public init(
         id: String,
@@ -39,7 +40,8 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
         next: String,
         progress: Double,
         currentTime: String? = nil,
-        nextTime: String? = nil
+        nextTime: String? = nil,
+        backgroundPlayback: SabellaTVBackgroundPlayback = .suspend
     ) {
         self.id = id
         self.streamURL = streamURL
@@ -52,7 +54,17 @@ public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
         self.progress = progress
         self.currentTime = currentTime
         self.nextTime = nextTime
+        self.backgroundPlayback = backgroundPlayback
     }
+}
+
+public enum SabellaTVBackgroundPlayback: Hashable, Sendable {
+    /// Stop playback when the application leaves the foreground. This is the
+    /// default for television and video channels.
+    case suspend
+
+    /// Continue audio while backgrounded. Audio-first radio channels must opt in.
+    case audio
 }
 
 public enum SabellaTVChannelTone: Hashable, Sendable {

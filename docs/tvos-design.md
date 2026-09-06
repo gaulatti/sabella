@@ -78,6 +78,10 @@ Once a channel is tuned, live viewing is entirely unobstructed. Do not persist a
 VOD transport card, implementation labels, duplicate channel metadata, or a
 fabricated timeline over linear video. The remote Play/Pause command remains
 active, and Menu restores the guide.
+Television channels use `.suspend` background playback by default: entering the
+background stops both picture and sound, then foreground activation resumes only
+if playback had been active. Audio-first radio channels may explicitly opt into
+`.audio`; never infer background-audio permission from a channel name or URL.
 
 Playback changes use a restrained ease-in-out transition: the catalog dissolves
 into full-screen video, while the guide enters from the leading edge. Reduce

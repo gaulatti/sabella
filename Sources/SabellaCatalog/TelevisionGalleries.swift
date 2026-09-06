@@ -274,11 +274,13 @@ struct SabellaTelevisionCatalog: View {
 
 private struct CatalogPlayback: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var player: AVPlayer
     @State private var isPlaying = true
     @State private var isMuted = false
     @State private var guideVisible = true
     @State private var selectedChannelID = "sky-news"
+    @State private var resumePlaybackWhenActive = false
     private let close: () -> Void
     private let channels = [
         SabellaTVChannel(
@@ -361,11 +363,14 @@ private struct CatalogPlayback: View {
             }
         }
         .ignoresSafeArea()
-        .onAppear { player.play() }
+        .onAppear { if isPlaying { player.play() } }
         .onDisappear { player.pause() }
         .onChange(of: isPlaying) { _, playing in playing ? player.play() : player.pause() }
         .onChange(of: isMuted) { _, muted in player.isMuted = muted }
         .onPlayPauseCommand { isPlaying.toggle() }
+        .onChange(of: scenePhase) { _, phase in
+            handleScenePhase(phase)
+        }
         .onExitCommand {
             if guideVisible {
                 close()
@@ -377,6 +382,27 @@ private struct CatalogPlayback: View {
 
     private var playbackAnimation: Animation? {
         reduceMotion ? nil : .easeInOut(duration: 0.38)
+    }
+
+    private var selectedChannel: SabellaTVChannel {
+        channels.first { $0.id == selectedChannelID } ?? channels[0]
+    }
+
+    private func handleScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .background:
+            guard selectedChannel.backgroundPlayback == .suspend else { return }
+            resumePlaybackWhenActive = isPlaying
+            isPlaying = false
+        case .active:
+            guard resumePlaybackWhenActive else { return }
+            resumePlaybackWhenActive = false
+            isPlaying = true
+        case .inactive:
+            break
+        @unknown default:
+            break
+        }
     }
 
 }

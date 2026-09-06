@@ -46,6 +46,22 @@ row. `SabellaTVCard` supports landscape or poster artwork, an optional relevance
 badge, and bounded watch progress. `SabellaTVContextBadge` is also available for
 live, entitlement, ranking, and availability labels.
 
+The catalog's Playback surface uses public Sky News, tagesschau24, RTL 102.5,
+and Radio Italia TV HLS feeds. Its
+overlay declares the stream live, supports Play/Pause, and intentionally omits
+fabricated duration and seeking controls because the feed does not advertise a
+DVR contract.
+
+Linear television keeps playback behind a remote-navigable channel guide.
+`SabellaTVChannelGuide` presents channel number and identity, the current and
+next programs, schedule progress, and the selected channel. Selecting a channel
+returns to unobstructed video; Menu toggles between full-screen playback and the
+guide without stopping the stream. Applications provide the channel lineup,
+schedule, entitlement, and stream URLs from their authoritative services.
+Playback itself is edge-to-edge and sits outside the browse/header container.
+Menu reveals the guide over uninterrupted video; pressing Menu again exits to
+Browse. Global navigation must never remain visible during full-screen viewing.
+
 ## Catalog acceptance
 
 The tvOS catalog demonstrates browse, details, playback, and state surfaces.
@@ -54,6 +70,11 @@ and a poster-based editorial collection. Every control must be reachable and
 activatable with directional focus and Select; Play/Pause must toggle playback.
 The header must keep the Bleecker mark, product name, navigation, and utility
 actions in separate layout regions without collision at 1080p or 4K.
+The tall Gaulatti mark must remain large enough for its detached forms to read
+at viewing distance; do not place a divider beside its right-hand stroke.
+`SabellaTVScreen` owns the full viewport and pins its content to the top-leading
+safe region. Short pages must not vertically center the header, and overflowing
+pages must scroll only their body rather than displacing global navigation.
 
 ## Research basis
 

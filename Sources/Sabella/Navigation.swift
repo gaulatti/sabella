@@ -6,20 +6,19 @@ public struct BleeckerBrandLockup: View {
     public init(name: String) { self.name = name }
     public var body: some View {
         let p = BleeckerPalette.resolve(scheme)
-        HStack(spacing: BleeckerSpacing.component) {
+        HStack(spacing: 16) {
             Image("BleeckerLogo", bundle: .module)
             .resizable()
             .scaledToFit()
             .foregroundStyle(p.textPrimary.opacity(0.9))
             .frame(width: logoWidth, height: logoHeight)
-            Rectangle().fill(p.border).frame(width: 1, height: logoHeight)
             Text(name).font(BleeckerTypography.primary(labelSize, weight: .semibold)).tracking(-0.4).foregroundStyle(p.textPrimary)
         }
     }
 
     private var logoWidth: CGFloat {
 #if os(tvOS)
-        34
+        46
 #else
         25
 #endif
@@ -27,7 +26,7 @@ public struct BleeckerBrandLockup: View {
 
     private var logoHeight: CGFloat {
 #if os(tvOS)
-        44
+        59
 #else
         32
 #endif

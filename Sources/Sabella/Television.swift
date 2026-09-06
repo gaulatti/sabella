@@ -15,6 +15,26 @@ public struct SabellaTVContent: Identifiable, Hashable, Sendable {
     }
 }
 
+public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
+    public let id: String
+    public let streamURL: URL
+    public let number: String
+    public let name: String
+    public let now: String
+    public let next: String
+    public let progress: Double
+
+    public init(id: String, streamURL: URL, number: String, name: String, now: String, next: String, progress: Double) {
+        self.id = id
+        self.streamURL = streamURL
+        self.number = number
+        self.name = name
+        self.now = now
+        self.next = next
+        self.progress = progress
+    }
+}
+
 public enum SabellaTVArtworkRatio: Sendable {
     case landscape
     case poster
@@ -48,6 +68,7 @@ public struct SabellaTVScreen<Content: View>: View {
             content
                 .safeAreaPadding(.horizontal, 96)
                 .safeAreaPadding(.vertical, 54)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .foregroundStyle(palette.textPrimary)
     }
@@ -72,6 +93,55 @@ public struct SabellaTVContextBadge: View {
         .frame(minHeight: 32)
         .background(.black.opacity(0.72), in: Capsule())
         .accessibilityElement(children: .combine)
+    }
+}
+
+public struct SabellaTVChannelGuide: View {
+    private let channels: [SabellaTVChannel]
+    private let selection: String
+    private let select: (SabellaTVChannel) -> Void
+
+    public init(channels: [SabellaTVChannel], selection: String, select: @escaping (SabellaTVChannel) -> Void) {
+        self.channels = channels
+        self.selection = selection
+        self.select = select
+    }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                Text("Live TV").font(BleeckerTypography.primary(34, weight: .bold))
+                Spacer()
+                Text("Now / Next").font(BleeckerTypography.secondary(18)).foregroundStyle(.white.opacity(0.62))
+            }
+            ForEach(channels) { channel in
+                Button { select(channel) } label: {
+                    HStack(spacing: 18) {
+                        Text(channel.number)
+                            .font(BleeckerTypography.mono(19, weight: .bold))
+                            .frame(width: 52)
+                        VStack(alignment: .leading, spacing: 7) {
+                            HStack {
+                                Text(channel.name).font(BleeckerTypography.primary(24, weight: .bold))
+                                if selection == channel.id { SabellaTVContextBadge("ON NOW") }
+                            }
+                            Text(channel.now).font(BleeckerTypography.secondary(20, weight: .medium))
+                            ProgressView(value: min(max(channel.progress, 0), 1)).tint(BleeckerPalette.dark.sea)
+                            Text("Next · \(channel.next)")
+                                .font(BleeckerTypography.secondary(17))
+                                .foregroundStyle(.white.opacity(0.62))
+                        }
+                    }
+                    .padding(18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(30)
+        .frame(width: 620)
+        .background(.black.opacity(0.86), in: RoundedRectangle(cornerRadius: 28))
+        .focusSection()
     }
 }
 
@@ -369,6 +439,7 @@ public struct SabellaTVPlaybackOverlay: View {
     private let subtitle: String
     private let elapsed: TimeInterval
     private let duration: TimeInterval
+    private let isLive: Bool
     private let skipBackward: () -> Void
     private let skipForward: () -> Void
 
@@ -378,6 +449,7 @@ public struct SabellaTVPlaybackOverlay: View {
         isPlaying: Binding<Bool>,
         elapsed: TimeInterval,
         duration: TimeInterval,
+        isLive: Bool = false,
         skipBackward: @escaping () -> Void = {},
         skipForward: @escaping () -> Void = {}
     ) {
@@ -386,6 +458,7 @@ public struct SabellaTVPlaybackOverlay: View {
         _isPlaying = isPlaying
         self.elapsed = elapsed
         self.duration = duration
+        self.isLive = isLive
         self.skipBackward = skipBackward
         self.skipForward = skipForward
     }
@@ -396,22 +469,30 @@ public struct SabellaTVPlaybackOverlay: View {
                 Text(title).font(BleeckerTypography.primary(34, weight: .bold))
                 Text(subtitle).font(BleeckerTypography.secondary(20)).foregroundStyle(.white.opacity(0.68))
             }
-            ProgressView(value: elapsed, total: max(duration, 1))
-                .tint(BleeckerPalette.dark.sea)
-                .scaleEffect(y: 1.8)
-            HStack {
-                Text(elapsed.formattedDuration)
-                Spacer()
-                Text(duration.formattedDuration)
+            if isLive {
+                SabellaTVContextBadge("LIVE", systemImage: "dot.radiowaves.left.and.right")
+            } else {
+                ProgressView(value: elapsed, total: max(duration, 1))
+                    .tint(BleeckerPalette.dark.sea)
+                    .scaleEffect(y: 1.8)
+                HStack {
+                    Text(elapsed.formattedDuration)
+                    Spacer()
+                    Text(duration.formattedDuration)
+                }
+                .font(BleeckerTypography.mono(17, weight: .medium))
+                .foregroundStyle(.white.opacity(0.72))
             }
-            .font(BleeckerTypography.mono(17, weight: .medium))
-            .foregroundStyle(.white.opacity(0.72))
             HStack(spacing: 28) {
-                Button(action: skipBackward) { Label("Back 10", systemImage: "gobackward.10") }
+                if !isLive {
+                    Button(action: skipBackward) { Label("Back 10", systemImage: "gobackward.10") }
+                }
                 Button { isPlaying.toggle() } label: {
                     Label(isPlaying ? "Pause" : "Play", systemImage: isPlaying ? "pause.fill" : "play.fill")
                 }
-                Button(action: skipForward) { Label("Forward 10", systemImage: "goforward.10") }
+                if !isLive {
+                    Button(action: skipForward) { Label("Forward 10", systemImage: "goforward.10") }
+                }
             }
             .buttonStyle(SabellaTVPrimaryButtonStyle())
             .focusSection()

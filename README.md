@@ -77,10 +77,16 @@ for example `SIMULATOR_NAME="iPad mini (A17 Pro)" scripts/run-catalog.sh ipad`.
 - iPhone uses compact touch navigation and safe-area-aware galleries.
 - iPad uses the adaptive split view in portrait, landscape, and resized windows,
   with native pointer and keyboard input.
-- tvOS uses a focus-driven split view and remote-operable examples. Date range
-  and file input are explicitly excluded because those Sabella components are
-  unavailable on tvOS; the catalog names that exception instead of silently
-  omitting it.
+- tvOS presents a television-first showcase instead of the cross-platform
+  component inventory. It exercises cinematic hero and detail layouts,
+  remote-focusable content cards and shelves, playback transport, and full-screen
+  TV state surfaces through the reusable `SabellaTV*` APIs.
+
+The television surface includes `SabellaTVScreen`, `SabellaTVNavigationBar`,
+`SabellaTVHero`, `SabellaTVCard`, `SabellaTVShelf`,
+`SabellaTVPrimaryButtonStyle`, and `SabellaTVPlaybackOverlay`. These APIs exist
+only when compiling for tvOS so application code cannot accidentally treat the
+television interaction model as a desktop or touch layout.
 
 Run `swift test` before release. The catalog coverage test discovers every
 public Sabella `View`, `ButtonStyle`, and `ToggleStyle` from library source and

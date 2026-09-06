@@ -99,3 +99,21 @@ import SabellaCatalogSupport
     )
     #expect(missing == ["BleeckerDeliberatelyOmitted"])
 }
+
+@Test func televisionCatalogCoversEveryPublicTVVisual() throws {
+    let sourceFile = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("Sources/Sabella/Television.swift")
+    let source = try String(contentsOf: sourceFile, encoding: .utf8)
+    let expression = try NSRegularExpression(
+        pattern: #"public struct (SabellaTV[A-Za-z0-9]+)(?:<[^\n]+>)?: (?:View|ButtonStyle)"#
+    )
+    let range = NSRange(source.startIndex..., in: source)
+    let components = Set(expression.matches(in: source, range: range).compactMap { match in
+        Range(match.range(at: 1), in: source).map { String(source[$0]) }
+    })
+
+    #expect(SabellaCatalogCoverage.missingTelevisionComponents(publicComponents: components).isEmpty)
+}

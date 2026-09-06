@@ -26,6 +26,16 @@ The goal is behavioral and visual convergence, not DOM emulation. Native platfor
 
 When Bleecker changes a platform-neutral token or public contract, update Sabella in the same change and extend the parity tests. Platform-specific behavior may diverge only to preserve keyboard navigation, focus, accessibility, menu conventions, or remote interaction.
 
+## Television boundary
+
+tvOS is not governed by web-component parity. It shares Sabella’s palette,
+typography, spacing, and low-level accessibility contracts, then exposes a
+television-native `SabellaTV*` surface for remote focus, 10-foot hierarchy,
+cinematic hero and detail screens, horizontal content shelves, and playback
+transport. Desktop administration, form, and chart components may continue to
+compile for shared consumers, but they are not the tvOS catalog or its product
+acceptance boundary.
+
 ## Catalog release gate
 
 Every public visual Sabella type is registered in the separate

@@ -22,7 +22,7 @@ struct SabellaCatalogApp: App {
 struct CatalogPlatformRootView: View {
     var body: some View {
 #if os(tvOS)
-        TVCatalogRootView()
+        SabellaTelevisionCatalog()
 #else
         CatalogRootView()
 #endif
@@ -207,38 +207,6 @@ struct CatalogRootView: View {
         }
     }
 }
-
-#if os(tvOS)
-struct TVCatalogRootView: View {
-    @State private var selection: CatalogPage? = .foundations
-    @State private var appearance = CatalogAppearance.system
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        NavigationSplitView {
-            List(CatalogPage.allCases, selection: $selection) { page in
-                NavigationLink(value: page) {
-                    Label(page.rawValue, systemImage: page.icon)
-                }
-            }
-            .navigationTitle("Sabella")
-        } detail: {
-            CatalogPageView(page: selection ?? .foundations)
-                .safeAreaInset(edge: .bottom) {
-                    Picker("Appearance", selection: $appearance) {
-                        ForEach(CatalogAppearance.allCases) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 64)
-                }
-        }
-        .preferredColorScheme(appearance.scheme)
-        .transaction { transaction in
-            if reduceMotion { transaction.animation = nil }
-        }
-    }
-}
-#endif
 
 struct CatalogPageView: View {
     let page: CatalogPage

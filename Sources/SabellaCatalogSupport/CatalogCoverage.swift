@@ -1,4 +1,14 @@
 public enum SabellaCatalogCoverage {
+    public static let registeredTelevisionComponents: Set<String> = [
+        "SabellaTVCard",
+        "SabellaTVHero",
+        "SabellaTVNavigationBar",
+        "SabellaTVPlaybackOverlay",
+        "SabellaTVPrimaryButtonStyle",
+        "SabellaTVScreen",
+        "SabellaTVShelf",
+    ]
+
     public static let registeredComponents: Set<String> = [
         "BleeckerAccordion",
         "BleeckerActivityItem",
@@ -85,5 +95,9 @@ public enum SabellaCatalogCoverage {
         registeredComponents: Set<String> = registeredComponents
     ) -> [String] {
         publicComponents.subtracting(registeredComponents).sorted()
+    }
+
+    public static func missingTelevisionComponents(publicComponents: Set<String>) -> [String] {
+        publicComponents.subtracting(registeredTelevisionComponents).sorted()
     }
 }

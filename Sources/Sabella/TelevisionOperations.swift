@@ -45,16 +45,117 @@ public struct SabellaTVChromeHeader: View {
             BleeckerBrandLockup(name: productName)
             Spacer()
             if showsClock {
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    Text(context.date, format: .dateTime.hour().minute().second())
-                        .font(BleeckerTypography.mono(22, weight: .medium))
-                        .tracking(1.2)
-                        .foregroundStyle(BleeckerPalette.dark.textSecondary)
-                }
+                SabellaTVClock()
             }
         }
         .frame(minHeight: 76)
         .accessibilityElement(children: .contain)
+    }
+}
+
+public struct SabellaTVClock: View {
+    public init() {}
+
+    public var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            Text(context.date, format: .dateTime.hour().minute().second())
+                .font(BleeckerTypography.mono(22, weight: .medium))
+                .tracking(1.2)
+                .foregroundStyle(BleeckerPalette.dark.textSecondary)
+        }
+        .accessibilityLabel("Current time")
+    }
+}
+
+public struct SabellaTVNavigationHeader<Value: Hashable, Utilities: View>: View {
+    private let productName: String
+    @Binding private var selection: Value
+    private let items: [SabellaTVNavigationItem<Value>]
+    private let utilities: Utilities
+    @Binding private var focusRequested: Bool
+    @Binding private var contentFocusRequested: Bool
+    @FocusState private var focusedItem: Value?
+
+    public init(
+        productName: String,
+        selection: Binding<Value>,
+        items: [SabellaTVNavigationItem<Value>],
+        focusRequested: Binding<Bool> = .constant(false),
+        contentFocusRequested: Binding<Bool> = .constant(false),
+        @ViewBuilder utilities: () -> Utilities
+    ) {
+        self.productName = productName
+        _selection = selection
+        self.items = items
+        _focusRequested = focusRequested
+        _contentFocusRequested = contentFocusRequested
+        self.utilities = utilities()
+    }
+
+    public var body: some View {
+        HStack(spacing: 32) {
+            BleeckerBrandLockup(name: productName)
+            Spacer(minLength: 52)
+            SabellaTVNavigationBar(
+                selection: $selection,
+                items: items,
+                focusedItem: $focusedItem,
+                requestContentFocus: {
+                    focusedItem = nil
+                    contentFocusRequested = true
+                }
+            )
+            Spacer(minLength: 52)
+            utilities
+        }
+        .frame(minHeight: 76)
+        .accessibilityElement(children: .contain)
+        .onChange(of: focusRequested) { _, requested in
+            guard requested else { return }
+            focusedItem = items.contains(where: { $0.value == selection })
+                ? selection
+                : items.first?.value
+            focusRequested = false
+        }
+    }
+}
+
+public struct SabellaTVUserButton: View {
+    private let selected: Bool
+    private let action: () -> Void
+
+    public init(selected: Bool, action: @escaping () -> Void) {
+        self.selected = selected
+        self.action = action
+    }
+
+    public var body: some View {
+        Button(action: action) {
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: 29, weight: .semibold))
+                .foregroundStyle(selected ? .white : .white.opacity(0.72))
+                .frame(width: 58, height: 58)
+        }
+        .buttonStyle(SabellaTVHeaderButtonStyle(selected: selected))
+        .focusEffectDisabled()
+        .accessibilityLabel("User and settings")
+    }
+}
+
+private struct SabellaTVHeaderButtonStyle: ButtonStyle {
+    @Environment(\.isFocused) private var focused
+    let selected: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(focused ? BleeckerPalette.dark.deepSea : .clear, in: Circle())
+            .overlay {
+                Circle().strokeBorder(
+                    focused || selected ? BleeckerPalette.dark.sea : .clear,
+                    lineWidth: focused ? 3 : 2
+                )
+            }
+            .opacity(configuration.isPressed ? 0.82 : 1)
     }
 }
 
@@ -90,53 +191,267 @@ public enum SabellaTVChannelHomeState {
     case ready([SabellaTVChannelGroupSummary])
 }
 
+public enum SabellaTVChannelBrowserPage: Hashable, Sendable {
+    case home
+    case channels
+    case user
+}
+
+public struct SabellaTVUserAction: Identifiable, Hashable, Sendable {
+    public let id: String
+    public let title: String
+    public let subtitle: String
+    public let systemImage: String
+
+    public init(id: String, title: String, subtitle: String, systemImage: String) {
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.systemImage = systemImage
+    }
+}
+
 public struct SabellaTVChannelHome: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let productName: String
     private let state: SabellaTVChannelHomeState
+    @Binding private var page: SabellaTVChannelBrowserPage
+    @Binding private var focusedGroupID: String?
+    private let userName: String?
+    private let userDetail: String
+    private let userActions: [SabellaTVUserAction]
     private let retry: () -> Void
+    private let selectUserAction: (SabellaTVUserAction) -> Void
     private let select: (SabellaTVChannelGroupSummary) -> Void
+    @State private var headerFocusRequested = false
+    @State private var contentFocusRequested = false
 
     public init(
         productName: String,
         state: SabellaTVChannelHomeState,
+        page: Binding<SabellaTVChannelBrowserPage>,
+        focusedGroupID: Binding<String?>,
+        userName: String?,
+        userDetail: String,
+        userActions: [SabellaTVUserAction],
         retry: @escaping () -> Void,
+        selectUserAction: @escaping (SabellaTVUserAction) -> Void,
         select: @escaping (SabellaTVChannelGroupSummary) -> Void
     ) {
         self.productName = productName
         self.state = state
+        _page = page
+        _focusedGroupID = focusedGroupID
+        self.userName = userName
+        self.userDetail = userDetail
+        self.userActions = userActions
         self.retry = retry
+        self.selectUserAction = selectUserAction
         self.select = select
     }
 
     public var body: some View {
-        SabellaTVChromeScreen(productName: productName) {
-            switch state {
-            case .loading:
-                SabellaTVLoadingState("Loading channel groups…")
-            case let .failed(message):
-                SabellaTVChannelHomeMessage(
-                    eyebrow: "Connection",
-                    icon: "wifi.exclamationmark",
-                    title: "Channel groups unavailable",
-                    message: message,
-                    actionTitle: "Try again",
-                    action: retry
-                )
-            case .empty:
-                SabellaTVChannelHomeMessage(
-                    eyebrow: "Your television",
-                    icon: "rectangle.3.group",
-                    title: "No channel groups yet",
-                    message: "Create a channel group in Celesti to start watching.",
-                    actionTitle: nil,
-                    action: retry
-                )
-            case let .ready(groups):
-                SabellaTVChannelGroupBrowser(groups: groups, select: select)
+        ZStack {
+            SabellaTVAmbientBackground()
+            VStack(spacing: 0) {
+                SabellaTVNavigationHeader(
+                    productName: productName,
+                    selection: $page,
+                    items: [
+                        SabellaTVNavigationItem(.home, title: "Home"),
+                        SabellaTVNavigationItem(.channels, title: "Channels"),
+                    ],
+                    focusRequested: $headerFocusRequested,
+                    contentFocusRequested: $contentFocusRequested
+                ) {
+                    HStack(spacing: 24) {
+                        SabellaTVClock()
+                        SabellaTVUserButton(selected: page == .user) { page = .user }
+                    }
+                }
+                .padding(.horizontal, 84)
+                .frame(height: 132)
+
+                channelContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .padding(.horizontal, 84)
                     .padding(.bottom, 44)
+                    .clipped()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: page)
+        .onExitCommand {
+            if page != .home { page = .home }
+        }
+    }
+
+    @ViewBuilder
+    private var channelContent: some View {
+        switch state {
+        case .loading:
+            SabellaTVLoadingState("Loading channel groups…")
+        case let .failed(message):
+            SabellaTVChannelHomeMessage(
+                eyebrow: "Connection",
+                icon: "wifi.exclamationmark",
+                title: "Channel groups unavailable",
+                message: message,
+                actionTitle: "Try again",
+                action: retry
+            )
+        case .empty:
+            SabellaTVChannelHomeMessage(
+                eyebrow: "Your television",
+                icon: "rectangle.3.group",
+                title: "No channel groups yet",
+                message: "Create a channel group in Celesti to start watching.",
+                actionTitle: nil,
+                action: retry
+            )
+        case let .ready(groups):
+            switch page {
+            case .home:
+                SabellaTVChannelGroupBrowser(
+                    groups: groups,
+                    focusedGroupID: $focusedGroupID,
+                    headerFocusRequested: $headerFocusRequested,
+                    contentFocusRequested: $contentFocusRequested,
+                    browseAll: { page = .channels },
+                    select: select
+                )
+                .transition(.opacity)
+            case .channels:
+                SabellaTVChannelGroupDirectory(
+                    groups: groups,
+                    focusedGroupID: $focusedGroupID,
+                    headerFocusRequested: $headerFocusRequested,
+                    contentFocusRequested: $contentFocusRequested,
+                    select: select
+                )
+                .transition(.opacity)
+            case .user:
+                SabellaTVUserSettings(
+                    name: userName,
+                    detail: userDetail,
+                    actions: userActions,
+                    headerFocusRequested: $headerFocusRequested,
+                    select: selectUserAction
+                )
+                .transition(.opacity)
             }
         }
+    }
+}
+
+public struct SabellaTVUserSettings: View {
+    private let name: String?
+    private let detail: String
+    private let actions: [SabellaTVUserAction]
+    @Binding private var headerFocusRequested: Bool
+    private let select: (SabellaTVUserAction) -> Void
+    @FocusState private var focusedActionID: String?
+
+    public init(
+        name: String?,
+        detail: String,
+        actions: [SabellaTVUserAction],
+        headerFocusRequested: Binding<Bool> = .constant(false),
+        select: @escaping (SabellaTVUserAction) -> Void
+    ) {
+        self.name = name
+        self.detail = detail
+        self.actions = actions
+        _headerFocusRequested = headerFocusRequested
+        self.select = select
+    }
+
+    public var body: some View {
+        HStack(alignment: .top, spacing: 76) {
+            VStack(alignment: .leading, spacing: 18) {
+                SabellaTVSectionLabel("User and settings")
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.system(size: 112, weight: .light))
+                    .foregroundStyle(BleeckerPalette.dark.sea)
+                    .padding(.top, 20)
+                if let displayName {
+                    Text(displayName)
+                        .font(BleeckerTypography.primary(44, weight: .bold))
+                } else {
+                    Text("Name unavailable")
+                        .font(BleeckerTypography.primary(34, weight: .bold))
+                        .foregroundStyle(BleeckerPalette.dark.textSecondary)
+                }
+                Text(detail)
+                    .font(BleeckerTypography.secondary(21))
+                    .foregroundStyle(BleeckerPalette.dark.textSecondary)
+            }
+            .frame(width: 470, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Actions")
+                    .font(BleeckerTypography.primary(30, weight: .bold))
+                ForEach(actions) { action in
+                    Button { select(action) } label: {
+                        HStack(spacing: 18) {
+                            Image(systemName: action.systemImage)
+                                .font(.system(size: 28, weight: .semibold))
+                                .frame(width: 48)
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(action.title)
+                                    .font(BleeckerTypography.primary(25, weight: .bold))
+                                Text(action.subtitle)
+                                    .font(BleeckerTypography.secondary(19))
+                                    .foregroundStyle(BleeckerPalette.dark.textSecondary)
+                            }
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        .frame(width: 640)
+                        .frame(minHeight: 88)
+                    }
+                    .buttonStyle(SabellaTVSettingsButtonStyle())
+                    .focusEffectDisabled()
+                    .focused($focusedActionID, equals: action.id)
+                    .onMoveCommand { direction in
+                        guard direction == .up, action.id == actions.first?.id else { return }
+                        focusedActionID = nil
+                        headerFocusRequested = true
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 72)
+        .padding(.top, 54)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .task {
+            await Task.yield()
+            focusedActionID = actions.first?.id
+        }
+    }
+
+    private var displayName: String? {
+        guard let name else { return nil }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+private struct SabellaTVSettingsButtonStyle: ButtonStyle {
+    @Environment(\.isFocused) private var focused
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.white)
+            .background(
+                focused ? BleeckerPalette.dark.deepSea : .white.opacity(0.07),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(focused ? BleeckerPalette.dark.sea : .white.opacity(0.08), lineWidth: focused ? 3 : 1)
+            }
+            .opacity(configuration.isPressed ? 0.84 : 1)
     }
 }
 

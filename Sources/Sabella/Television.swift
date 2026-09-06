@@ -31,10 +31,27 @@ public struct SabellaTVChannelGroupSummary: Identifiable, Hashable, Sendable {
 
 public struct SabellaTVChannelGroupBrowser: View {
     private let groups: [SabellaTVChannelGroupSummary]
+    @Binding private var focusedGroupID: String?
+    @Binding private var headerFocusRequested: Bool
+    @Binding private var contentFocusRequested: Bool
+    private let browseAll: () -> Void
     private let select: (SabellaTVChannelGroupSummary) -> Void
+    @FocusState private var focusedID: String?
+    @FocusState private var browseAllFocused: Bool
 
-    public init(groups: [SabellaTVChannelGroupSummary], select: @escaping (SabellaTVChannelGroupSummary) -> Void) {
+    public init(
+        groups: [SabellaTVChannelGroupSummary],
+        focusedGroupID: Binding<String?>,
+        headerFocusRequested: Binding<Bool> = .constant(false),
+        contentFocusRequested: Binding<Bool> = .constant(false),
+        browseAll: @escaping () -> Void,
+        select: @escaping (SabellaTVChannelGroupSummary) -> Void
+    ) {
         self.groups = groups
+        _focusedGroupID = focusedGroupID
+        _headerFocusRequested = headerFocusRequested
+        _contentFocusRequested = contentFocusRequested
+        self.browseAll = browseAll
         self.select = select
     }
 
@@ -62,76 +79,291 @@ public struct SabellaTVChannelGroupBrowser: View {
                             .padding(.trailing, 96)
                     }
                 } actions: {
-                    if let firstPlayableGroup {
-                        Button { select(firstPlayableGroup) } label: {
-                            Label("Watch live", systemImage: "play.fill")
-                        }
-                        .buttonStyle(SabellaTVPrimaryButtonStyle())
+                    Button(action: browseAll) {
+                        Label("Browse all groups", systemImage: "square.grid.2x2.fill")
+                    }
+                    .buttonStyle(SabellaTVPrimaryButtonStyle())
+                    .focused($browseAllFocused)
+                    .onMoveCommand { direction in
+                        guard direction == .up else { return }
+                        browseAllFocused = false
+                        headerFocusRequested = true
                     }
                 }
 
-                SabellaTVShelf("Channel groups", items: indexedGroups) { item in
-                    SabellaTVCard(
-                        title: item.group.name,
-                        subtitle: item.group.channelCount == 0
-                            ? "No channels assigned"
-                            : "\(item.group.channelCount) live channel\(item.group.channelCount == 1 ? "" : "s")",
-                        width: 360,
-                        context: item.group.channelCount == 0 ? "EMPTY" : "LIVE",
-                        enabled: item.group.channelCount > 0,
-                        action: { select(item.group) }
-                    ) {
-                        LinearGradient(
-                            colors: artworkColors(for: item.index),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        .overlay {
-                            Image(systemName: item.group.systemImage)
-                                .font(.system(size: 112, weight: .light))
-                                .foregroundStyle(.white.opacity(0.2))
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("Featured groups")
+                        .font(BleeckerTypography.primary(32, weight: .bold))
+                    ScrollViewReader { proxy in
+                        ScrollView(.horizontal) {
+                            LazyHStack(spacing: 40) {
+                                ForEach(featuredGroups) { item in
+                                    SabellaTVChannelGroupTile(
+                                        item: item,
+                                        focusedID: $focusedID,
+                                        select: rememberAndSelect
+                                    )
+                                    .id(item.id)
+                                }
+                            }
+                            .scrollTargetLayout()
+                            .padding(.vertical, 28)
+                            .padding(.horizontal, 12)
                         }
-                        .overlay(alignment: .bottomTrailing) {
-                            Text(String(format: "%02d", item.index + 1))
-                                .font(BleeckerTypography.mono(24, weight: .bold))
-                                .foregroundStyle(.white.opacity(0.66))
-                                .padding(22)
+                        .scrollTargetBehavior(.viewAligned)
+                        .scrollIndicators(.hidden)
+                        .scrollClipDisabled()
+                        .task {
+                            guard let focusedGroupID,
+                                  featuredGroups.contains(where: { $0.id == focusedGroupID }) else { return }
+                            proxy.scrollTo(focusedGroupID, anchor: .center)
+                            await Task.yield()
+                            focusedID = focusedGroupID
                         }
                     }
                 }
+                .focusSection()
             }
             .padding(.bottom, 80)
         }
         .scrollIndicators(.hidden)
+        .onChange(of: focusedID) { _, id in
+            if let id { focusedGroupID = id }
+        }
+        .onChange(of: contentFocusRequested) { _, requested in
+            guard requested else { return }
+            focusedID = nil
+            browseAllFocused = true
+            contentFocusRequested = false
+        }
     }
 
     private var channelCount: Int {
         groups.reduce(0) { $0 + $1.channelCount }
     }
 
-    private var firstPlayableGroup: SabellaTVChannelGroupSummary? {
-        groups.first { $0.channelCount > 0 }
+    private var featuredGroups: [SabellaTVIndexedChannelGroup] {
+        Array(indexedGroups.filter { $0.group.channelCount > 0 }.prefix(4))
     }
 
-    private var indexedGroups: [IndexedGroup] {
-        groups.enumerated().map { IndexedGroup(index: $0.offset, group: $0.element) }
+    private var indexedGroups: [SabellaTVIndexedChannelGroup] {
+        groups.enumerated().map { SabellaTVIndexedChannelGroup(index: $0.offset, group: $0.element) }
     }
 
-    private func artworkColors(for index: Int) -> [Color] {
-        let palettes: [[Color]] = [
-            [BleeckerPalette.dark.sea, BleeckerPalette.dark.deepSea],
-            [BleeckerPalette.dark.terracotta, BleeckerPalette.dark.accentOxblood],
-            [BleeckerPalette.dark.accentGold, BleeckerPalette.dark.deepSea],
-            [BleeckerPalette.dark.accentBlue, BleeckerPalette.dark.sea],
-        ]
-        return palettes[index % palettes.count]
+    private func rememberAndSelect(_ item: SabellaTVIndexedChannelGroup) {
+        guard item.group.channelCount > 0 else { return }
+        focusedGroupID = item.id
+        select(item.group)
+    }
+}
+
+public struct SabellaTVChannelGroupDirectory: View {
+    private let groups: [SabellaTVChannelGroupSummary]
+    @Binding private var focusedGroupID: String?
+    @Binding private var headerFocusRequested: Bool
+    @Binding private var contentFocusRequested: Bool
+    private let select: (SabellaTVChannelGroupSummary) -> Void
+    @FocusState private var focusedID: String?
+
+    public init(
+        groups: [SabellaTVChannelGroupSummary],
+        focusedGroupID: Binding<String?>,
+        headerFocusRequested: Binding<Bool> = .constant(false),
+        contentFocusRequested: Binding<Bool> = .constant(false),
+        select: @escaping (SabellaTVChannelGroupSummary) -> Void
+    ) {
+        self.groups = groups
+        _focusedGroupID = focusedGroupID
+        _headerFocusRequested = headerFocusRequested
+        _contentFocusRequested = contentFocusRequested
+        self.select = select
     }
 
-    private struct IndexedGroup: Identifiable {
-        let index: Int
-        let group: SabellaTVChannelGroupSummary
-        var id: String { group.id }
+    public var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical) {
+                VStack(alignment: .leading, spacing: 26) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        SabellaTVSectionLabel("Channel directory")
+                        HStack(alignment: .firstTextBaseline, spacing: 16) {
+                            Text("All groups")
+                                .font(BleeckerTypography.primary(46, weight: .bold))
+                            Text("\(groups.count)")
+                                .font(BleeckerTypography.mono(24, weight: .bold))
+                                .foregroundStyle(BleeckerPalette.dark.sea)
+                        }
+                        Text("Choose a group to open its live television and radio lineup.")
+                            .font(BleeckerTypography.secondary(21))
+                            .foregroundStyle(BleeckerPalette.dark.textSecondary)
+                    }
+
+                    LazyVGrid(columns: columns, alignment: .leading, spacing: 42) {
+                        ForEach(indexedGroups) { item in
+                            SabellaTVChannelGroupTile(
+                                item: item,
+                                focusedID: $focusedID,
+                                requestsHeaderOnUp: item.index < columns.count,
+                                requestHeaderFocus: requestHeaderFocus,
+                                select: rememberAndSelect
+                            )
+                            .id(item.id)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 20)
+                    .focusSection()
+                }
+                .padding(.bottom, 80)
+            }
+            .scrollIndicators(.hidden)
+            .task {
+                let target = focusedGroupID.flatMap { id in
+                    groups.contains(where: { $0.id == id }) ? id : nil
+                } ?? groups.first(where: { $0.channelCount > 0 })?.id
+                guard let target else { return }
+                proxy.scrollTo(target, anchor: .center)
+                await Task.yield()
+                focusedID = target
+            }
+            .onChange(of: focusedID) { _, id in
+                guard let id else { return }
+                focusedGroupID = id
+                withAnimation(.easeOut(duration: 0.24)) {
+                    proxy.scrollTo(id, anchor: .center)
+                }
+            }
+            .onChange(of: contentFocusRequested) { _, requested in
+                guard requested else { return }
+                let target = focusedGroupID.flatMap { id in
+                    groups.contains(where: { $0.id == id }) ? id : nil
+                } ?? groups.first(where: { $0.channelCount > 0 })?.id
+                focusedID = target
+                if let target {
+                    withAnimation(.easeOut(duration: 0.24)) {
+                        proxy.scrollTo(target, anchor: .center)
+                    }
+                }
+                contentFocusRequested = false
+            }
+        }
     }
+
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.fixed(360), spacing: 48), count: 4)
+    }
+
+    private var indexedGroups: [SabellaTVIndexedChannelGroup] {
+        groups.enumerated().map { SabellaTVIndexedChannelGroup(index: $0.offset, group: $0.element) }
+    }
+
+    private func rememberAndSelect(_ item: SabellaTVIndexedChannelGroup) {
+        guard item.group.channelCount > 0 else { return }
+        focusedGroupID = item.id
+        select(item.group)
+    }
+
+    private func requestHeaderFocus() {
+        focusedID = nil
+        headerFocusRequested = true
+    }
+}
+
+private struct SabellaTVIndexedChannelGroup: Identifiable {
+    let index: Int
+    let group: SabellaTVChannelGroupSummary
+    var id: String { group.id }
+}
+
+private struct SabellaTVChannelGroupTile: View {
+    let item: SabellaTVIndexedChannelGroup
+    let focusedID: FocusState<String?>.Binding
+    var requestsHeaderOnUp = false
+    var requestHeaderFocus: () -> Void = {}
+    let select: (SabellaTVIndexedChannelGroup) -> Void
+
+    private var focused: Bool { focusedID.wrappedValue == item.id }
+
+    var body: some View {
+        Button { select(item) } label: {
+            VStack(alignment: .leading, spacing: 11) {
+                LinearGradient(
+                    colors: sabellaTVGroupArtworkColors(for: item.index),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .overlay {
+                    Image(systemName: item.group.systemImage)
+                        .font(.system(size: 92, weight: .light))
+                        .foregroundStyle(.white.opacity(0.2))
+                }
+                .overlay(alignment: .topLeading) {
+                    if item.group.channelCount == 0 {
+                        SabellaTVContextBadge("EMPTY")
+                            .padding(14)
+                    } else {
+                        SabellaTVLiveBadge()
+                            .padding(14)
+                    }
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    Text(String(format: "%02d", item.index + 1))
+                        .font(BleeckerTypography.mono(22, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.66))
+                        .padding(20)
+                }
+                .frame(width: 336, height: 186)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                Text(item.group.name)
+                    .font(BleeckerTypography.primary(23, weight: .semibold))
+                    .foregroundStyle(BleeckerPalette.dark.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Text(item.group.channelCount == 0
+                    ? "No channels assigned"
+                    : "\(item.group.channelCount) live channel\(item.group.channelCount == 1 ? "" : "s")")
+                    .font(BleeckerTypography.secondary(19))
+                    .foregroundStyle(BleeckerPalette.dark.textSecondary)
+                    .lineLimit(1)
+            }
+            .frame(width: 336, alignment: .leading)
+            .padding(12)
+            .frame(width: 360, alignment: .leading)
+            .background(
+                focused ? BleeckerPalette.dark.deepSea.opacity(0.96) : .clear,
+                in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(
+                        focused ? BleeckerPalette.dark.sea : .white.opacity(0.06),
+                        lineWidth: focused ? 3 : 1
+                    )
+            }
+            .shadow(color: focused ? BleeckerPalette.dark.sea.opacity(0.22) : .clear, radius: 18, y: 8)
+        }
+        .buttonStyle(SabellaTVChannelButtonStyle())
+        .focusEffectDisabled()
+        .focused(focusedID, equals: item.id)
+        .disabled(item.group.channelCount == 0)
+        .opacity(item.group.channelCount == 0 ? 0.46 : 1)
+        .onMoveCommand { direction in
+            guard requestsHeaderOnUp, direction == .up else { return }
+            requestHeaderFocus()
+        }
+        .animation(.easeOut(duration: BleeckerDuration.enter), value: focused)
+        .accessibilityLabel("\(item.group.name), \(item.group.channelCount) channels")
+    }
+}
+
+private func sabellaTVGroupArtworkColors(for index: Int) -> [Color] {
+    let palettes: [[Color]] = [
+        [BleeckerPalette.dark.sea, BleeckerPalette.dark.deepSea],
+        [BleeckerPalette.dark.terracotta, BleeckerPalette.dark.accentOxblood],
+        [BleeckerPalette.dark.accentGold, BleeckerPalette.dark.deepSea],
+        [BleeckerPalette.dark.accentBlue, BleeckerPalette.dark.sea],
+    ]
+    return palettes[index % palettes.count]
 }
 
 public struct SabellaTVChannel: Identifiable, Hashable, Sendable {
@@ -271,9 +503,42 @@ public struct SabellaTVContextBadge: View {
             Text(text)
         }
         .font(BleeckerTypography.secondary(18, weight: .semibold))
+        .foregroundStyle(.white)
         .padding(.horizontal, 12)
         .frame(minHeight: 32)
         .background(.black.opacity(0.72), in: Capsule())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+public struct SabellaTVLiveBadge: View {
+    private let text: String
+
+    public init(_ text: String = "LIVE") {
+        self.text = text
+    }
+
+    public var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "dot.radiowaves.left.and.right")
+                .font(.system(size: 15, weight: .bold))
+            Text(text)
+        }
+        .font(BleeckerTypography.secondary(17, weight: .bold))
+        .tracking(0.8)
+        .foregroundStyle(.white)
+        .padding(.horizontal, 14)
+        .frame(minHeight: 36)
+        .background(
+            LinearGradient(
+                colors: [BleeckerPalette.dark.accentRed, BleeckerPalette.dark.accentOxblood],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: Capsule()
+        )
+        .overlay { Capsule().strokeBorder(.white.opacity(0.22), lineWidth: 1) }
+        .shadow(color: .black.opacity(0.32), radius: 10, y: 5)
         .accessibilityElement(children: .combine)
     }
 }
@@ -579,7 +844,7 @@ private struct SabellaTVChannelRow: View {
                 }
             }
             .padding(.horizontal, 14)
-            .frame(width: focused ? 380 : 230, height: focused ? 118 : 86, alignment: .leading)
+            .frame(width: focused ? 380 : 230, height: 100, alignment: .leading)
             .clipped()
             .background(focused ? .black.opacity(0.46) : .black.opacity(0.28), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
@@ -631,27 +896,51 @@ public struct SabellaTVNavigationItem<Value: Hashable>: Identifiable {
 public struct SabellaTVNavigationBar<Value: Hashable>: View {
     @Binding private var selection: Value
     private let items: [SabellaTVNavigationItem<Value>]
+    private let focusedItem: FocusState<Value?>.Binding
+    private let requestContentFocus: () -> Void
     @Namespace private var selectionNamespace
 
-    public init(selection: Binding<Value>, items: [SabellaTVNavigationItem<Value>]) {
+    public init(
+        selection: Binding<Value>,
+        items: [SabellaTVNavigationItem<Value>],
+        focusedItem: FocusState<Value?>.Binding,
+        requestContentFocus: @escaping () -> Void = {}
+    ) {
         _selection = selection
         self.items = items
+        self.focusedItem = focusedItem
+        self.requestContentFocus = requestContentFocus
     }
 
     public var body: some View {
         HStack(spacing: 36) {
             ForEach(items) { item in
-                Button(item.title) { selection = item.value }
-                    .font(BleeckerTypography.primary(25, weight: selection == item.value ? .bold : .medium))
-                    .foregroundStyle(selection == item.value ? .white : .white.opacity(0.62))
-                    .buttonStyle(.plain)
-                    .padding(.vertical, 12)
+                Button { selection = item.value } label: {
+                    Text(item.title)
+                        .font(BleeckerTypography.primary(25, weight: selection == item.value ? .bold : .medium))
+                        .foregroundStyle(selection == item.value ? .white : .white.opacity(0.62))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            focusedItem.wrappedValue == item.value ? .white.opacity(0.13) : .clear,
+                            in: Capsule()
+                        )
+                }
+                    .buttonStyle(SabellaTVChannelButtonStyle())
+                    .focusEffectDisabled()
+                    .focused(focusedItem, equals: item.value)
+                    .onMoveCommand { direction in
+                        guard direction == .down else { return }
+                        requestContentFocus()
+                    }
+                    .padding(.vertical, 8)
                     .overlay(alignment: .bottom) {
                         if selection == item.value {
                             Capsule().fill(BleeckerPalette.dark.sea).frame(height: 4)
                                 .matchedGeometryEffect(id: "selection", in: selectionNamespace)
                         }
                     }
+                    .animation(.easeOut(duration: BleeckerDuration.control), value: focusedItem.wrappedValue)
             }
         }
         .focusSection()
@@ -732,12 +1021,21 @@ public struct SabellaTVPrimaryButtonStyle: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(BleeckerTypography.primary(24, weight: .semibold))
-            .foregroundStyle(focused ? BleeckerPalette.dark.deepSea : .white)
-            .padding(.horizontal, 32)
-            .frame(minHeight: 68)
-            .background(focused ? .white : .white.opacity(0.16), in: Capsule())
-            .scaleEffect(focused ? 1.08 : configuration.isPressed ? 0.97 : 1)
-            .shadow(color: focused ? .black.opacity(0.45) : .clear, radius: 24, y: 12)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 26)
+            .frame(minHeight: 62)
+            .background(
+                focused ? BleeckerPalette.dark.deepSea.opacity(0.98) : .white.opacity(0.13),
+                in: Capsule()
+            )
+            .overlay {
+                Capsule().strokeBorder(
+                    focused ? BleeckerPalette.dark.sea : .white.opacity(0.08),
+                    lineWidth: focused ? 3 : 1
+                )
+            }
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .shadow(color: focused ? BleeckerPalette.dark.sea.opacity(0.2) : .clear, radius: 14, y: 6)
             .animation(.easeOut(duration: BleeckerDuration.control), value: focused)
     }
 }
@@ -820,15 +1118,17 @@ public struct SabellaTVCard<Artwork: View>: View {
             .frame(width: width, alignment: .leading)
             .padding(12)
             .background(focused ? .white.opacity(0.13) : .clear, in: RoundedRectangle(cornerRadius: 24))
-            .scaleEffect(focused ? 1.045 : 1)
-            .shadow(color: focused ? .black.opacity(0.62) : .clear, radius: 30, y: 16)
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(focused ? BleeckerPalette.dark.sea : .clear, lineWidth: 3)
+            }
+            .shadow(color: focused ? BleeckerPalette.dark.sea.opacity(0.2) : .clear, radius: 18, y: 8)
         }
         .buttonStyle(.plain)
         .focused($focused)
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.46)
         .frame(width: width + 32)
-        .zIndex(focused ? 1 : 0)
         .animation(reduceMotion ? nil : .easeOut(duration: BleeckerDuration.enter), value: focused)
         .accessibilityLabel("\(title), \(subtitle)")
     }

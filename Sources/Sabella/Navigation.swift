@@ -23,7 +23,7 @@ public struct BleeckerBrandLockup: View {
         let p = BleeckerPalette.resolve(scheme)
         HStack(spacing: 16) {
             BleeckerBrandMark(size: logoWidth).frame(height: logoHeight)
-            Text(name).font(BleeckerTypography.primary(labelSize, weight: .semibold)).tracking(-0.4).foregroundStyle(p.textPrimary)
+            Text(name).font(BleeckerTypography.primary(labelSize, weight: .bold)).tracking(-0.4).foregroundStyle(p.textPrimary)
         }
     }
 
@@ -45,7 +45,7 @@ public struct BleeckerBrandLockup: View {
 
     private var labelSize: CGFloat {
 #if os(tvOS)
-        25
+        27
 #else
         20
 #endif

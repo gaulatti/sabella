@@ -46,9 +46,39 @@ for name, expected_targets in expected_products.items():
         )
 
 targets = {target["name"]: target for target in manifest["targets"]}
-if targets["Sabella"]["dependencies"]:
+expected_sabella_dependencies = {
+    ("product", "KSPlayer", "KSPlayer", ("tvos",)),
+    ("target", "SabellaKSPlayerWorkaround", None, ("tvos",)),
+}
+actual_sabella_dependencies = set()
+for dependency in targets["Sabella"]["dependencies"]:
+    if "product" in dependency:
+        name, package, _, condition = dependency["product"]
+        actual_sabella_dependencies.add(
+            (
+                "product",
+                name,
+                package,
+                tuple(condition.get("platformNames", [])),
+            )
+        )
+    elif "target" in dependency:
+        name, condition = dependency["target"]
+        actual_sabella_dependencies.add(
+            (
+                "target",
+                name,
+                None,
+                tuple(condition.get("platformNames", [])),
+            )
+        )
+    else:
+        raise SystemExit(f"Unexpected Sabella dependency: {dependency!r}")
+
+if actual_sabella_dependencies != expected_sabella_dependencies:
     raise SystemExit(
-        "The Sabella library target must not depend on catalog, support, or example targets."
+        "Sabella dependencies changed: "
+        f"{actual_sabella_dependencies!r} != {expected_sabella_dependencies!r}"
     )
 
 print("Package product, platform, and dependency contract passed.")

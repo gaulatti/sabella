@@ -21,6 +21,8 @@ struct SabellaTelevisionCatalog: View {
     @State private var query = ""
     @State private var activeProfile = "Javier"
     @State private var isWatchlisted = false
+    @State private var focusedChannelGroupID: String?
+    @State private var headerFocusRequested = false
 
     private let content = [
         SabellaTVContent(id: "coast", title: "The Southern Coast", subtitle: "Travel · 48 min", systemImage: "water.waves"),
@@ -50,27 +52,18 @@ struct SabellaTelevisionCatalog: View {
             } else {
                 SabellaTVScreen {
                     VStack(alignment: .leading, spacing: 30) {
-                HStack(spacing: 32) {
-                    BleeckerBrandLockup(name: "Sabella")
-                    Spacer(minLength: 52)
-                    SabellaTVNavigationBar(
-                        selection: $page,
-                        items: TelevisionPage.navigation.map { SabellaTVNavigationItem($0, title: $0.rawValue) }
-                    )
-                    Spacer(minLength: 52)
-                    HStack(spacing: 18) {
-                        Button { page = .search } label: { Label("Search", systemImage: "magnifyingglass") }
-                            .buttonStyle(SabellaTVPrimaryButtonStyle())
-                        Button { page = .profiles } label: {
-                            Label(activeProfile, systemImage: "person.crop.circle.fill")
-                                .labelStyle(.iconOnly)
-                                .font(.system(size: 34))
-                                .accessibilityLabel("Choose profile, current profile \(activeProfile)")
+                        SabellaTVNavigationHeader(
+                            productName: "Sabella",
+                            selection: $page,
+                            items: TelevisionPage.navigation.map { SabellaTVNavigationItem($0, title: $0.rawValue) },
+                            focusRequested: $headerFocusRequested
+                        ) {
+                            HStack(spacing: 18) {
+                                Button { page = .search } label: { Label("Search", systemImage: "magnifyingglass") }
+                                    .buttonStyle(SabellaTVPrimaryButtonStyle())
+                                SabellaTVUserButton(selected: page == .profiles) { page = .profiles }
+                            }
                         }
-                        .buttonStyle(SabellaTVPrimaryButtonStyle())
-                    }
-                }
-                .frame(minHeight: 76)
 
                         Group {
                             switch page {
@@ -169,14 +162,24 @@ struct SabellaTelevisionCatalog: View {
     }
 
     private var groups: some View {
-        SabellaTVChannelGroupBrowser(groups: [
+        SabellaTVChannelGroupDirectory(
+            groups: catalogChannelGroups,
+            focusedGroupID: $focusedChannelGroupID,
+            headerFocusRequested: $headerFocusRequested
+        ) { _ in page = .playback }
+    }
+
+    private var catalogChannelGroups: [SabellaTVChannelGroupSummary] {
+        [
             SabellaTVChannelGroupSummary(id: "news", name: "World news", channelCount: 12),
             SabellaTVChannelGroupSummary(id: "italy", name: "Italy", channelCount: 24),
             SabellaTVChannelGroupSummary(id: "radio", name: "Live radio", channelCount: 8, systemImage: "radio.fill"),
+            SabellaTVChannelGroupSummary(id: "documentary", name: "Documentary", channelCount: 17),
+            SabellaTVChannelGroupSummary(id: "local", name: "Local stations", channelCount: 31),
+            SabellaTVChannelGroupSummary(id: "music", name: "Music television", channelCount: 19),
+            SabellaTVChannelGroupSummary(id: "culture", name: "Arts and culture", channelCount: 14),
             SabellaTVChannelGroupSummary(id: "empty", name: "Weekend", channelCount: 0),
-        ]) { _ in
-            page = .playback
-        }
+        ]
     }
 
     private var search: some View {
@@ -201,30 +204,18 @@ struct SabellaTelevisionCatalog: View {
     }
 
     private var profiles: some View {
-        VStack(alignment: .leading, spacing: 32) {
-            Text("Who’s watching?")
-                .font(BleeckerTypography.primary(48, weight: .bold))
-            Text("Switching profile changes the household context used by browse recommendations.")
-                .font(BleeckerTypography.secondary(23))
-                .foregroundStyle(.white.opacity(0.7))
-            HStack(spacing: 32) {
-                ForEach(["Javier", "Guest", "Family"], id: \.self) { profile in
-                    Button {
-                        activeProfile = profile
-                        page = .browse
-                    } label: {
-                        VStack(spacing: 18) {
-                            Image(systemName: profile == "Family" ? "person.3.fill" : "person.crop.circle.fill")
-                                .font(.system(size: 76))
-                            Text(profile).font(BleeckerTypography.primary(26, weight: .semibold))
-                            if activeProfile == profile { Text("Current").font(BleeckerTypography.secondary(18)) }
-                        }
-                        .frame(width: 230, height: 230)
-                    }
-                    .buttonStyle(SabellaTVPrimaryButtonStyle())
-                }
-            }
-            .focusSection()
+        SabellaTVUserSettings(
+            name: activeProfile,
+            detail: "Current catalog profile",
+            actions: [
+                SabellaTVUserAction(id: "javier", title: "Use Javier", subtitle: "Personal viewing context", systemImage: "person.fill"),
+                SabellaTVUserAction(id: "guest", title: "Use Guest", subtitle: "Temporary household context", systemImage: "person"),
+                SabellaTVUserAction(id: "family", title: "Use Family", subtitle: "Shared viewing context", systemImage: "person.3.fill"),
+            ],
+            headerFocusRequested: $headerFocusRequested
+        ) { action in
+            activeProfile = action.title.replacingOccurrences(of: "Use ", with: "")
+            page = .browse
         }
     }
 

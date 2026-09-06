@@ -117,3 +117,40 @@ import SabellaCatalogSupport
 
     #expect(SabellaCatalogCoverage.missingTelevisionComponents(publicComponents: components).isEmpty)
 }
+
+@Test func televisionPlaybackEngineRoutesTransportStreamsThroughFFmpeg() throws {
+    let transportStream = try #require(URL(string: "https://example.com/live/channel.ts?token=abc"))
+    let parameterizedMIME = try #require(URL(string: "https://example.com/live/channel"))
+
+    #expect(SabellaTVPlaybackEnginePolicy.engine(for: transportStream) == .ffmpeg)
+    #expect(
+        SabellaTVPlaybackEnginePolicy.engine(
+            for: parameterizedMIME,
+            contentType: "Video/MP2T; charset=binary"
+        ) == .ffmpeg
+    )
+}
+
+@Test func televisionPlaybackEngineKeepsHLSOnNativePlayback() throws {
+    let hls = try #require(URL(string: "https://example.com/live/master.m3u8"))
+    let unknown = try #require(URL(string: "https://example.com/live/channel"))
+
+    #expect(SabellaTVPlaybackEnginePolicy.engine(for: hls) == .native)
+    #expect(SabellaTVPlaybackEnginePolicy.engine(for: unknown) == nil)
+}
+
+@Test func televisionPlaybackEngineRecognizesOpaqueTransportStreamBytes() throws {
+    let opaqueURL = try #require(URL(string: "https://example.com/live/157993"))
+    var packets = Data(repeating: 0, count: 188 * 3)
+    packets[0] = 0x47
+    packets[188] = 0x47
+    packets[376] = 0x47
+
+    #expect(
+        SabellaTVPlaybackEnginePolicy.engine(
+            for: opaqueURL,
+            contentType: nil,
+            leadingBytes: packets
+        ) == .ffmpeg
+    )
+}

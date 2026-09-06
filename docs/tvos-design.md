@@ -8,9 +8,10 @@ themeable or white-label product.
 
 ## Product principles
 
-- Keep focus and selection distinct. Focus uses scale, depth, contrast, and
-  motion; selection changes application state only after activation. Shelves
-  reserve space for focused depth so a focused item never obscures its neighbor.
+- Keep focus and selection distinct. Focus uses depth, contrast, and motion;
+  selection changes application state only after activation. Grid and list
+  highlights stay inside their allocated layout boxes so they never obscure a
+  neighbor.
 - Put content before chrome. Navigation stays shallow and the current screen
   preserves enough context to make the next remote movement predictable.
 - Keep important content inside a five-percent 1080p safe region. Sabella's
@@ -26,6 +27,11 @@ themeable or white-label product.
   thesis, and a bounded set of titles should communicate a human point of view.
 - Keep discovery shortcuts visible. Search, saved content, and profiles should
   not depend on a hidden edge gesture or a long remote traversal.
+- Reserve a fixed header region above scrolling content. Pressing Up from the
+  first channel-directory row explicitly returns focus to the selected header
+  destination.
+- Product names in brand lockups are bold and never smaller than primary
+  navigation labels.
 - Assume a shared household screen. Profile switching should be visible, while
   private account details and sensitive recommendations stay out of ambient UI.
 - Treat autoplay as a product decision, not a component default. Sabella does
@@ -44,7 +50,8 @@ themeable or white-label product.
 task-oriented row. `SabellaTVEditorialRail` adds a curatorial argument before a
 row. `SabellaTVCard` supports landscape or poster artwork, an optional relevance
 badge, and bounded watch progress. `SabellaTVContextBadge` is also available for
-live, entitlement, ranking, and availability labels.
+entitlement, ranking, and availability labels. Live broadcast state uses the
+dedicated, high-contrast `SabellaTVLiveBadge`.
 
 The catalog's Playback surface uses public Sky News, tagesschau24, RTL 102.5,
 and Radio Italia TV HLS feeds. Its
@@ -53,19 +60,36 @@ fabricated duration and seeking controls because the feed does not advertise a
 DVR contract.
 
 Linear television keeps playback behind a remote-navigable channel guide.
-Authenticated television homes use `SabellaTVChannelGroupBrowser` beneath
-the pinned header in `SabellaTVChannelHome` to present the viewer's authoritative
-groups with the same cinematic hero, focus shelf, typography, and motion as the
-Sabella Browse surface. Product apps map their state into this component instead
-of rebuilding home chrome, navigation, group cards, or loading and failure
-states. Selecting a group enters edge-to-edge playback with
+Authenticated television homes use `SabellaTVChannelGroupBrowser` beneath the
+pinned `SabellaTVNavigationHeader` in `SabellaTVChannelHome` to present a
+bounded set of featured groups with the same cinematic hero, typography, and
+motion as the Sabella Browse surface. The header's Home and Channels
+destinations are functional; `SabellaTVChannelGroupDirectory` presents the
+complete multi-row group index. The header's user button opens a Sabella-owned
+user and settings surface while the consuming product supplies identity and
+functional actions. The directory's first row has an explicit Up route back to
+the header, and restored scroll content is clipped below its reserved region.
+Product apps bind the current browse page and focused group to durable view
+state instead of rebuilding home chrome, navigation, group cards, or loading
+and failure states. Selecting a group enters edge-to-edge playback with
 `SabellaTVChannelGuide`; Menu returns to the group browser. Empty and failed
 group loads must remain explicit rather than substituting demo channels.
+Returning from playback restores the browse page, focused group, and containing
+grid row; it must not reset the viewer to the first group.
 `SabellaTVLivePlayer` owns the complete live TV and radio surface: playback,
 buffering and failure states, media-specific presentation, focus, remote
 commands, foreground/background behavior, tuning, and the guide. Product apps
 only supply authoritative channel data and observe selection; they must not
 overlay their own controls or gesture capture on the component.
+Sabella also owns live-stream decoder selection. HLS and standard Apple media
+stay on AVPlayer; raw MPEG-TS, DASH, and RTMP are routed through the pinned
+KSPlayer/FFmpeg decoder used by the proven Celesti playback path. Detection
+accepts both URL extensions and normalized response content types, including
+parameterized `video/mp2t` values. Opaque endpoints with neither hint are
+identified from repeated 188-byte MPEG transport packet sync markers before a
+decoder is chosen. Transient decoder failures are retried three times before
+the failure surface is shown. Consuming products must not replace this policy
+or provide a second live-channel player.
 `SabellaTVChannelGuide` presents channel number and identity, the current and
 next programs, schedule progress, and the selected channel. Selecting a channel
 returns to unobstructed video; Menu toggles between full-screen playback and the

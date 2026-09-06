@@ -46,8 +46,8 @@ public struct SabellaTVScreen<Content: View>: View {
             )
             .ignoresSafeArea()
             content
-                .safeAreaPadding(.horizontal, 72)
-                .safeAreaPadding(.vertical, 44)
+                .safeAreaPadding(.horizontal, 96)
+                .safeAreaPadding(.vertical, 54)
         }
         .foregroundStyle(palette.textPrimary)
     }
@@ -67,7 +67,7 @@ public struct SabellaTVContextBadge: View {
             if let systemImage { Image(systemName: systemImage) }
             Text(text)
         }
-        .font(BleeckerTypography.secondary(16, weight: .semibold))
+        .font(BleeckerTypography.secondary(18, weight: .semibold))
         .padding(.horizontal, 12)
         .frame(minHeight: 32)
         .background(.black.opacity(0.72), in: Capsule())
@@ -268,18 +268,19 @@ public struct SabellaTVCard<Artwork: View>: View {
                     .font(BleeckerTypography.primary(24, weight: .semibold))
                     .lineLimit(1)
                 Text(subtitle)
-                    .font(BleeckerTypography.secondary(18))
+                    .font(BleeckerTypography.secondary(20))
                     .foregroundStyle(.white.opacity(0.62))
                     .lineLimit(1)
             }
             .frame(width: width, alignment: .leading)
             .padding(12)
             .background(focused ? .white.opacity(0.13) : .clear, in: RoundedRectangle(cornerRadius: 24))
-            .scaleEffect(focused ? 1.09 : 1)
+            .scaleEffect(focused ? 1.045 : 1)
             .shadow(color: focused ? .black.opacity(0.62) : .clear, radius: 30, y: 16)
         }
         .buttonStyle(.plain)
         .focused($focused)
+        .frame(width: width + 32)
         .zIndex(focused ? 1 : 0)
         .animation(reduceMotion ? nil : .easeOut(duration: BleeckerDuration.enter), value: focused)
         .accessibilityLabel("\(title), \(subtitle)")
@@ -319,7 +320,7 @@ public struct SabellaTVEditorialRail<Item: Identifiable, Card: View>: View {
                 .foregroundStyle(.white.opacity(0.68))
                 .frame(maxWidth: 780, alignment: .leading)
             ScrollView(.horizontal) {
-                LazyHStack(spacing: 30) { ForEach(items) { item in card(item) } }
+                LazyHStack(spacing: 40) { ForEach(items) { item in card(item) } }
                     .scrollTargetLayout()
                     .padding(.vertical, 30)
                     .padding(.horizontal, 12)
@@ -347,7 +348,7 @@ public struct SabellaTVShelf<Item: Identifiable, Card: View>: View {
         VStack(alignment: .leading, spacing: 18) {
             Text(title).font(BleeckerTypography.primary(32, weight: .bold))
             ScrollView(.horizontal) {
-                LazyHStack(spacing: 30) {
+                LazyHStack(spacing: 40) {
                     ForEach(items) { item in card(item) }
                 }
                 .scrollTargetLayout()

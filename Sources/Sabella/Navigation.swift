@@ -3,15 +3,42 @@ import SwiftUI
 public struct BleeckerBrandLockup: View {
     @Environment(\.colorScheme) private var scheme
     let name: String
-    let image: Image
-    public init(name: String, image: Image = Image(systemName: "circle.hexagongrid.fill")) { self.name = name; self.image = image }
+    public init(name: String) { self.name = name }
     public var body: some View {
         let p = BleeckerPalette.resolve(scheme)
         HStack(spacing: BleeckerSpacing.component) {
-            image.resizable().scaledToFit().foregroundStyle(p.textPrimary.opacity(0.9)).frame(width: 25, height: 32)
-            Rectangle().fill(p.border).frame(width: 1, height: 32)
-            Text(name).font(BleeckerTypography.primary(20, weight: .semibold)).tracking(-0.4).foregroundStyle(p.textPrimary)
+            Image("BleeckerLogo", bundle: .module)
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(p.textPrimary.opacity(0.9))
+            .frame(width: logoWidth, height: logoHeight)
+            Rectangle().fill(p.border).frame(width: 1, height: logoHeight)
+            Text(name).font(BleeckerTypography.primary(labelSize, weight: .semibold)).tracking(-0.4).foregroundStyle(p.textPrimary)
         }
+    }
+
+    private var logoWidth: CGFloat {
+#if os(tvOS)
+        34
+#else
+        25
+#endif
+    }
+
+    private var logoHeight: CGFloat {
+#if os(tvOS)
+        44
+#else
+        32
+#endif
+    }
+
+    private var labelSize: CGFloat {
+#if os(tvOS)
+        25
+#else
+        20
+#endif
     }
 }
 

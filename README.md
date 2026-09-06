@@ -19,6 +19,11 @@ Button("Sync") { sync() }
 
 Components keep the `Bleecker` prefix so product code reads identically across design-system implementations while the module name (`Sabella`) identifies the platform library.
 
+Bleecker, Sabella, and Thompson are proprietary parts of the Gaulatti identity
+system for Gaulatti products and websites. They are not white-label or fungible
+themes. Brand components therefore ship the authoritative Gaulatti artwork and
+do not expose a consumer-supplied logo override.
+
 ## Private package consumption
 
 Sabella is distributed as a private Swift package. The initial release is

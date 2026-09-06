@@ -16,7 +16,10 @@ let package = Package(
     targets: [
         .target(
             name: "Sabella",
-            resources: [.copy("Resources/Fonts")]
+            resources: [
+                .process("Resources/Assets.xcassets"),
+                .copy("Resources/Fonts"),
+            ]
         ),
         .target(name: "SabellaCatalogSupport"),
         .executableTarget(

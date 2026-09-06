@@ -2,13 +2,20 @@
 
 Sabella's television API is designed for a remote, a ten-foot viewing distance,
 and a shared room. It is not a responsive web layout enlarged to 16:9.
+Sabella is the native expression of the same proprietary Gaulatti identity as
+Bleecker and Thompson; the catalog demonstrates that identity rather than a
+themeable or white-label product.
 
 ## Product principles
 
 - Keep focus and selection distinct. Focus uses scale, depth, contrast, and
-  motion; selection changes application state only after activation.
+  motion; selection changes application state only after activation. Shelves
+  reserve space for focused depth so a focused item never obscures its neighbor.
 - Put content before chrome. Navigation stays shallow and the current screen
   preserves enough context to make the next remote movement predictable.
+- Keep important content inside a five-percent 1080p safe region. Sabella's
+  screen container reserves 96 horizontal and 54 vertical points so identity,
+  navigation, and controls survive conservative display cropping.
 - Help people decide. Context badges should explain relevance (for example,
   “Top 10 today” or “Because you watch travel”), not repeat genres already in
   metadata. Progress belongs directly on resumable artwork.
@@ -19,6 +26,8 @@ and a shared room. It is not a responsive web layout enlarged to 16:9.
   thesis, and a bounded set of titles should communicate a human point of view.
 - Keep discovery shortcuts visible. Search, saved content, and profiles should
   not depend on a hidden edge gesture or a long remote traversal.
+- Assume a shared household screen. Profile switching should be visible, while
+  private account details and sensitive recommendations stay out of ambient UI.
 - Treat autoplay as a product decision, not a component default. Sabella does
   not start preview audio or video. If a product adds previews, respect Reduce
   Motion, avoid surprise audio, and make stopping them immediate.
@@ -43,6 +52,8 @@ The tvOS catalog demonstrates browse, details, playback, and state surfaces.
 Browse must show visible top navigation and search, landscape progress cards,
 and a poster-based editorial collection. Every control must be reachable and
 activatable with directional focus and Select; Play/Pause must toggle playback.
+The header must keep the Bleecker mark, product name, navigation, and utility
+actions in separate layout regions without collision at 1080p or 4K.
 
 ## Research basis
 
@@ -52,6 +63,7 @@ activatable with directional focus and Select; Play/Pause must toggle playback.
 - [Netflix: 2025 TV experience](https://about.netflix.com/en/news/unveiling-our-innovative-new-tv-experience)
 - [Google TV: conversational discovery](https://blog.google/products-and-platforms/platforms/google-tv/gemini-google-tv/)
 - [Amazon Fire TV: feature rotator](https://advertising.amazon.com/en-ca/resources/ad-specs/fire-tv/feature-rotator)
+- [UX Studio: TV interface practices](https://www.uxstudioteam.com/ux-blog/best-practices-for-designing-tv-interfaces)
 
 These sources establish current platform and product patterns, not a mandate to
 copy any one service. Sabella deliberately excludes recommendation algorithms,

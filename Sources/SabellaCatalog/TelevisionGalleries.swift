@@ -24,17 +24,26 @@ struct SabellaTelevisionCatalog: View {
     var body: some View {
         SabellaTVScreen {
             VStack(alignment: .leading, spacing: 30) {
-                HStack(spacing: 44) {
-                    BleeckerBrandLockup(name: "Sabella TV")
+                HStack(spacing: 32) {
+                    BleeckerBrandLockup(name: "Sabella")
+                    Spacer(minLength: 52)
                     SabellaTVNavigationBar(
                         selection: $page,
                         items: TelevisionPage.allCases.map { SabellaTVNavigationItem($0, title: $0.rawValue) }
                     )
-                    Spacer()
-                    Button { } label: { Label("Search", systemImage: "magnifyingglass") }
+                    Spacer(minLength: 52)
+                    HStack(spacing: 18) {
+                        Button { } label: { Label("Search", systemImage: "magnifyingglass") }
+                            .buttonStyle(SabellaTVPrimaryButtonStyle())
+                        Button { } label: {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 34))
+                                .accessibilityLabel("Choose profile")
+                        }
                         .buttonStyle(SabellaTVPrimaryButtonStyle())
-                    BleeckerStatusBadge("TV native", variant: .live)
+                    }
                 }
+                .frame(minHeight: 76)
 
                 Group {
                     switch page {

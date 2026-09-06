@@ -102,6 +102,21 @@ it in a square lockup frame rather than recropping or reconstructing its paths.
 
 ## Catalog acceptance
 
+Operational television products should compose registration, standby, radio,
+failure, and monitoring surfaces from `SabellaTVAmbientBackground`,
+`SabellaTVChromeHeader`, `SabellaTVSectionLabel`, `SabellaTVStatusPill`,
+`SabellaTVSignalVisualizer`, `SabellaTVRadioNowPlaying`,
+`SabellaTVPlaybackFailure`, and `.sabellaTVPanel()`. Product repositories own
+their workflows and data, not parallel typography, palette, card, status, or
+broadcast-presentation implementations.
+Multi-feed products use `SabellaTVQuadLayout` and `SabellaTVBroadcastCell`;
+audio or absent feeds use `SabellaTVTestPattern`. Emergency presentation uses
+`SabellaTVEmergencyLayout`, `SabellaTVEmergencyHeader`, and
+`SabellaTVCarouselDots`. Seekable and live transport state uses
+`SabellaTVDVROverlay` with `SabellaTVDVRAction`. These views accept application
+content and state without owning stream selection, networking, or player
+lifecycle.
+
 The tvOS catalog demonstrates browse, details, playback, and state surfaces.
 Browse must show visible top navigation and search, landscape progress cards,
 and a poster-based editorial collection. Every control must be reachable and

@@ -1,5 +1,20 @@
 import SwiftUI
 
+public struct BleeckerBrandMark: View {
+    @Environment(\.colorScheme) private var scheme
+    private let size: CGFloat
+
+    public init(size: CGFloat = 64) { self.size = size }
+
+    public var body: some View {
+        Image("BleeckerLogo", bundle: .module)
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(BleeckerPalette.resolve(scheme).textPrimary.opacity(0.9))
+            .frame(width: size, height: size)
+    }
+}
+
 public struct BleeckerBrandLockup: View {
     @Environment(\.colorScheme) private var scheme
     let name: String
@@ -7,11 +22,7 @@ public struct BleeckerBrandLockup: View {
     public var body: some View {
         let p = BleeckerPalette.resolve(scheme)
         HStack(spacing: 16) {
-            Image("BleeckerLogo", bundle: .module)
-            .resizable()
-            .scaledToFit()
-            .foregroundStyle(p.textPrimary.opacity(0.9))
-            .frame(width: logoWidth, height: logoHeight)
+            BleeckerBrandMark(size: logoWidth).frame(height: logoHeight)
             Text(name).font(BleeckerTypography.primary(labelSize, weight: .semibold)).tracking(-0.4).foregroundStyle(p.textPrimary)
         }
     }

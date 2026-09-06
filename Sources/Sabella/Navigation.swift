@@ -18,7 +18,7 @@ public struct BleeckerBrandLockup: View {
 
     private var logoWidth: CGFloat {
 #if os(tvOS)
-        46
+        64
 #else
         25
 #endif
@@ -26,7 +26,7 @@ public struct BleeckerBrandLockup: View {
 
     private var logoHeight: CGFloat {
 #if os(tvOS)
-        59
+        64
 #else
         32
 #endif

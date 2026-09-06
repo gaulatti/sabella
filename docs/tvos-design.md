@@ -66,9 +66,9 @@ Playback changes use a restrained ease-in-out transition: the catalog dissolves
 into full-screen video, while the guide enters from the leading edge and the
 transport enters from below. Reduce Motion removes these spatial transitions.
 
-The Bleecker mark remains sourced from the canonical brand SVG. The Apple asset
-catalog consumes antialiased 1x, 2x, and 3x template rasters generated from that
-source because CoreSVG does not reliably render the source path data on tvOS.
+The Bleecker mark uses the authoritative transparent `gaulatti.png` brand
+master. Its square canvas includes the mark's optical spacing, so tvOS renders
+it in a square lockup frame rather than recropping or reconstructing its paths.
 
 ## Catalog acceptance
 

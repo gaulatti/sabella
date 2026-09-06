@@ -154,3 +154,125 @@ import SabellaCatalogSupport
         ) == .ffmpeg
     )
 }
+
+@Test func televisionPlaybackEnginesShareSemanticActivityOrdering() {
+    let avPlayer = playbackActivitySequence(for: .avPlayer)
+    let ksPlayer = playbackActivitySequence(for: .ksPlayer)
+    let expected = [
+        activity("news", .starting),
+        activity("news", .buffering),
+        activity("news", .playing),
+        activity("news", .buffering),
+        activity("news", .playing),
+    ]
+
+    #expect(avPlayer == expected)
+    #expect(ksPlayer == expected)
+}
+
+@Test func televisionPlaybackActivityCoalescesRepeatedEngineState() {
+    var coordinator = SabellaTVPlaybackActivityCoordinator()
+    acceptsSendable(activity("news", .starting))
+    #expect(coordinator.tune(to: "news") == [activity("news", .starting)])
+    #expect(coordinator.selectEngine(.avPlayer, for: "news") == activity("news", .buffering))
+    #expect(coordinator.receive(.buffering, from: .avPlayer, for: "news") == nil)
+    #expect(coordinator.receive(.advancing, from: .avPlayer, for: "news") == activity("news", .playing))
+    #expect(coordinator.receive(.advancing, from: .avPlayer, for: "news") == nil)
+}
+
+@Test func televisionPlaybackActivityCoversPauseSceneRecoveryAndFailure() {
+    var coordinator = SabellaTVPlaybackActivityCoordinator()
+    var sequence = coordinator.tune(to: "news")
+    append(coordinator.selectEngine(.ksPlayer, for: "news"), to: &sequence)
+    append(coordinator.receive(.advancing, from: .ksPlayer, for: "news"), to: &sequence)
+
+    // Remote pause/resume and scene suspension/resume use these same semantic
+    // transitions; neither resume reports playing before the engine advances.
+    append(coordinator.receive(.paused, from: .ksPlayer, for: "news"), to: &sequence)
+    append(coordinator.resume(channelID: "news"), to: &sequence)
+    append(coordinator.receive(.advancing, from: .ksPlayer, for: "news"), to: &sequence)
+    append(coordinator.receive(.paused, from: .ksPlayer, for: "news"), to: &sequence)
+    append(coordinator.resume(channelID: "news"), to: &sequence)
+    append(coordinator.receive(.advancing, from: .ksPlayer, for: "news"), to: &sequence)
+
+    // A recoverable engine error ends playing time, starts a fresh attempt,
+    // and waits for a new engine before playing can be emitted again.
+    append(coordinator.receive(.buffering, from: .ksPlayer, for: "news"), to: &sequence)
+    append(coordinator.beginRecovery(channelID: "news"), to: &sequence)
+    #expect(coordinator.receive(.advancing, from: .ksPlayer, for: "news") == nil)
+    append(coordinator.selectEngine(.ksPlayer, for: "news"), to: &sequence)
+    append(coordinator.receive(.advancing, from: .ksPlayer, for: "news"), to: &sequence)
+    append(coordinator.fail(channelID: "news"), to: &sequence)
+
+    #expect(sequence.map(\.state) == [
+        .starting, .buffering, .playing,
+        .paused, .starting, .playing,
+        .paused, .starting, .playing,
+        .buffering, .starting, .buffering, .playing, .failed,
+    ])
+}
+
+@Test func televisionPlaybackActivityStopsOldChannelBeforeStartingNewOne() {
+    var coordinator = SabellaTVPlaybackActivityCoordinator()
+    _ = coordinator.tune(to: "a")
+    _ = coordinator.selectEngine(.avPlayer, for: "a")
+    _ = coordinator.receive(.advancing, from: .avPlayer, for: "a")
+
+    #expect(coordinator.tune(to: "b") == [
+        activity("a", .stopped),
+        activity("b", .starting),
+    ])
+    #expect(coordinator.receive(.advancing, from: .avPlayer, for: "a") == nil)
+    #expect(coordinator.stop() == activity("b", .stopped))
+    #expect(coordinator.stop() == nil)
+}
+
+#if os(tvOS)
+@Test @MainActor func televisionLivePlayerInitializerRemainsSourceCompatible() throws {
+    let channel = SabellaTVChannel(
+        id: "news",
+        streamURL: try #require(URL(string: "https://example.com/live.m3u8")),
+        number: "1",
+        name: "News",
+        now: "Live",
+        progress: 1
+    )
+
+    _ = SabellaTVLivePlayer(
+        channels: [channel],
+        selection: .constant(channel.id),
+        guideVisible: .constant(true),
+        onExit: {}
+    )
+}
+#endif
+
+private func playbackActivitySequence(
+    for engine: SabellaTVPlaybackActivityEngine
+) -> [SabellaTVPlaybackActivity] {
+    var coordinator = SabellaTVPlaybackActivityCoordinator()
+    var sequence = coordinator.tune(to: "news")
+    append(coordinator.selectEngine(engine, for: "news"), to: &sequence)
+    append(coordinator.receive(.advancing, from: engine, for: "news"), to: &sequence)
+    append(coordinator.receive(.buffering, from: engine, for: "news"), to: &sequence)
+    append(coordinator.receive(.advancing, from: engine, for: "news"), to: &sequence)
+    return sequence
+}
+
+private func activity(
+    _ channelID: String,
+    _ state: SabellaTVPlaybackActivity.State
+) -> SabellaTVPlaybackActivity {
+    SabellaTVPlaybackActivity(channelID: channelID, state: state)
+}
+
+private func append(
+    _ activity: SabellaTVPlaybackActivity?,
+    to sequence: inout [SabellaTVPlaybackActivity]
+) {
+    if let activity {
+        sequence.append(activity)
+    }
+}
+
+private func acceptsSendable<T: Sendable>(_ value: T) {}

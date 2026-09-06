@@ -81,6 +81,33 @@ buffering and failure states, media-specific presentation, focus, remote
 commands, foreground/background behavior, tuning, and the guide. Product apps
 only supply authoritative channel data and observe selection; they must not
 overlay their own controls or gesture capture on the component.
+
+Products that need truthful live-viewing duration observe
+`onPlaybackActivityChanged`. The callback receives a `Sendable`
+`SabellaTVPlaybackActivity` with the authoritative channel ID and one semantic
+state: `starting`, `buffering`, `playing`, `paused`, `failed`, or `stopped`.
+Only `playing` means the engine reports advancing media. A requested stream,
+AVPlayer's waiting state, and KSPlayer preparation or buffering are explicitly
+non-playing. Identical consecutive activities are coalesced.
+
+Event ordering is stable across the AVPlayer and KSPlayer paths. A tune begins
+with `starting`, then remains non-playing through `buffering` until the engine
+advances. A stall produces `buffering`; an engine-reported resume produces
+`playing`. Remote pause and scene suspension produce `paused` immediately, and
+resume produces `starting` before the engine may report `playing` again.
+Recoverable failures move through `buffering` and a new `starting` attempt;
+exhausted recovery produces `failed`. Switching channels always emits
+`stopped` for the old channel before `starting` for the new one. Explicit exit
+and disappearance emit at most one final `stopped` activity for the active
+channel.
+
+The callback is additive and defaults to a no-op. Consumers own persistence,
+identity, analytics, thresholds, and delivery, and should start or resume a
+timer only for `playing`, end it for every other state, and treat events as
+ordered semantic changes rather than a periodic heartbeat. Sabella performs no
+consumer network request and receives no analytics identifiers through this
+contract. The tvOS catalog records the latest callback transitions in an
+inspectable overlay.
 Sabella also owns live-stream decoder selection. HLS and standard Apple media
 stay on AVPlayer; raw MPEG-TS, DASH, and RTMP are routed through the pinned
 KSPlayer/FFmpeg decoder used by the proven Celesti playback path. Detection

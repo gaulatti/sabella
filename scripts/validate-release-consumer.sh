@@ -11,7 +11,7 @@ case "$mode" in
     dependency=".package(name: \"Sabella\", path: \"$repository_root\")"
     ;;
   --remote)
-    release_version="${SABELLA_RELEASE_VERSION:-0.1.0}"
+    release_version="${SABELLA_RELEASE_VERSION:-0.2.0}"
     if ! printf '%s\n' "$release_version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
       echo "SABELLA_RELEASE_VERSION must be a semantic version." >&2
       exit 64
@@ -25,7 +25,7 @@ case "$mode" in
 esac
 
 mkdir -p "$consumer_root/Sources/ReleaseConsumer"
-cp "$repository_root/Tests/ReleaseConsumer/main.swift" "$consumer_root/Sources/ReleaseConsumer/main.swift"
+cp "$repository_root/Tests/ReleaseConsumer/main.swift" "$consumer_root/Sources/ReleaseConsumer/ReleaseConsumer.swift"
 
 {
   printf '%s\n' '// swift-tools-version: 6.0'
@@ -33,7 +33,7 @@ cp "$repository_root/Tests/ReleaseConsumer/main.swift" "$consumer_root/Sources/R
   printf '%s\n' ''
   printf '%s\n' 'let package = Package('
   printf '%s\n' '    name: "SabellaReleaseConsumer",'
-  printf '%s\n' '    platforms: [.macOS(.v14)],'
+  printf '%s\n' '    platforms: [.macOS(.v14), .tvOS(.v17)],'
   printf '%s\n' '    dependencies: ['
   printf '        %s,\n' "$dependency"
   printf '%s\n' '    ],'
@@ -47,3 +47,17 @@ cp "$repository_root/Tests/ReleaseConsumer/main.swift" "$consumer_root/Sources/R
 } > "$consumer_root/Package.swift"
 
 swift build --package-path "$consumer_root" --product ReleaseConsumer
+swift run --package-path "$consumer_root" --skip-build ReleaseConsumer
+
+if xcrun --sdk appletvsimulator --show-sdk-path >/dev/null 2>&1; then
+  (
+    cd "$consumer_root"
+    xcodebuild \
+      -quiet \
+      -scheme SabellaReleaseConsumer \
+      -destination "generic/platform=tvOS Simulator" \
+      -derivedDataPath "$consumer_root/DerivedData" \
+      CODE_SIGNING_ALLOWED=NO \
+      build
+  )
+fi

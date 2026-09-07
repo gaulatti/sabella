@@ -31,20 +31,20 @@ do not expose a consumer-supplied logo override.
 
 ## Private package consumption
 
-Sabella is distributed as a private Swift package. The initial release is
-`0.1.0`; authorized consumers should accept compatible `0.1.x` fixes while
+Sabella is distributed as a private Swift package. The current release is
+`0.2.0`; authorized consumers should accept compatible `0.2.x` fixes while
 excluding the next potentially breaking pre-1.0 minor:
 
 ```swift
 .package(
     url: "https://github.com/gaulatti/sabella.git",
-    .upToNextMinor(from: "0.1.0")
+    .upToNextMinor(from: "0.2.0")
 )
 ```
 
 Application targets link only `.product(name: "Sabella", package: "Sabella")`.
-The equivalent version range is `>= 0.1.0, < 0.2.0`. Compatible fixes use
-`0.1.x`; breaking public API changes before 1.0 use a new `0.x.0` minor. Release
+The equivalent version range is `>= 0.2.0, < 0.3.0`. Compatible fixes use
+`0.2.x`; breaking public API changes before 1.0 use a new `0.x.0` minor. Release
 tags are immutable, so a faulty release is corrected with a new version instead
 of moving an existing tag.
 
@@ -133,9 +133,11 @@ scripts/validate-release.sh
 After a reviewed release commit lands on remote `main`, create its immutable
 semantic-version tag. The tag workflow verifies that the commit belongs to
 remote `main`, resolves the private package as an external consumer using the
-tagged compatible range, and only then publishes the private GitHub Release
-from `docs/releases/<version>.md`. Release `0.1.0` uses
-[`docs/releases/0.1.0.md`](docs/releases/0.1.0.md).
+tagged compatible range on macOS and tvOS, and only then publishes the private
+GitHub Release from `docs/releases/<version>.md`. Each release includes a
+deterministic source archive and `SHA256SUMS`; verify it with
+`shasum -a 256 -c SHA256SUMS`. Release `0.2.0` uses
+[`docs/releases/0.2.0.md`](docs/releases/0.2.0.md).
 
 ## Adaptive application shells
 

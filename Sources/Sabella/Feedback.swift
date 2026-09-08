@@ -50,7 +50,13 @@ public struct BleeckerProgress: View {
 public struct BleeckerLoadingSpinner: View {
     let size: BleeckerLoadingSize
     public init(size: BleeckerLoadingSize = .md) { self.size = size }
-    public var body: some View { ProgressView().controlSize(size == .sm ? .small : size == .lg ? .large : .regular) }
+    public var body: some View {
+#if os(tvOS)
+        ProgressView()
+#else
+        ProgressView().controlSize(size == .sm ? .small : size == .lg ? .large : .regular)
+#endif
+    }
 }
 
 public struct BleeckerLoadingOverlay: View {

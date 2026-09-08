@@ -82,7 +82,13 @@ public struct BleeckerButton<Label: View>: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: BleeckerSpacing.inline) {
-                if loading { ProgressView().controlSize(.small) }
+                if loading {
+#if os(tvOS)
+                    ProgressView()
+#else
+                    ProgressView().controlSize(.small)
+#endif
+                }
                 label
             }
         }

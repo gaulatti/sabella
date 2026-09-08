@@ -1,7 +1,7 @@
 #if os(tvOS)
 import SwiftUI
 import UIKit
-import AVFoundation
+@preconcurrency import AVFoundation
 import Combine
 import OSLog
 @_exported import KSPlayer

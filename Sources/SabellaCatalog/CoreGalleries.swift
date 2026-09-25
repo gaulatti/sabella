@@ -223,6 +223,19 @@ struct SurfacesGallery: View {
         }
         CatalogSection("Surface utilities") {
             VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 12) {
+                    ForEach([0.0, 5.0, 10.0], id: \.self) { intensity in
+                        BleeckerAttentionSurface(hue: 210, intensity: intensity) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Attention \(Int(intensity))")
+                                    .font(BleeckerTypography.primary(13, weight: .semibold))
+                                Text("Dense feed surface")
+                                    .font(BleeckerTypography.secondary(11))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
                 BleeckerPanel(title: "Panel") { Text("Panels provide a titled card composition.") }
                 BleeckerSeparator()
                 BleeckerSkeleton().frame(height: 18)

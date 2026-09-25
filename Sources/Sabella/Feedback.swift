@@ -8,7 +8,7 @@ public struct BleeckerStatusBadge: View {
     public var body: some View {
         let p = BleeckerPalette.resolve(scheme)
         HStack(spacing: 6) { Circle().fill(color(p)).frame(width: 6, height: 6); Text(text) }
-            .font(BleeckerTypography.primary(11, weight: .semibold)).foregroundStyle(color(p))
+            .bleeckerFont(.primary, size: 11, weight: .semibold).foregroundStyle(color(p))
             .padding(.horizontal, 9).frame(minHeight: 24).background(color(p).opacity(0.1)).clipShape(Capsule())
     }
     private func color(_ p: BleeckerPalette) -> Color { switch variant { case .live: p.live; case .offline: p.textSecondary; case .warning: p.desert; case .info: p.sea; case .default: p.textPrimary } }

@@ -66,6 +66,11 @@ package resource bundle on first use. Consumers do not need to install fonts or
 add `UIAppFonts` entries. The font files are distributed under the SIL Open Font
 License included beside the assets in `Sources/Sabella/Resources/Fonts`.
 
+Hosts can set `\.bleeckerTextScale` on a view hierarchy and use
+`bleeckerFont(_:size:weight:)` for text that follows the selected scale.
+Sabella buttons, text inputs, selectors, and compact or standard checkboxes
+use the same value. The default scale is 1.0.
+
 ## Component catalog
 
 `SabellaCatalog` is the canonical visual release gate for every supported Apple

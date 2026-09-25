@@ -27,6 +27,18 @@ struct FoundationsGallery: View {
                 Text("UTILITY PILL").bleeckerPill()
             }
         }
+        CatalogSection("Text size", note: "The same fonts and controls at three host-selected scales.") {
+            HStack(alignment: .top, spacing: 24) {
+                ForEach([("Compact", 0.9), ("Standard", 1.0), ("Large", 1.25)], id: \.0) { label, scale in
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(label).bleeckerFont(.primary, size: 12, weight: .semibold)
+                        Text("Live posts").bleeckerFont(.primary, size: 18, weight: .semibold)
+                        Button("Send for processing") {}.buttonStyle(BleeckerButtonStyle(.secondary, size: .sm))
+                    }
+                    .environment(\.bleeckerTextScale, scale)
+                }
+            }
+        }
         CatalogSection("Spacing & radius") {
             VStack(alignment: .leading, spacing: 12) {
                 tokenBar("detail", BleeckerSpacing.detail)
@@ -167,6 +179,7 @@ struct ControlsGallery: View {
                 BleeckerSelect(selection: $option, options: options, systemImage: "folder")
                 Toggle("Notifications", isOn: $toggle).toggleStyle(BleeckerSwitchStyle())
                 BleeckerCheckbox("Include archived", checked: $checked)
+                BleeckerCheckbox("Compact selection", checked: $checked, size: .sm)
                 BleeckerRadioGroup(selection: $option, options: options, orientation: .horizontal)
                 BleeckerStepper("Seats", value: $count, in: 1...10)
             }

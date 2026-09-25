@@ -1,5 +1,62 @@
 import SwiftUI
 
+/// A bounded attention treatment for dense feeds. Hue identifies a category;
+/// intensity (0...10) moves the accent toward urgency without hiding content.
+public struct BleeckerAttentionSurface<Content: View>: View {
+    @Environment(\.colorScheme) private var scheme
+    let hue: Double
+    let intensity: Double
+    @ViewBuilder let content: Content
+
+    public init(hue: Double, intensity: Double, @ViewBuilder content: () -> Content) {
+        self.hue = hue
+        self.intensity = intensity
+        self.content = content()
+    }
+
+    public var body: some View {
+        let p = BleeckerPalette.resolve(scheme)
+        let urgency = min(10, max(0, intensity.isFinite ? intensity : 0))
+        let accent = Self.accent(hue: hue, intensity: urgency)
+        let shape = RoundedRectangle(cornerRadius: BleeckerRadius.card, style: .continuous)
+        content
+            .padding(BleeckerSpacing.component)
+            .background {
+                shape.fill(p.card)
+                    .overlay {
+                        shape.fill(LinearGradient(
+                            colors: [accent.opacity(scheme == .dark ? 0.12 + urgency * 0.037 : 0.06 + urgency * 0.018), .clear],
+                            startPoint: .bottomLeading, endPoint: .topTrailing
+                        ))
+                    }
+            }
+            .clipShape(shape)
+            .overlay { shape.strokeBorder(accent.opacity(scheme == .dark ? 0.24 : 0.18), lineWidth: 1) }
+    }
+
+    public static func accent(hue: Double, intensity: Double) -> Color {
+        let normalized = ((hue.isFinite ? hue : 210).truncatingRemainder(dividingBy: 360) + 360)
+            .truncatingRemainder(dividingBy: 360) / 360
+        let urgency = min(1, max(0, (intensity.isFinite ? intensity : 0) / 10))
+        let segment = normalized * 6
+        let chroma = 0.66 * 0.52
+        let secondary = chroma * (1 - abs(segment.truncatingRemainder(dividingBy: 2) - 1))
+        let base = 0.52 - chroma
+        let rgb: (Double, Double, Double) = switch Int(segment) {
+        case 0: (chroma, secondary, 0)
+        case 1: (secondary, chroma, 0)
+        case 2: (0, chroma, secondary)
+        case 3: (0, secondary, chroma)
+        case 4: (secondary, 0, chroma)
+        default: (chroma, 0, secondary)
+        }
+        let red = (0.94, 0.25, 0.18)
+        return Color(red: (rgb.0 + base) * (1 - urgency) + red.0 * urgency,
+                     green: (rgb.1 + base) * (1 - urgency) + red.1 * urgency,
+                     blue: (rgb.2 + base) * (1 - urgency) + red.2 * urgency)
+    }
+}
+
 public struct BleeckerCard<Content: View>: View {
     @Environment(\.colorScheme) private var scheme
     let padding: BleeckerCardPadding

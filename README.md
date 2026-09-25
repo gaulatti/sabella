@@ -19,6 +19,10 @@ Button("Sync") { sync() }
 
 Components keep the `Bleecker` prefix so product code reads identically across design-system implementations while the module name (`Sabella`) identifies the platform library.
 
+`BleeckerAttentionSurface` carries the web feed's category hue and 0–10
+urgency treatment into native dense lists. The Sabella catalog shows calm,
+moderate, and urgent fixtures in both appearances.
+
 The bounded [Kolibri primary-button contract
 decision](docs/kolibri-primary-button-contract.md) pins the private neutral
 0.1.0 bundle, validates its checksums and schema, and records deterministic

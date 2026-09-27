@@ -19,6 +19,10 @@ Button("Sync") { sync() }
 
 Components keep the `Bleecker` prefix so product code reads identically across design-system implementations while the module name (`Sabella`) identifies the platform library.
 
+`BleeckerAttentionSurface` carries the web feed's category hue and 0–10
+urgency treatment into native dense lists. The Sabella catalog shows calm,
+moderate, and urgent fixtures in both appearances.
+
 The bounded [Kolibri primary-button contract
 decision](docs/kolibri-primary-button-contract.md) pins the private neutral
 0.1.0 bundle, validates its checksums and schema, and records deterministic
@@ -61,6 +65,11 @@ Franklin typefaces used by its typography tokens and registers them from the
 package resource bundle on first use. Consumers do not need to install fonts or
 add `UIAppFonts` entries. The font files are distributed under the SIL Open Font
 License included beside the assets in `Sources/Sabella/Resources/Fonts`.
+
+Hosts can set `\.bleeckerTextScale` on a view hierarchy and use
+`bleeckerFont(_:size:weight:)` for text that follows the selected scale.
+Sabella buttons, text inputs, selectors, and compact or standard checkboxes
+use the same value. The default scale is 1.0.
 
 ## Component catalog
 

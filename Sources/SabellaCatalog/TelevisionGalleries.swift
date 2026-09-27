@@ -350,15 +350,15 @@ private struct CatalogPlayback: View {
             id: "groove-salad",
             streamURL: URL(string: "https://somafm.com/m3u/groovesalad130.m3u")!,
             number: "202",
-            name: "Groove Salad",
+            name: "Groove Salad · Auto",
             mark: "gs",
             tone: .sea,
             now: "Ambient + downtempo",
             next: "A nicely chilled plate of ambient beats",
             progress: 1,
             currentTime: "Live · SomaFM",
-            backgroundPlayback: .audio,
-            medium: .radio
+            backgroundPlayback: .automatic,
+            medium: .automatic
         ),
         SabellaTVChannel(
             id: "rtl-1025",

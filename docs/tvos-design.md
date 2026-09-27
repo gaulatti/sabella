@@ -151,8 +151,13 @@ active, and Menu restores the guide.
 Channels use `.automatic` medium and background behavior by default so large
 lineups do not require a manual TV/radio migration. Sabella begins on the video
 surface and classifies only after the player item is ready: any video signal wins
-immediately, while radio requires repeated successful checks with no video and
-can still correct itself if video arrives later. Automatically resolved radio
+immediately, while radio requires three consecutive checks with audio and no
+video. Unknown or late track metadata keeps classification pending rather than
+permanently leaving an audio-only feed on a black video surface. Classification
+continues after radio is shown so a late video track can restore video. Tuning
+away cancels the observer. The catalog's `Groove Salad · Auto` channel exercises
+this automatic presentation alongside an explicitly declared radio channel.
+Automatically resolved radio
 may continue audio in the background; automatically resolved television stops
 picture and sound, then resumes only if playback had been active. Products may
 use `.television`, `.radio`, `.suspend`, or `.audio` only as explicit overrides;

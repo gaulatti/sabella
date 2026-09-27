@@ -616,61 +616,34 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
     }
 
     private func classify(item: AVPlayerItem, channelID: String) async {
-        var confirmedAudioOnlySamples = 0
-
-        for sample in 0..<3 {
-            guard !Task.isCancelled, self.channelID == channelID else { return }
-
+        await SabellaTVAutomaticMediumClassifier.observe {
+            guard self.channelID == channelID else { return nil }
             let videoTracks = try? await item.asset.loadTracks(withMediaType: .video)
             let audioTracks = try? await item.asset.loadTracks(withMediaType: .audio)
-            guard !Task.isCancelled, self.channelID == channelID else { return }
-
-            if item.presentationSize.width > 0 || videoTracks?.isEmpty == false {
-                resolvedMedia[channelID] = .television
-                isRadio = false
-                return
-            }
-
-            if videoTracks?.isEmpty == true, audioTracks?.isEmpty == false {
-                confirmedAudioOnlySamples += 1
-            }
-
-            if sample < 2 {
-                try? await Task.sleep(for: .milliseconds(750))
-            }
+            guard self.channelID == channelID else { return nil }
+            if item.presentationSize.width > 0 || videoTracks?.isEmpty == false { return .video }
+            if videoTracks?.isEmpty == true, audioTracks?.isEmpty == false { return .audioOnly }
+            return .unknown
+        } resolved: { result in
+            guard self.channelID == channelID else { return }
+            self.resolvedMedia[channelID] = result == .radio ? .radio : .television
+            self.isRadio = result == .radio
         }
-
-        guard confirmedAudioOnlySamples == 3, self.channelID == channelID else { return }
-        resolvedMedia[channelID] = .radio
-        isRadio = true
     }
 
     private func classifyKSPlayer(channelID: String) async {
-        var confirmedAudioOnlySamples = 0
-
-        for sample in 0..<3 {
-            guard !Task.isCancelled, self.channelID == channelID,
-                  let mediaPlayer = ksCoordinator?.playerLayer?.player else { return }
-
+        await SabellaTVAutomaticMediumClassifier.observe {
+            guard self.channelID == channelID,
+                  let mediaPlayer = self.ksCoordinator?.playerLayer?.player else { return nil }
             if mediaPlayer.naturalSize.width > 0 || !mediaPlayer.tracks(mediaType: .video).isEmpty {
-                resolvedMedia[channelID] = .television
-                isRadio = false
-                return
+                return .video
             }
-
-            if mediaPlayer.tracks(mediaType: .video).isEmpty,
-               !mediaPlayer.tracks(mediaType: .audio).isEmpty {
-                confirmedAudioOnlySamples += 1
-            }
-
-            if sample < 2 {
-                try? await Task.sleep(for: .milliseconds(750))
-            }
+            return mediaPlayer.tracks(mediaType: .audio).isEmpty ? .unknown : .audioOnly
+        } resolved: { result in
+            guard self.channelID == channelID else { return }
+            self.resolvedMedia[channelID] = result == .radio ? .radio : .television
+            self.isRadio = result == .radio
         }
-
-        guard confirmedAudioOnlySamples == 3, self.channelID == channelID else { return }
-        resolvedMedia[channelID] = .radio
-        isRadio = true
     }
 
     private func scheduleRecovery(for channel: SabellaTVChannel) {

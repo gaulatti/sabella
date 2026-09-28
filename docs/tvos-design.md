@@ -81,8 +81,9 @@ buffering and failure states, media-specific presentation, focus, remote
 commands, foreground/background behavior, tuning, and the guide. Product apps
 only supply authoritative channel data and observe selection; they must not
 overlay their own controls or gesture capture on the component.
-During full-screen group playback, a connected remote's Channel + / Channel -
-page commands tune the next / previous channel in the supplied lineup. At the end
+During group playback, a connected remote's Channel + / Channel - page commands
+tune the next / previous channel in the supplied lineup, whether the guide is
+open or closed. A channel change closes the guide just like Select. At the end
 of a loaded page, Channel + requests the next page and tunes its first channel
 once it arrives. At the first or final channel, the command leaves the current
 channel playing. The guide's Up / Down focus, Select-to-tune, and Menu behavior
@@ -155,10 +156,13 @@ current program title remains the only dominant near-white text.
 Playback itself is edge-to-edge and sits outside the browse/header container.
 Menu reveals the guide over uninterrupted video; pressing Menu again exits to
 Browse. Global navigation must never remain visible during full-screen viewing.
-Once a channel is tuned, live viewing is entirely unobstructed. Do not persist a
-VOD transport card, implementation labels, duplicate channel metadata, or a
-fabricated timeline over linear video. The remote Play/Pause command remains
-active, and Menu restores the guide.
+After a channel switch, live playback briefly shows the tuned channel number
+and name in a compact lower-left notice. It clears after five seconds, resets
+on another switch, and clears when the guide opens. Reduced-motion settings
+remove its animation. Otherwise live viewing remains unobstructed: do not
+persist a VOD transport card, duplicate channel metadata, or a fabricated
+timeline over linear video. The remote Play/Pause command remains active, and
+Menu restores the guide.
 Channels use `.automatic` medium and background behavior by default so large
 lineups do not require a manual TV/radio migration. Sabella begins on the video
 surface and classifies only after the player item is ready: any video signal wins

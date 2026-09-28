@@ -170,6 +170,7 @@ public struct SabellaTVLivePlayer: View {
     @Binding private var selection: String
     @Binding private var guideVisible: Bool
     @StateObject private var playback: SabellaTVLivePlaybackModel
+    @StateObject private var channelNotice = SabellaTVChannelChangeNoticeModel()
     @State private var pendingChannelIndex: Int?
 
     private let channels: [SabellaTVChannel]
@@ -269,6 +270,7 @@ public struct SabellaTVLivePlayer: View {
                 ) { channel in
                     tune(channel)
                 }
+                .pageCommand(value: channelPagePosition, in: 0...lastPagePosition)
                 .transition(.move(edge: .leading).combined(with: .opacity))
             } else {
                 SabellaTVPlaybackRemoteCapture(
@@ -281,15 +283,30 @@ public struct SabellaTVLivePlayer: View {
             }
         }
         .ignoresSafeArea()
+        .overlay(alignment: .bottomLeading) {
+            if let channel = channelNotice.channel, !guideVisible {
+                SabellaTVChannelChangeNotice(channel: channel)
+                    .padding(.leading, 54)
+                    .padding(.bottom, 54)
+                    .transition(.opacity)
+            }
+        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.28), value: channelNotice.channel?.id)
         .task(id: selection) {
             guard let channel = channels.first(where: { $0.id == selection }) else { return }
             playback.tune(channel)
         }
-        .onDisappear { playback.stop() }
+        .onDisappear {
+            channelNotice.clear()
+            playback.stop()
+        }
         .onPlayPauseCommand { playback.togglePlayback() }
         .onChange(of: channels.count) { _, _ in completePendingChannelStep() }
         .onChange(of: loadingMoreChannels) { _, loading in
             if !loading { completePendingChannelStep() }
+        }
+        .onChange(of: guideVisible) { _, visible in
+            if visible { channelNotice.clear() }
         }
         .onChange(of: scenePhase) { _, phase in playback.handleScenePhase(phase, channel: selectedChannel) }
         .onExitCommand {
@@ -353,10 +370,70 @@ public struct SabellaTVLivePlayer: View {
         if guideVisible {
             withAnimation(playbackAnimation) { guideVisible = false }
         }
+        channelNotice.show(channel)
     }
 
     private var playbackAnimation: Animation? {
         reduceMotion ? nil : .easeInOut(duration: 0.34)
+    }
+}
+
+@MainActor
+final class SabellaTVChannelChangeNoticeModel: ObservableObject {
+    @Published private(set) var channel: SabellaTVChannel?
+    private let displayDuration: Duration
+    private var dismissTask: Task<Void, Never>?
+
+    init(displayDuration: Duration = .seconds(5)) {
+        self.displayDuration = displayDuration
+    }
+
+    func show(_ channel: SabellaTVChannel) {
+        dismissTask?.cancel()
+        self.channel = channel
+        dismissTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: displayDuration)
+            guard !Task.isCancelled else { return }
+            self.channel = nil
+        }
+    }
+
+    func clear() {
+        dismissTask?.cancel()
+        dismissTask = nil
+        channel = nil
+    }
+}
+
+private struct SabellaTVChannelChangeNotice: View {
+    let channel: SabellaTVChannel
+
+    var body: some View {
+        HStack(spacing: 18) {
+            Text(channel.number)
+                .font(BleeckerTypography.mono(27, weight: .bold))
+                .foregroundStyle(BleeckerPalette.dark.sea)
+            Rectangle()
+                .fill(.white.opacity(0.22))
+                .frame(width: 1, height: 34)
+            Text(channel.name)
+                .font(BleeckerTypography.primary(30, weight: .semibold))
+                .foregroundStyle(BleeckerPalette.dark.textPrimary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 18)
+        .frame(maxWidth: 640, alignment: .leading)
+        .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(.white.opacity(0.18), lineWidth: 1)
+        }
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Channel \(channel.number), \(channel.name)")
+        .accessibilityIdentifier("sabella-channel-change-notice")
     }
 }
 

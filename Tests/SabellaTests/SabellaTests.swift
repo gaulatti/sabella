@@ -270,6 +270,31 @@ import SabellaCatalogSupport
     #expect(SabellaTVChannelPageNavigation.requestedIndex(position: 100, loadedCount: 101, hasMore: false) == 100)
 }
 
+@Test @MainActor func televisionChannelChangeNoticeReplacesAndExpires() async throws {
+    let channels = (1...2).map { number in
+        SabellaTVChannel(
+            id: "channel-\(number)",
+            streamURL: URL(string: "https://example.com/\(number).m3u8")!,
+            number: String(format: "%03d", number),
+            name: "Channel \(number)",
+            now: "Live",
+            progress: 1
+        )
+    }
+    let notice = SabellaTVChannelChangeNoticeModel(displayDuration: .milliseconds(30))
+
+    notice.show(channels[0])
+    #expect(notice.channel?.id == channels[0].id)
+    notice.show(channels[1])
+    #expect(notice.channel?.id == channels[1].id)
+    try await Task.sleep(for: .milliseconds(120))
+    #expect(notice.channel == nil)
+
+    notice.show(channels[0])
+    notice.clear()
+    #expect(notice.channel == nil)
+}
+
 @Test @MainActor func televisionLivePlayerInitializerRemainsSourceCompatible() throws {
     let channel = SabellaTVChannel(
         id: "news",

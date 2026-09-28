@@ -92,6 +92,8 @@ at the first loads any remaining pages, then wraps to the final channel. The
 guide's Up / Down focus wraps at the same true ends without tuning. Select-to-tune
 and Menu remain available. A pending wrap shows loading status, and a failed
 page load leaves the current channel or guide focus in place with a visible error.
+Guide focus wraps scroll the destination row into view before assigning focus,
+including in long lineups where the opposite end begins off-screen.
 
 Products that need truthful live-viewing duration observe
 `onPlaybackActivityChanged`. The callback receives a `Sendable`

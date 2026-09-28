@@ -664,7 +664,7 @@ public struct SabellaTVChannelGuide: View {
                                 )
                                 .focused($focusedChannelID, equals: item.id)
                                 .onMoveCommand { direction in
-                                    moveBeyondGuideEdge(direction, from: item.id)
+                                    moveBeyondGuideEdge(direction, from: item.id, scrollProxy: scrollProxy)
                                 }
                                 .id(item.id)
                             }
@@ -722,7 +722,7 @@ public struct SabellaTVChannelGuide: View {
                             performLoadToLast(loadToLast.observe(
                                 loadedCount: channels.count,
                                 hasMore: hasMoreChannels
-                            ))
+                            ), scrollProxy: scrollProxy)
                         }
                     }
                 }
@@ -818,7 +818,11 @@ public struct SabellaTVChannelGuide: View {
         channels.first { $0.id == highlightedID } ?? channels.first { $0.id == selection } ?? channels[0]
     }
 
-    private func moveBeyondGuideEdge(_ direction: MoveCommandDirection, from id: String) {
+    private func moveBeyondGuideEdge(
+        _ direction: MoveCommandDirection,
+        from id: String,
+        scrollProxy: ScrollViewProxy
+    ) {
         guard focusedChannelID == id else { return }
         switch SabellaTVChannelGuideOrder.edgeMove(
             direction: direction,
@@ -832,26 +836,33 @@ public struct SabellaTVChannelGuide: View {
                 loadedCount: channels.count,
                 hasMore: hasMoreChannels,
                 loading: loadingMoreChannels
-            ))
+            ), scrollProxy: scrollProxy)
         case .firstChannel:
-            focusChannel(channels[0].id)
+            focusChannel(channels[0].id, scrollProxy: scrollProxy)
         case .none:
             break
         }
     }
 
-    private func performLoadToLast(_ action: SabellaTVChannelLoadToEnd.Action) {
+    private func performLoadToLast(_ action: SabellaTVChannelLoadToEnd.Action, scrollProxy: ScrollViewProxy) {
         switch action {
         case .none: break
         case .loadMore: loadMoreChannels()
-        case .finished: focusChannel(channels[channels.count - 1].id)
+        case .finished: focusChannel(channels[channels.count - 1].id, scrollProxy: scrollProxy)
         case .failed: wrapError = "Could not load the last channel."
         }
     }
 
-    private func focusChannel(_ id: String) {
-        highlightedID = id
-        focusedChannelID = id
+    private func focusChannel(_ id: String, scrollProxy: ScrollViewProxy) {
+        withTransaction(Transaction(animation: nil)) {
+            scrollProxy.scrollTo(id, anchor: .center)
+        }
+        Task { @MainActor in
+            await Task.yield()
+            highlightedID = id
+            await Task.yield()
+            focusedChannelID = id
+        }
     }
 
     private func effectiveMedium(for channel: SabellaTVChannel) -> SabellaTVChannelMedium {

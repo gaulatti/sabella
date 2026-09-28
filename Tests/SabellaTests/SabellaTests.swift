@@ -228,6 +228,18 @@ import SabellaCatalogSupport
 }
 
 #if os(tvOS)
+@Test func televisionGroupReturnKeepsSavedPointerUntilInitialFocusRestores() {
+    var restoration = SabellaTVGroupFocusRestoration()
+    let savedGroupID = "group-on-third-row"
+
+    // tvOS may focus the first visible tile while the saved row is scrolling in.
+    #expect(restoration.accepted("first-group") == nil)
+    #expect(restoration.accepted(savedGroupID) == nil)
+    restoration.finish()
+    #expect(restoration.accepted(savedGroupID) == savedGroupID)
+    #expect(restoration.accepted("next-group") == "next-group")
+}
+
 @Test func televisionGuideClimbsFromFirstChannelAndLoadsOnlyAtFocusedTopEdge() {
     let channels = (1...3).map { number in
         SabellaTVChannel(

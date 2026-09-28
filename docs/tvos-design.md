@@ -75,7 +75,9 @@ and failure states. Selecting a group enters edge-to-edge playback with
 `SabellaTVChannelGuide`; Menu returns to the group browser. Empty and failed
 group loads must remain explicit rather than substituting demo channels.
 Returning from playback restores the browse page, focused group, and containing
-grid row; it must not reset the viewer to the first group.
+grid row; it must not reset the viewer to the first group. On a recreated group
+list, transient tvOS focus on the first visible tile is ignored until the saved
+group has been scrolled into view and refocused.
 `SabellaTVLivePlayer` owns the complete live TV and radio surface: playback,
 buffering and failure states, media-specific presentation, focus, remote
 commands, foreground/background behavior, tuning, and the guide. Product apps

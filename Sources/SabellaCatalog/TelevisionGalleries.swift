@@ -21,7 +21,7 @@ struct SabellaTelevisionCatalog: View {
     @State private var query = ""
     @State private var activeProfile = "Javier"
     @State private var isWatchlisted = false
-    @State private var focusedChannelGroupID: String?
+    @State private var focusedChannelGroupID: String? = "late"
     @State private var headerFocusRequested = false
 
     private let content = [
@@ -194,6 +194,11 @@ struct SabellaTelevisionCatalog: View {
             SabellaTVChannelGroupSummary(id: "music", name: "Music television", channelCount: 19),
             SabellaTVChannelGroupSummary(id: "culture", name: "Arts and culture", channelCount: 14),
             SabellaTVChannelGroupSummary(id: "empty", name: "Weekend", channelCount: 0),
+            SabellaTVChannelGroupSummary(id: "sports", name: "Sports", channelCount: 22),
+            SabellaTVChannelGroupSummary(id: "films", name: "Films", channelCount: 11),
+            SabellaTVChannelGroupSummary(id: "family", name: "Family", channelCount: 10),
+            SabellaTVChannelGroupSummary(id: "travel", name: "Travel", channelCount: 13),
+            SabellaTVChannelGroupSummary(id: "late", name: "Late night", channelCount: 9),
         ]
     }
 

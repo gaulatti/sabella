@@ -306,8 +306,8 @@ public struct SabellaTVLivePlayer: View {
         channels.first { $0.id == selection } ?? channels[0]
     }
 
-    // pageUp is Channel + on tvOS. Invert the list index so it advances
-    // through the lineup, while pageDown (Channel -) moves toward its start.
+    // The page command's value follows the numbered lineup. On the connected
+    // TV remote, Channel + advances it and Channel - moves toward its start.
     private var lastPagePosition: Int {
         SabellaTVChannelPageNavigation.lastPosition(
             loadedCount: channels.count,
@@ -318,8 +318,7 @@ public struct SabellaTVLivePlayer: View {
     private var channelPagePosition: Binding<Int> {
         Binding(
             get: {
-                let index = channels.firstIndex { $0.id == selection } ?? 0
-                return lastPagePosition - index
+                channels.firstIndex { $0.id == selection } ?? 0
             },
             set: { position in
                 guard let index = SabellaTVChannelPageNavigation.requestedIndex(
@@ -372,7 +371,7 @@ enum SabellaTVChannelPageNavigation {
     static func requestedIndex(position: Int, loadedCount: Int, hasMore: Bool) -> Int? {
         let last = lastPosition(loadedCount: loadedCount, hasMore: hasMore)
         guard (0...last).contains(position) else { return nil }
-        return last - position
+        return position
     }
 }
 

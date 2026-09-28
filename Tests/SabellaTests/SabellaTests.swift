@@ -228,6 +228,106 @@ import SabellaCatalogSupport
 }
 
 #if os(tvOS)
+@Test func televisionGroupReturnKeepsSavedPointerUntilInitialFocusRestores() {
+    var restoration = SabellaTVGroupFocusRestoration()
+    let savedGroupID = "group-on-third-row"
+
+    // tvOS may focus the first visible tile while the saved row is scrolling in.
+    #expect(restoration.accepted("first-group") == nil)
+    #expect(restoration.accepted(savedGroupID) == nil)
+    restoration.finish()
+    #expect(restoration.accepted(savedGroupID) == savedGroupID)
+    #expect(restoration.accepted("next-group") == "next-group")
+}
+
+@Test func televisionGuideClimbsFromFirstChannelAndLoadsOnlyAtFocusedTopEdge() {
+    let channels = (1...3).map { number in
+        SabellaTVChannel(
+            id: "channel-\(number)",
+            streamURL: URL(string: "https://example.com/\(number).m3u8")!,
+            number: String(number),
+            name: "Channel \(number)",
+            now: "Live",
+            progress: 1
+        )
+    }
+
+    #expect(SabellaTVChannelGuideOrder.rowsTopToBottom(channels).map(\.id) == [
+        "channel-3", "channel-2", "channel-1"
+    ])
+    #expect(SabellaTVChannelGuideOrder.edgeMove(
+        direction: .down, focusedID: "channel-1", channels: channels, hasMore: true
+    ) == .lastChannel)
+    #expect(SabellaTVChannelGuideOrder.edgeMove(
+        direction: .up, focusedID: "channel-3", channels: channels, hasMore: false
+    ) == .firstChannel)
+    #expect(SabellaTVChannelGuideOrder.edgeMove(
+        direction: .up, focusedID: "channel-3", channels: channels, hasMore: true
+    ) == .none)
+    #expect(!SabellaTVChannelGuideOrder.shouldLoadNextPage(
+        highlightedID: "channel-1", channels: channels, hasMore: true, loading: false
+    ))
+    #expect(SabellaTVChannelGuideOrder.shouldLoadNextPage(
+        highlightedID: "channel-3", channels: channels, hasMore: true, loading: false
+    ))
+    #expect(!SabellaTVChannelGuideOrder.shouldLoadNextPage(
+        highlightedID: "channel-3", channels: channels, hasMore: true, loading: true
+    ))
+    #expect(!SabellaTVChannelGuideOrder.shouldLoadNextPage(
+        highlightedID: "channel-3", channels: channels, hasMore: false, loading: false
+    ))
+}
+
+@Test func televisionChannelPageCommandsFollowGroupOrderAndPageBoundary() {
+    #expect(SabellaTVChannelPageNavigation.lastPosition(loadedCount: 3) == 4)
+    #expect(SabellaTVChannelPageNavigation.request(position: 2, loadedCount: 3, hasMore: false) == .channel(1))
+    #expect(SabellaTVChannelPageNavigation.request(position: 0, loadedCount: 3, hasMore: false) == .lastChannel)
+    #expect(SabellaTVChannelPageNavigation.request(position: 4, loadedCount: 3, hasMore: false) == .channel(0))
+    #expect(SabellaTVChannelPageNavigation.request(position: -1, loadedCount: 3, hasMore: false) == nil)
+    #expect(SabellaTVChannelPageNavigation.request(position: 5, loadedCount: 3, hasMore: false) == nil)
+    #expect(SabellaTVChannelPageNavigation.request(position: 101, loadedCount: 100, hasMore: true) == .nextPage(100))
+    #expect(SabellaTVChannelPageNavigation.request(position: 101, loadedCount: 101, hasMore: false) == .channel(100))
+}
+
+@Test func televisionChannelWrapLoadsEveryPageAndStopsOnFailure() {
+    var load = SabellaTVChannelLoadToEnd()
+    #expect(load.begin(loadedCount: 100, hasMore: true, loading: false) == .loadMore)
+    #expect(load.isActive)
+    #expect(load.observe(loadedCount: 200, hasMore: true) == .loadMore)
+    #expect(load.observe(loadedCount: 219, hasMore: false) == .finished)
+    #expect(!load.isActive)
+
+    #expect(load.begin(loadedCount: 100, hasMore: true, loading: true) == .none)
+    #expect(load.observe(loadedCount: 100, hasMore: true) == .failed)
+    #expect(!load.isActive)
+    #expect(load.begin(loadedCount: 1, hasMore: false, loading: false) == .finished)
+}
+
+@Test @MainActor func televisionChannelChangeNoticeReplacesAndExpires() async throws {
+    let channels = (1...2).map { number in
+        SabellaTVChannel(
+            id: "channel-\(number)",
+            streamURL: URL(string: "https://example.com/\(number).m3u8")!,
+            number: String(format: "%03d", number),
+            name: "Channel \(number)",
+            now: "Live",
+            progress: 1
+        )
+    }
+    let notice = SabellaTVChannelChangeNoticeModel(displayDuration: .milliseconds(30))
+
+    notice.show(channels[0])
+    #expect(notice.channel?.id == channels[0].id)
+    notice.show(channels[1])
+    #expect(notice.channel?.id == channels[1].id)
+    try await Task.sleep(for: .milliseconds(120))
+    #expect(notice.channel == nil)
+
+    notice.show(channels[0])
+    notice.clear()
+    #expect(notice.channel == nil)
+}
+
 @Test @MainActor func televisionLivePlayerInitializerRemainsSourceCompatible() throws {
     let channel = SabellaTVChannel(
         id: "news",

@@ -21,7 +21,7 @@ struct SabellaTelevisionCatalog: View {
     @State private var query = ""
     @State private var activeProfile = "Javier"
     @State private var isWatchlisted = false
-    @State private var focusedChannelGroupID: String?
+    @State private var focusedChannelGroupID: String? = "late"
     @State private var headerFocusRequested = false
 
     private let content = [
@@ -194,6 +194,11 @@ struct SabellaTelevisionCatalog: View {
             SabellaTVChannelGroupSummary(id: "music", name: "Music television", channelCount: 19),
             SabellaTVChannelGroupSummary(id: "culture", name: "Arts and culture", channelCount: 14),
             SabellaTVChannelGroupSummary(id: "empty", name: "Weekend", channelCount: 0),
+            SabellaTVChannelGroupSummary(id: "sports", name: "Sports", channelCount: 22),
+            SabellaTVChannelGroupSummary(id: "films", name: "Films", channelCount: 11),
+            SabellaTVChannelGroupSummary(id: "family", name: "Family", channelCount: 10),
+            SabellaTVChannelGroupSummary(id: "travel", name: "Travel", channelCount: 13),
+            SabellaTVChannelGroupSummary(id: "late", name: "Late night", channelCount: 9),
         ]
     }
 
@@ -310,7 +315,7 @@ private struct CatalogPlayback: View {
         SabellaTVChannel(
             id: "sky-news",
             streamURL: URL(string: "https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/v1/master/6404a5d732e04991ed59ac7790b61cc065c9aabd/prod-gb-lin-skynews-hls-25-web/master.m3u8?ads.cdn=https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com&ads.csid=sitesection:SkyNews:Web&manifest.mthost=7a38d30e7dd84cd0872ab4f691c38f58&manifest.region=mediatailor.eu-west-1.amazonaws.com")!,
-            number: "501",
+            number: "001",
             name: "Sky News",
             mark: "sky",
             tone: .red,
@@ -323,7 +328,7 @@ private struct CatalogPlayback: View {
         SabellaTVChannel(
             id: "tagesschau24",
             streamURL: URL(string: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8")!,
-            number: "024",
+            number: "002",
             name: "tagesschau24",
             mark: "t24",
             tone: .sea,
@@ -335,7 +340,7 @@ private struct CatalogPlayback: View {
         SabellaTVChannel(
             id: "radio-paradise",
             streamURL: URL(string: "https://stream.radioparadise.com/aac-320")!,
-            number: "201",
+            number: "003",
             name: "Radio Paradise",
             mark: "rp",
             tone: .terracotta,
@@ -349,7 +354,7 @@ private struct CatalogPlayback: View {
         SabellaTVChannel(
             id: "groove-salad",
             streamURL: URL(string: "https://somafm.com/m3u/groovesalad130.m3u")!,
-            number: "202",
+            number: "004",
             name: "Groove Salad",
             mark: "gs",
             tone: .sea,
@@ -363,7 +368,7 @@ private struct CatalogPlayback: View {
         SabellaTVChannel(
             id: "rtl-1025",
             streamURL: URL(string: "https://streamcdnc1-dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S97044836/tbbP8T1ZRPBL/playlist_video.m3u8")!,
-            number: "036",
+            number: "005",
             name: "RTL 102.5",
             mark: "rtl",
             tone: .terracotta,
@@ -375,7 +380,7 @@ private struct CatalogPlayback: View {
         SabellaTVChannel(
             id: "radio-italia",
             streamURL: URL(string: "https://radioitaliatv.akamaized.net/hls/live/2093117/RadioitaliaTV/master.m3u8")!,
-            number: "070",
+            number: "006",
             name: "Radio Italia TV",
             mark: "rit",
             tone: .gold,
@@ -384,7 +389,16 @@ private struct CatalogPlayback: View {
             progress: 0.74,
             currentTime: "Live coverage"
         ),
-    ]
+    ] + (7...24).map { number in
+        SabellaTVChannel(
+            id: "guide-focus-\(number)",
+            streamURL: URL(string: "https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8")!,
+            number: String(format: "%03d", number),
+            name: "Guide sample \(number)",
+            now: "Guide focus fixture",
+            progress: 1
+        )
+    }
 
     init(close: @escaping () -> Void) {
         self.close = close
@@ -401,8 +415,14 @@ private struct CatalogPlayback: View {
                 onExit: close
             )
 
-            if !playbackActivities.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("TUNED CHANNEL: \(selectedChannelID)")
+                    .font(BleeckerTypography.secondary(15, weight: .bold))
+                    .foregroundStyle(.white)
+                Text("CHANNEL +/-: TUNE + WRAP · CHANNEL NOTICE: 5S")
+                    .font(BleeckerTypography.secondary(15, weight: .medium))
+                    .foregroundStyle(BleeckerPalette.dark.sea)
+                if !playbackActivities.isEmpty {
                     Text("PLAYBACK ACTIVITY CALLBACK")
                         .font(BleeckerTypography.secondary(15, weight: .bold))
                         .foregroundStyle(BleeckerPalette.dark.sea)
@@ -417,19 +437,19 @@ private struct CatalogPlayback: View {
                         .font(BleeckerTypography.secondary(18, weight: .semibold))
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(BleeckerPalette.dark.sea.opacity(0.7), lineWidth: 1)
-                }
-                .padding(.top, 54)
-                .padding(.trailing, 56)
-                .allowsHitTesting(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("sabella-playback-activity")
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(BleeckerPalette.dark.sea.opacity(0.7), lineWidth: 1)
+            }
+            .padding(.top, 54)
+            .padding(.trailing, 56)
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("sabella-channel-remote-state")
         }
     }
 

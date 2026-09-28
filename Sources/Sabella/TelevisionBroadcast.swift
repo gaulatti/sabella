@@ -170,6 +170,10 @@ public struct SabellaTVLivePlayer: View {
     @Binding private var selection: String
     @Binding private var guideVisible: Bool
     @StateObject private var playback: SabellaTVLivePlaybackModel
+    @StateObject private var channelNotice = SabellaTVChannelChangeNoticeModel()
+    @State private var pendingChannelIndex: Int?
+    @State private var loadToLast = SabellaTVChannelLoadToEnd()
+    @State private var channelNavigationError: String?
 
     private let channels: [SabellaTVChannel]
     private let guideTitle: String
@@ -266,25 +270,57 @@ public struct SabellaTVLivePlayer: View {
                     togglePlayback: playback.togglePlayback,
                     toggleMute: playback.toggleMute
                 ) { channel in
-                    selection = channel.id
-                    playback.tune(channel)
-                    onSelectionChanged(channel)
-                    withAnimation(playbackAnimation) { guideVisible = false }
+                    tune(channel)
                 }
+                .pageCommand(value: channelPagePosition, in: 0...lastPagePosition)
                 .transition(.move(edge: .leading).combined(with: .opacity))
             } else {
-                SabellaTVPlaybackRemoteCapture(label: "Show \(guideTitle) channel guide") {
+                SabellaTVPlaybackRemoteCapture(
+                    label: "Show \(guideTitle) channel guide",
+                    channelPagePosition: channelPagePosition,
+                    lastPagePosition: lastPagePosition
+                ) {
                     withAnimation(playbackAnimation) { guideVisible = true }
                 }
             }
         }
         .ignoresSafeArea()
+        .overlay(alignment: .bottomLeading) {
+            if let channel = channelNotice.channel, !guideVisible {
+                SabellaTVChannelChangeNotice(channel: channel)
+                    .padding(.leading, 54)
+                    .padding(.bottom, 54)
+                    .transition(.opacity)
+            } else if loadToLast.isActive {
+                SabellaTVChannelNavigationStatus(message: "Loading last channel…", loading: true)
+                    .padding(.leading, 54)
+                    .padding(.bottom, 54)
+            } else if let channelNavigationError {
+                SabellaTVChannelNavigationStatus(message: channelNavigationError, loading: false)
+                    .padding(.leading, 54)
+                    .padding(.bottom, 54)
+            }
+        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.28), value: channelNotice.channel?.id)
         .task(id: selection) {
             guard let channel = channels.first(where: { $0.id == selection }) else { return }
             playback.tune(channel)
         }
-        .onDisappear { playback.stop() }
+        .onDisappear {
+            channelNotice.clear()
+            playback.stop()
+        }
         .onPlayPauseCommand { playback.togglePlayback() }
+        .onChange(of: channels.count) { _, _ in completePendingChannelStep() }
+        .onChange(of: loadingMoreChannels) { _, loading in
+            if !loading {
+                completePendingChannelStep()
+                advanceLoadToLast()
+            }
+        }
+        .onChange(of: guideVisible) { _, visible in
+            if visible { channelNotice.clear() }
+        }
         .onChange(of: scenePhase) { _, phase in playback.handleScenePhase(phase, channel: selectedChannel) }
         .onExitCommand {
             if guideVisible {
@@ -300,8 +336,230 @@ public struct SabellaTVLivePlayer: View {
         channels.first { $0.id == selection } ?? channels[0]
     }
 
+    // Leave one virtual page-command position at each end of the loaded lineup.
+    // Those positions let the remote wrap rather than stop at a range boundary.
+    private var lastPagePosition: Int {
+        SabellaTVChannelPageNavigation.lastPosition(loadedCount: channels.count)
+    }
+
+    private var channelPagePosition: Binding<Int> {
+        Binding(
+            get: {
+                (channels.firstIndex { $0.id == selection } ?? 0) + 1
+            },
+            set: { position in
+                guard let request = SabellaTVChannelPageNavigation.request(
+                    position: position,
+                    loadedCount: channels.count,
+                    hasMore: hasMoreChannels
+                ) else { return }
+                channelNavigationError = nil
+                switch request {
+                case let .channel(index):
+                    loadToLast.cancel()
+                    pendingChannelIndex = nil
+                    tune(channels[index])
+                case let .nextPage(index):
+                    loadToLast.cancel()
+                    channelNotice.clear()
+                    pendingChannelIndex = index
+                    if !loadingMoreChannels { loadMoreChannels() }
+                case .lastChannel:
+                    pendingChannelIndex = nil
+                    channelNotice.clear()
+                    performLoadToLast(loadToLast.begin(
+                        loadedCount: channels.count,
+                        hasMore: hasMoreChannels,
+                        loading: loadingMoreChannels
+                    ))
+                }
+            }
+        )
+    }
+
+    private func advanceLoadToLast() {
+        performLoadToLast(loadToLast.observe(
+            loadedCount: channels.count,
+            hasMore: hasMoreChannels
+        ))
+    }
+
+    private func performLoadToLast(_ action: SabellaTVChannelLoadToEnd.Action) {
+        switch action {
+        case .none: break
+        case .loadMore: loadMoreChannels()
+        case .finished: tune(channels[channels.count - 1])
+        case .failed: channelNavigationError = "Could not load the last channel."
+        }
+    }
+
+    private func completePendingChannelStep() {
+        guard let index = pendingChannelIndex else { return }
+        if channels.indices.contains(index) {
+            pendingChannelIndex = nil
+            tune(channels[index])
+        } else if !loadingMoreChannels {
+            pendingChannelIndex = nil
+            channelNavigationError = "Could not load the next channel."
+        }
+    }
+
+    private func tune(_ channel: SabellaTVChannel) {
+        channelNavigationError = nil
+        selection = channel.id
+        playback.tune(channel)
+        onSelectionChanged(channel)
+        if guideVisible {
+            withAnimation(playbackAnimation) { guideVisible = false }
+        }
+        channelNotice.show(channel)
+    }
+
     private var playbackAnimation: Animation? {
         reduceMotion ? nil : .easeInOut(duration: 0.34)
+    }
+}
+
+private struct SabellaTVChannelNavigationStatus: View {
+    let message: String
+    let loading: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            if loading { ProgressView().tint(BleeckerPalette.dark.sea) }
+            Text(message)
+                .font(BleeckerTypography.primary(23, weight: .semibold))
+                .foregroundStyle(BleeckerPalette.dark.textPrimary)
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 18)
+        .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+@MainActor
+final class SabellaTVChannelChangeNoticeModel: ObservableObject {
+    @Published private(set) var channel: SabellaTVChannel?
+    private let displayDuration: Duration
+    private var dismissTask: Task<Void, Never>?
+
+    init(displayDuration: Duration = .seconds(5)) {
+        self.displayDuration = displayDuration
+    }
+
+    func show(_ channel: SabellaTVChannel) {
+        dismissTask?.cancel()
+        self.channel = channel
+        dismissTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: displayDuration)
+            guard !Task.isCancelled else { return }
+            self.channel = nil
+        }
+    }
+
+    func clear() {
+        dismissTask?.cancel()
+        dismissTask = nil
+        channel = nil
+    }
+}
+
+private struct SabellaTVChannelChangeNotice: View {
+    let channel: SabellaTVChannel
+
+    var body: some View {
+        HStack(spacing: 18) {
+            Text(channel.number)
+                .font(BleeckerTypography.mono(27, weight: .bold))
+                .foregroundStyle(BleeckerPalette.dark.sea)
+            Rectangle()
+                .fill(.white.opacity(0.22))
+                .frame(width: 1, height: 34)
+            Text(channel.name)
+                .font(BleeckerTypography.primary(30, weight: .semibold))
+                .foregroundStyle(BleeckerPalette.dark.textPrimary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 18)
+        .frame(maxWidth: 640, alignment: .leading)
+        .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(.white.opacity(0.18), lineWidth: 1)
+        }
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Channel \(channel.number), \(channel.name)")
+        .accessibilityIdentifier("sabella-channel-change-notice")
+    }
+}
+
+/// Maps the remote's page commands to the numbered lineup, including virtual
+/// positions for both ends and for the first channel of an unloaded page.
+enum SabellaTVChannelPageNavigation {
+    enum Request: Equatable {
+        case channel(Int)
+        case nextPage(Int)
+        case lastChannel
+    }
+
+    static func lastPosition(loadedCount: Int) -> Int {
+        precondition(loadedCount > 0)
+        return loadedCount + 1
+    }
+
+    static func request(position: Int, loadedCount: Int, hasMore: Bool) -> Request? {
+        guard (0...lastPosition(loadedCount: loadedCount)).contains(position) else { return nil }
+        if position == 0 { return .lastChannel }
+        if position == loadedCount + 1 {
+            return hasMore ? .nextPage(loadedCount) : .channel(0)
+        }
+        return .channel(position - 1)
+    }
+}
+
+struct SabellaTVChannelLoadToEnd {
+    enum Action: Equatable {
+        case none
+        case loadMore
+        case finished
+        case failed
+    }
+
+    private(set) var requestedAtCount: Int?
+    var isActive: Bool { requestedAtCount != nil }
+
+    mutating func begin(loadedCount: Int, hasMore: Bool, loading: Bool) -> Action {
+        precondition(loadedCount > 0)
+        if !hasMore {
+            requestedAtCount = nil
+            return .finished
+        }
+        guard requestedAtCount == nil else { return .none }
+        requestedAtCount = loadedCount
+        return loading ? .none : .loadMore
+    }
+
+    mutating func observe(loadedCount: Int, hasMore: Bool) -> Action {
+        guard let requestedAtCount else { return .none }
+        if !hasMore {
+            self.requestedAtCount = nil
+            return .finished
+        }
+        guard loadedCount > requestedAtCount else {
+            self.requestedAtCount = nil
+            return .failed
+        }
+        self.requestedAtCount = loadedCount
+        return .loadMore
+    }
+
+    mutating func cancel() {
+        requestedAtCount = nil
     }
 }
 
@@ -777,6 +1035,8 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
 private struct SabellaTVPlaybackRemoteCapture: View {
     @FocusState private var focused: Bool
     let label: String
+    let channelPagePosition: Binding<Int>
+    let lastPagePosition: Int
     let showGuide: () -> Void
 
     var body: some View {
@@ -789,6 +1049,7 @@ private struct SabellaTVPlaybackRemoteCapture: View {
         .onMoveCommand { direction in
             if direction == .up || direction == .down { showGuide() }
         }
+        .pageCommand(value: channelPagePosition, in: 0...lastPagePosition)
         .accessibilityLabel(label)
     }
 }

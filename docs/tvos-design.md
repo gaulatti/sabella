@@ -75,12 +75,25 @@ and failure states. Selecting a group enters edge-to-edge playback with
 `SabellaTVChannelGuide`; Menu returns to the group browser. Empty and failed
 group loads must remain explicit rather than substituting demo channels.
 Returning from playback restores the browse page, focused group, and containing
-grid row; it must not reset the viewer to the first group.
+grid row; it must not reset the viewer to the first group. On a recreated group
+list, transient tvOS focus on the first visible tile is ignored until the saved
+group has been scrolled into view and refocused.
 `SabellaTVLivePlayer` owns the complete live TV and radio surface: playback,
 buffering and failure states, media-specific presentation, focus, remote
 commands, foreground/background behavior, tuning, and the guide. Product apps
 only supply authoritative channel data and observe selection; they must not
 overlay their own controls or gesture capture on the component.
+During group playback, a connected remote's Channel + / Channel - page commands
+tune the next / previous channel in the supplied lineup, whether the guide is
+open or closed. A channel change closes the guide just like Select. At the end
+of a loaded page, Channel + requests the next page and tunes its first channel
+once it arrives. Channel + at the final channel wraps to the first; Channel -
+at the first loads any remaining pages, then wraps to the final channel. The
+guide's Up / Down focus wraps at the same true ends without tuning. Select-to-tune
+and Menu remain available. A pending wrap shows loading status, and a failed
+page load leaves the current channel or guide focus in place with a visible error.
+Guide focus wraps scroll the destination row into view before assigning focus,
+including in long lineups where the opposite end begins off-screen.
 
 Products that need truthful live-viewing duration observe
 `onPlaybackActivityChanged`. The callback receives a `Sendable`
@@ -126,6 +139,11 @@ The guide uses a narrow vertical tuning rail, expands the focused row, places
 current-program context near the visual center, and keeps Up Next independent at
 the trailing edge. It only displays remote instructions backed by implemented
 actions: Up and Down browse the lineup, and Select tunes the focused channel.
+The first channel in the supplied lineup sits at the bottom of the rail; higher
+channel numbers appear above it, so Channel + during playback and Up in the
+guide point toward the same end of the lineup. The guide requests the next page
+only when focus reaches the highest loaded channel, not when that row first
+appears during layout.
 Moving focus changes the preview metadata but never retunes playback; the green
 on-air indicator remains on the tuned row until Select commits the highlighted
 channel. Reopening the guide restores focus to that tuned row. Imported channel
@@ -144,10 +162,13 @@ current program title remains the only dominant near-white text.
 Playback itself is edge-to-edge and sits outside the browse/header container.
 Menu reveals the guide over uninterrupted video; pressing Menu again exits to
 Browse. Global navigation must never remain visible during full-screen viewing.
-Once a channel is tuned, live viewing is entirely unobstructed. Do not persist a
-VOD transport card, implementation labels, duplicate channel metadata, or a
-fabricated timeline over linear video. The remote Play/Pause command remains
-active, and Menu restores the guide.
+After a channel switch, live playback briefly shows the tuned channel number
+and name in a compact lower-left notice. It clears after five seconds, resets
+on another switch, and clears when the guide opens. Reduced-motion settings
+remove its animation. Otherwise live viewing remains unobstructed: do not
+persist a VOD transport card, duplicate channel metadata, or a fabricated
+timeline over linear video. The remote Play/Pause command remains active, and
+Menu restores the guide.
 Channels use `.automatic` medium and background behavior by default so large
 lineups do not require a manual TV/radio migration. Sabella begins on the video
 surface and classifies only after the player item is ready: any video signal wins

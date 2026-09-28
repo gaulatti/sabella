@@ -132,6 +132,11 @@ The guide uses a narrow vertical tuning rail, expands the focused row, places
 current-program context near the visual center, and keeps Up Next independent at
 the trailing edge. It only displays remote instructions backed by implemented
 actions: Up and Down browse the lineup, and Select tunes the focused channel.
+The first channel in the supplied lineup sits at the bottom of the rail; higher
+channel numbers appear above it, so Channel + during playback and Up in the
+guide point toward the same end of the lineup. The guide requests the next page
+only when focus reaches the highest loaded channel, not when that row first
+appears during layout.
 Moving focus changes the preview metadata but never retunes playback; the green
 on-air indicator remains on the tuned row until Select commits the highlighted
 channel. Reopening the guide restores focus to that tuned row. Imported channel

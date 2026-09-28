@@ -228,6 +228,35 @@ import SabellaCatalogSupport
 }
 
 #if os(tvOS)
+@Test func televisionGuideClimbsFromFirstChannelAndLoadsOnlyAtFocusedTopEdge() {
+    let channels = (1...3).map { number in
+        SabellaTVChannel(
+            id: "channel-\(number)",
+            streamURL: URL(string: "https://example.com/\(number).m3u8")!,
+            number: String(number),
+            name: "Channel \(number)",
+            now: "Live",
+            progress: 1
+        )
+    }
+
+    #expect(SabellaTVChannelGuideOrder.rowsTopToBottom(channels).map(\.id) == [
+        "channel-3", "channel-2", "channel-1"
+    ])
+    #expect(!SabellaTVChannelGuideOrder.shouldLoadNextPage(
+        highlightedID: "channel-1", channels: channels, hasMore: true, loading: false
+    ))
+    #expect(SabellaTVChannelGuideOrder.shouldLoadNextPage(
+        highlightedID: "channel-3", channels: channels, hasMore: true, loading: false
+    ))
+    #expect(!SabellaTVChannelGuideOrder.shouldLoadNextPage(
+        highlightedID: "channel-3", channels: channels, hasMore: true, loading: true
+    ))
+    #expect(!SabellaTVChannelGuideOrder.shouldLoadNextPage(
+        highlightedID: "channel-3", channels: channels, hasMore: false, loading: false
+    ))
+}
+
 @Test func televisionChannelPageCommandsFollowGroupOrderAndPageBoundary() {
     let last = SabellaTVChannelPageNavigation.lastPosition(loadedCount: 3, hasMore: false)
     #expect(last == 2)

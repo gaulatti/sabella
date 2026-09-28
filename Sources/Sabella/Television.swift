@@ -631,7 +631,7 @@ public struct SabellaTVChannelGuide: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView(.vertical) {
                         LazyVStack(alignment: .leading, spacing: 14) {
-                            ForEach(channels) { item in
+                            ForEach(SabellaTVChannelGuideOrder.rowsTopToBottom(channels)) { item in
                                 SabellaTVChannelRow(
                                     channel: item,
                                     medium: effectiveMedium(for: item),
@@ -642,11 +642,6 @@ public struct SabellaTVChannelGuide: View {
                                 )
                                 .focused($focusedChannelID, equals: item.id)
                                 .id(item.id)
-                                .onAppear {
-                                    if item.id == channels.last?.id, hasMoreChannels {
-                                        loadMoreChannels()
-                                    }
-                                }
                             }
                             if loadingMoreChannels {
                                 ProgressView()
@@ -671,6 +666,17 @@ public struct SabellaTVChannelGuide: View {
                         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.28)) {
                             scrollProxy.scrollTo(id, anchor: .center)
                         }
+                        if SabellaTVChannelGuideOrder.shouldLoadNextPage(
+                            highlightedID: id,
+                            channels: channels,
+                            hasMore: hasMoreChannels,
+                            loading: loadingMoreChannels
+                        ) {
+                            loadMoreChannels()
+                        }
+                    }
+                    .onChange(of: channels.count) { _, _ in
+                        scrollProxy.scrollTo(highlightedID, anchor: .center)
                     }
                 }
 
@@ -800,6 +806,21 @@ public struct SabellaTVChannelGuide: View {
         }
         .buttonStyle(SabellaTVChannelButtonStyle())
         .accessibilityLabel(label)
+    }
+}
+
+enum SabellaTVChannelGuideOrder {
+    static func rowsTopToBottom(_ channels: [SabellaTVChannel]) -> [SabellaTVChannel] {
+        Array(channels.reversed())
+    }
+
+    static func shouldLoadNextPage(
+        highlightedID: String,
+        channels: [SabellaTVChannel],
+        hasMore: Bool,
+        loading: Bool
+    ) -> Bool {
+        hasMore && !loading && highlightedID == channels.last?.id
     }
 }
 

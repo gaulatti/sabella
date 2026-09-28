@@ -12,6 +12,34 @@ import SabellaCatalogSupport
     #expect(BleeckerDuration.control == 0.19)
 }
 
+@Test @MainActor func categoryLabelsOnCardsMeetSmallTextContrastAcrossHues() {
+    func luminance(_ rgb: (red: Double, green: Double, blue: Double)) -> Double {
+        let channels = [rgb.red, rgb.green, rgb.blue].map { value in
+            value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+    }
+
+    for scheme in [ColorScheme.light, .dark] {
+        let card: (red: Double, green: Double, blue: Double) = scheme == .dark
+            ? (24 / 255, 37 / 255, 51 / 255) : (1, 1, 1)
+        let cardLuminance = luminance(card)
+        var worst = (ratio: Double.infinity, hue: 0, intensity: 0)
+        for hue in 0..<360 {
+            for intensity in 0...10 {
+                let rgb = BleeckerAttentionSurface<EmptyView>.labelAccentComponents(
+                    hue: Double(hue), intensity: Double(intensity), scheme: scheme)
+                let labelLuminance = luminance(rgb)
+                let ratio = (max(cardLuminance, labelLuminance) + 0.05) /
+                            (min(cardLuminance, labelLuminance) + 0.05)
+                if ratio < worst.ratio { worst = (ratio, hue, intensity) }
+            }
+        }
+        #expect(worst.ratio >= 4.5,
+                "\(scheme) hue \(worst.hue) intensity \(worst.intensity): \(worst.ratio):1")
+    }
+}
+
 @Test func bundledBrandFontsRegisterWithoutSubstitution() {
     SabellaFonts.register()
 

@@ -226,6 +226,8 @@ struct FeedbackGallery: View {
 }
 
 struct SurfacesGallery: View {
+    @Environment(\.colorScheme) private var scheme
+
     var body: some View {
         CatalogSection("Card variants") {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 180))], spacing: 16) {
@@ -249,6 +251,18 @@ struct SurfacesGallery: View {
                         }
                     }
                 }
+                HStack(spacing: 18) {
+                    ForEach([15.0, 105.0, 285.0], id: \.self) { hue in
+                        Text(hue == 15 ? "Current Event" : hue == 105 ? "World" : "Relevant")
+                            .font(BleeckerTypography.primary(11, weight: .semibold))
+                            .foregroundStyle(BleeckerAttentionSurface<EmptyView>.labelAccent(
+                                hue: hue, intensity: 0, scheme: scheme))
+                    }
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(BleeckerPalette.resolve(scheme).card,
+                            in: RoundedRectangle(cornerRadius: BleeckerRadius.card))
                 BleeckerPanel(title: "Panel") { Text("Panels provide a titled card composition.") }
                 BleeckerSeparator()
                 BleeckerSkeleton().frame(height: 18)

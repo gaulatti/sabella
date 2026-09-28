@@ -21,7 +21,11 @@ Components keep the `Bleecker` prefix so product code reads identically across d
 
 `BleeckerAttentionSurface` carries the web feed's category hue and 0–10
 urgency treatment into native dense lists. The Sabella catalog shows calm,
-moderate, and urgent fixtures in both appearances.
+moderate, and urgent fixtures in both appearances. Use its `labelAccent` for
+small category text on a Bleecker card; it lightens the accent in dark mode
+and darkens it in light mode to keep at least 4.5:1 contrast across all hues
+and urgency levels. The quieter `accent` remains for dots, borders, and fills.
+The catalog also shows three category-label hues in each appearance.
 
 The bounded [Kolibri primary-button contract
 decision](docs/kolibri-primary-button-contract.md) pins the private neutral

@@ -170,6 +170,7 @@ public struct SabellaTVLivePlayer: View {
     @Binding private var selection: String
     @Binding private var guideVisible: Bool
     @StateObject private var playback: SabellaTVLivePlaybackModel
+    @State private var pendingChannelIndex: Int?
 
     private let channels: [SabellaTVChannel]
     private let guideTitle: String
@@ -266,14 +267,15 @@ public struct SabellaTVLivePlayer: View {
                     togglePlayback: playback.togglePlayback,
                     toggleMute: playback.toggleMute
                 ) { channel in
-                    selection = channel.id
-                    playback.tune(channel)
-                    onSelectionChanged(channel)
-                    withAnimation(playbackAnimation) { guideVisible = false }
+                    tune(channel)
                 }
                 .transition(.move(edge: .leading).combined(with: .opacity))
             } else {
-                SabellaTVPlaybackRemoteCapture(label: "Show \(guideTitle) channel guide") {
+                SabellaTVPlaybackRemoteCapture(
+                    label: "Show \(guideTitle) channel guide",
+                    channelPagePosition: channelPagePosition,
+                    lastPagePosition: lastPagePosition
+                ) {
                     withAnimation(playbackAnimation) { guideVisible = true }
                 }
             }
@@ -285,6 +287,10 @@ public struct SabellaTVLivePlayer: View {
         }
         .onDisappear { playback.stop() }
         .onPlayPauseCommand { playback.togglePlayback() }
+        .onChange(of: channels.count) { _, _ in completePendingChannelStep() }
+        .onChange(of: loadingMoreChannels) { _, loading in
+            if !loading { completePendingChannelStep() }
+        }
         .onChange(of: scenePhase) { _, phase in playback.handleScenePhase(phase, channel: selectedChannel) }
         .onExitCommand {
             if guideVisible {
@@ -300,8 +306,73 @@ public struct SabellaTVLivePlayer: View {
         channels.first { $0.id == selection } ?? channels[0]
     }
 
+    // pageUp is Channel + on tvOS. Invert the list index so it advances
+    // through the lineup, while pageDown (Channel -) moves toward its start.
+    private var lastPagePosition: Int {
+        SabellaTVChannelPageNavigation.lastPosition(
+            loadedCount: channels.count,
+            hasMore: hasMoreChannels
+        )
+    }
+
+    private var channelPagePosition: Binding<Int> {
+        Binding(
+            get: {
+                let index = channels.firstIndex { $0.id == selection } ?? 0
+                return lastPagePosition - index
+            },
+            set: { position in
+                guard let index = SabellaTVChannelPageNavigation.requestedIndex(
+                    position: position,
+                    loadedCount: channels.count,
+                    hasMore: hasMoreChannels
+                ) else { return }
+                if channels.indices.contains(index) {
+                    tune(channels[index])
+                } else if index == channels.count, hasMoreChannels, !loadingMoreChannels {
+                    pendingChannelIndex = index
+                    loadMoreChannels()
+                }
+            }
+        )
+    }
+
+    private func completePendingChannelStep() {
+        guard let index = pendingChannelIndex else { return }
+        if channels.indices.contains(index) {
+            pendingChannelIndex = nil
+            tune(channels[index])
+        } else if !loadingMoreChannels {
+            pendingChannelIndex = nil
+        }
+    }
+
+    private func tune(_ channel: SabellaTVChannel) {
+        selection = channel.id
+        playback.tune(channel)
+        onSelectionChanged(channel)
+        if guideVisible {
+            withAnimation(playbackAnimation) { guideVisible = false }
+        }
+    }
+
     private var playbackAnimation: Animation? {
         reduceMotion ? nil : .easeInOut(duration: 0.34)
+    }
+}
+
+/// Maps page commands to the ordered lineup, including one virtual position
+/// for the first channel of a page that has not been fetched yet.
+enum SabellaTVChannelPageNavigation {
+    static func lastPosition(loadedCount: Int, hasMore: Bool) -> Int {
+        precondition(loadedCount > 0)
+        return loadedCount - 1 + (hasMore ? 1 : 0)
+    }
+
+    static func requestedIndex(position: Int, loadedCount: Int, hasMore: Bool) -> Int? {
+        let last = lastPosition(loadedCount: loadedCount, hasMore: hasMore)
+        guard (0...last).contains(position) else { return nil }
+        return last - position
     }
 }
 
@@ -777,6 +848,8 @@ private final class SabellaTVLivePlaybackModel: ObservableObject {
 private struct SabellaTVPlaybackRemoteCapture: View {
     @FocusState private var focused: Bool
     let label: String
+    let channelPagePosition: Binding<Int>
+    let lastPagePosition: Int
     let showGuide: () -> Void
 
     var body: some View {
@@ -789,6 +862,7 @@ private struct SabellaTVPlaybackRemoteCapture: View {
         .onMoveCommand { direction in
             if direction == .up || direction == .down { showGuide() }
         }
+        .pageCommand(value: channelPagePosition, in: 0...lastPagePosition)
         .accessibilityLabel(label)
     }
 }

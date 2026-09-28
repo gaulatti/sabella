@@ -81,6 +81,12 @@ buffering and failure states, media-specific presentation, focus, remote
 commands, foreground/background behavior, tuning, and the guide. Product apps
 only supply authoritative channel data and observe selection; they must not
 overlay their own controls or gesture capture on the component.
+During full-screen group playback, a connected remote's Channel + / Channel -
+page commands tune the next / previous channel in the supplied lineup. At the end
+of a loaded page, Channel + requests the next page and tunes its first channel
+once it arrives. At the first or final channel, the command leaves the current
+channel playing. The guide's Up / Down focus, Select-to-tune, and Menu behavior
+remain available.
 
 Products that need truthful live-viewing duration observe
 `onPlaybackActivityChanged`. The callback receives a `Sendable`

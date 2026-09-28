@@ -401,8 +401,11 @@ private struct CatalogPlayback: View {
                 onExit: close
             )
 
-            if !playbackActivities.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("TUNED CHANNEL: \(selectedChannelID)")
+                    .font(BleeckerTypography.secondary(15, weight: .bold))
+                    .foregroundStyle(.white)
+                if !playbackActivities.isEmpty {
                     Text("PLAYBACK ACTIVITY CALLBACK")
                         .font(BleeckerTypography.secondary(15, weight: .bold))
                         .foregroundStyle(BleeckerPalette.dark.sea)
@@ -417,19 +420,19 @@ private struct CatalogPlayback: View {
                         .font(BleeckerTypography.secondary(18, weight: .semibold))
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(BleeckerPalette.dark.sea.opacity(0.7), lineWidth: 1)
-                }
-                .padding(.top, 54)
-                .padding(.trailing, 56)
-                .allowsHitTesting(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("sabella-playback-activity")
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(BleeckerPalette.dark.sea.opacity(0.7), lineWidth: 1)
+            }
+            .padding(.top, 54)
+            .padding(.trailing, 56)
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("sabella-channel-remote-state")
         }
     }
 

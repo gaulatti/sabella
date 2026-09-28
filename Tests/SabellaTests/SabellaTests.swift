@@ -228,6 +228,19 @@ import SabellaCatalogSupport
 }
 
 #if os(tvOS)
+@Test func televisionChannelPageCommandsFollowGroupOrderAndPageBoundary() {
+    let last = SabellaTVChannelPageNavigation.lastPosition(loadedCount: 3, hasMore: false)
+    #expect(last == 2)
+    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: last - 1, loadedCount: 3, hasMore: false) == 1)
+    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: last, loadedCount: 3, hasMore: false) == 0)
+    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: -1, loadedCount: 3, hasMore: false) == nil)
+
+    let pagedLast = SabellaTVChannelPageNavigation.lastPosition(loadedCount: 100, hasMore: true)
+    #expect(pagedLast == 100)
+    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: 0, loadedCount: 100, hasMore: true) == 100)
+    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: 0, loadedCount: 101, hasMore: false) == 100)
+}
+
 @Test @MainActor func televisionLivePlayerInitializerRemainsSourceCompatible() throws {
     let channel = SabellaTVChannel(
         id: "news",

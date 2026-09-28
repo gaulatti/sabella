@@ -172,6 +172,8 @@ public struct SabellaTVLivePlayer: View {
     @StateObject private var playback: SabellaTVLivePlaybackModel
     @StateObject private var channelNotice = SabellaTVChannelChangeNoticeModel()
     @State private var pendingChannelIndex: Int?
+    @State private var loadToLast = SabellaTVChannelLoadToEnd()
+    @State private var channelNavigationError: String?
 
     private let channels: [SabellaTVChannel]
     private let guideTitle: String
@@ -289,6 +291,14 @@ public struct SabellaTVLivePlayer: View {
                     .padding(.leading, 54)
                     .padding(.bottom, 54)
                     .transition(.opacity)
+            } else if loadToLast.isActive {
+                SabellaTVChannelNavigationStatus(message: "Loading last channel…", loading: true)
+                    .padding(.leading, 54)
+                    .padding(.bottom, 54)
+            } else if let channelNavigationError {
+                SabellaTVChannelNavigationStatus(message: channelNavigationError, loading: false)
+                    .padding(.leading, 54)
+                    .padding(.bottom, 54)
             }
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.28), value: channelNotice.channel?.id)
@@ -303,7 +313,10 @@ public struct SabellaTVLivePlayer: View {
         .onPlayPauseCommand { playback.togglePlayback() }
         .onChange(of: channels.count) { _, _ in completePendingChannelStep() }
         .onChange(of: loadingMoreChannels) { _, loading in
-            if !loading { completePendingChannelStep() }
+            if !loading {
+                completePendingChannelStep()
+                advanceLoadToLast()
+            }
         }
         .onChange(of: guideVisible) { _, visible in
             if visible { channelNotice.clear() }
@@ -323,34 +336,61 @@ public struct SabellaTVLivePlayer: View {
         channels.first { $0.id == selection } ?? channels[0]
     }
 
-    // The page command's value follows the numbered lineup. On the connected
-    // TV remote, Channel + advances it and Channel - moves toward its start.
+    // Leave one virtual page-command position at each end of the loaded lineup.
+    // Those positions let the remote wrap rather than stop at a range boundary.
     private var lastPagePosition: Int {
-        SabellaTVChannelPageNavigation.lastPosition(
-            loadedCount: channels.count,
-            hasMore: hasMoreChannels
-        )
+        SabellaTVChannelPageNavigation.lastPosition(loadedCount: channels.count)
     }
 
     private var channelPagePosition: Binding<Int> {
         Binding(
             get: {
-                channels.firstIndex { $0.id == selection } ?? 0
+                (channels.firstIndex { $0.id == selection } ?? 0) + 1
             },
             set: { position in
-                guard let index = SabellaTVChannelPageNavigation.requestedIndex(
+                guard let request = SabellaTVChannelPageNavigation.request(
                     position: position,
                     loadedCount: channels.count,
                     hasMore: hasMoreChannels
                 ) else { return }
-                if channels.indices.contains(index) {
+                channelNavigationError = nil
+                switch request {
+                case let .channel(index):
+                    loadToLast.cancel()
+                    pendingChannelIndex = nil
                     tune(channels[index])
-                } else if index == channels.count, hasMoreChannels, !loadingMoreChannels {
+                case let .nextPage(index):
+                    loadToLast.cancel()
+                    channelNotice.clear()
                     pendingChannelIndex = index
-                    loadMoreChannels()
+                    if !loadingMoreChannels { loadMoreChannels() }
+                case .lastChannel:
+                    pendingChannelIndex = nil
+                    channelNotice.clear()
+                    performLoadToLast(loadToLast.begin(
+                        loadedCount: channels.count,
+                        hasMore: hasMoreChannels,
+                        loading: loadingMoreChannels
+                    ))
                 }
             }
         )
+    }
+
+    private func advanceLoadToLast() {
+        performLoadToLast(loadToLast.observe(
+            loadedCount: channels.count,
+            hasMore: hasMoreChannels
+        ))
+    }
+
+    private func performLoadToLast(_ action: SabellaTVChannelLoadToEnd.Action) {
+        switch action {
+        case .none: break
+        case .loadMore: loadMoreChannels()
+        case .finished: tune(channels[channels.count - 1])
+        case .failed: channelNavigationError = "Could not load the last channel."
+        }
     }
 
     private func completePendingChannelStep() {
@@ -360,10 +400,12 @@ public struct SabellaTVLivePlayer: View {
             tune(channels[index])
         } else if !loadingMoreChannels {
             pendingChannelIndex = nil
+            channelNavigationError = "Could not load the next channel."
         }
     }
 
     private func tune(_ channel: SabellaTVChannel) {
+        channelNavigationError = nil
         selection = channel.id
         playback.tune(channel)
         onSelectionChanged(channel)
@@ -375,6 +417,25 @@ public struct SabellaTVLivePlayer: View {
 
     private var playbackAnimation: Animation? {
         reduceMotion ? nil : .easeInOut(duration: 0.34)
+    }
+}
+
+private struct SabellaTVChannelNavigationStatus: View {
+    let message: String
+    let loading: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            if loading { ProgressView().tint(BleeckerPalette.dark.sea) }
+            Text(message)
+                .font(BleeckerTypography.primary(23, weight: .semibold))
+                .foregroundStyle(BleeckerPalette.dark.textPrimary)
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 18)
+        .background(BleeckerPalette.dark.deepSea.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -437,18 +498,68 @@ private struct SabellaTVChannelChangeNotice: View {
     }
 }
 
-/// Maps page commands to the ordered lineup, including one virtual position
-/// for the first channel of a page that has not been fetched yet.
+/// Maps the remote's page commands to the numbered lineup, including virtual
+/// positions for both ends and for the first channel of an unloaded page.
 enum SabellaTVChannelPageNavigation {
-    static func lastPosition(loadedCount: Int, hasMore: Bool) -> Int {
-        precondition(loadedCount > 0)
-        return loadedCount - 1 + (hasMore ? 1 : 0)
+    enum Request: Equatable {
+        case channel(Int)
+        case nextPage(Int)
+        case lastChannel
     }
 
-    static func requestedIndex(position: Int, loadedCount: Int, hasMore: Bool) -> Int? {
-        let last = lastPosition(loadedCount: loadedCount, hasMore: hasMore)
-        guard (0...last).contains(position) else { return nil }
-        return position
+    static func lastPosition(loadedCount: Int) -> Int {
+        precondition(loadedCount > 0)
+        return loadedCount + 1
+    }
+
+    static func request(position: Int, loadedCount: Int, hasMore: Bool) -> Request? {
+        guard (0...lastPosition(loadedCount: loadedCount)).contains(position) else { return nil }
+        if position == 0 { return .lastChannel }
+        if position == loadedCount + 1 {
+            return hasMore ? .nextPage(loadedCount) : .channel(0)
+        }
+        return .channel(position - 1)
+    }
+}
+
+struct SabellaTVChannelLoadToEnd {
+    enum Action: Equatable {
+        case none
+        case loadMore
+        case finished
+        case failed
+    }
+
+    private(set) var requestedAtCount: Int?
+    var isActive: Bool { requestedAtCount != nil }
+
+    mutating func begin(loadedCount: Int, hasMore: Bool, loading: Bool) -> Action {
+        precondition(loadedCount > 0)
+        if !hasMore {
+            requestedAtCount = nil
+            return .finished
+        }
+        guard requestedAtCount == nil else { return .none }
+        requestedAtCount = loadedCount
+        return loading ? .none : .loadMore
+    }
+
+    mutating func observe(loadedCount: Int, hasMore: Bool) -> Action {
+        guard let requestedAtCount else { return .none }
+        if !hasMore {
+            self.requestedAtCount = nil
+            return .finished
+        }
+        guard loadedCount > requestedAtCount else {
+            self.requestedAtCount = nil
+            return .failed
+        }
+        self.requestedAtCount = loadedCount
+        return .loadMore
+    }
+
+    mutating func cancel() {
+        requestedAtCount = nil
     }
 }
 

@@ -87,9 +87,11 @@ During group playback, a connected remote's Channel + / Channel - page commands
 tune the next / previous channel in the supplied lineup, whether the guide is
 open or closed. A channel change closes the guide just like Select. At the end
 of a loaded page, Channel + requests the next page and tunes its first channel
-once it arrives. At the first or final channel, the command leaves the current
-channel playing. The guide's Up / Down focus, Select-to-tune, and Menu behavior
-remain available.
+once it arrives. Channel + at the final channel wraps to the first; Channel -
+at the first loads any remaining pages, then wraps to the final channel. The
+guide's Up / Down focus wraps at the same true ends without tuning. Select-to-tune
+and Menu remain available. A pending wrap shows loading status, and a failed
+page load leaves the current channel or guide focus in place with a visible error.
 
 Products that need truthful live-viewing duration observe
 `onPlaybackActivityChanged`. The callback receives a `Sendable`

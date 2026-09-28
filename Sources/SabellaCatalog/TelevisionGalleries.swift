@@ -410,7 +410,7 @@ private struct CatalogPlayback: View {
                 Text("TUNED CHANNEL: \(selectedChannelID)")
                     .font(BleeckerTypography.secondary(15, weight: .bold))
                     .foregroundStyle(.white)
-                Text("CHANNEL +/-: TUNE · CHANNEL NOTICE: 5S")
+                Text("CHANNEL +/-: TUNE + WRAP · CHANNEL NOTICE: 5S")
                     .font(BleeckerTypography.secondary(15, weight: .medium))
                     .foregroundStyle(BleeckerPalette.dark.sea)
                 if !playbackActivities.isEmpty {

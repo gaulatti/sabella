@@ -255,6 +255,15 @@ import SabellaCatalogSupport
     #expect(SabellaTVChannelGuideOrder.rowsTopToBottom(channels).map(\.id) == [
         "channel-3", "channel-2", "channel-1"
     ])
+    #expect(SabellaTVChannelGuideOrder.edgeMove(
+        direction: .down, focusedID: "channel-1", channels: channels, hasMore: true
+    ) == .lastChannel)
+    #expect(SabellaTVChannelGuideOrder.edgeMove(
+        direction: .up, focusedID: "channel-3", channels: channels, hasMore: false
+    ) == .firstChannel)
+    #expect(SabellaTVChannelGuideOrder.edgeMove(
+        direction: .up, focusedID: "channel-3", channels: channels, hasMore: true
+    ) == .none)
     #expect(!SabellaTVChannelGuideOrder.shouldLoadNextPage(
         highlightedID: "channel-1", channels: channels, hasMore: true, loading: false
     ))
@@ -270,16 +279,28 @@ import SabellaCatalogSupport
 }
 
 @Test func televisionChannelPageCommandsFollowGroupOrderAndPageBoundary() {
-    let last = SabellaTVChannelPageNavigation.lastPosition(loadedCount: 3, hasMore: false)
-    #expect(last == 2)
-    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: 1, loadedCount: 3, hasMore: false) == 1)
-    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: 0, loadedCount: 3, hasMore: false) == 0)
-    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: -1, loadedCount: 3, hasMore: false) == nil)
+    #expect(SabellaTVChannelPageNavigation.lastPosition(loadedCount: 3) == 4)
+    #expect(SabellaTVChannelPageNavigation.request(position: 2, loadedCount: 3, hasMore: false) == .channel(1))
+    #expect(SabellaTVChannelPageNavigation.request(position: 0, loadedCount: 3, hasMore: false) == .lastChannel)
+    #expect(SabellaTVChannelPageNavigation.request(position: 4, loadedCount: 3, hasMore: false) == .channel(0))
+    #expect(SabellaTVChannelPageNavigation.request(position: -1, loadedCount: 3, hasMore: false) == nil)
+    #expect(SabellaTVChannelPageNavigation.request(position: 5, loadedCount: 3, hasMore: false) == nil)
+    #expect(SabellaTVChannelPageNavigation.request(position: 101, loadedCount: 100, hasMore: true) == .nextPage(100))
+    #expect(SabellaTVChannelPageNavigation.request(position: 101, loadedCount: 101, hasMore: false) == .channel(100))
+}
 
-    let pagedLast = SabellaTVChannelPageNavigation.lastPosition(loadedCount: 100, hasMore: true)
-    #expect(pagedLast == 100)
-    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: pagedLast, loadedCount: 100, hasMore: true) == 100)
-    #expect(SabellaTVChannelPageNavigation.requestedIndex(position: 100, loadedCount: 101, hasMore: false) == 100)
+@Test func televisionChannelWrapLoadsEveryPageAndStopsOnFailure() {
+    var load = SabellaTVChannelLoadToEnd()
+    #expect(load.begin(loadedCount: 100, hasMore: true, loading: false) == .loadMore)
+    #expect(load.isActive)
+    #expect(load.observe(loadedCount: 200, hasMore: true) == .loadMore)
+    #expect(load.observe(loadedCount: 219, hasMore: false) == .finished)
+    #expect(!load.isActive)
+
+    #expect(load.begin(loadedCount: 100, hasMore: true, loading: true) == .none)
+    #expect(load.observe(loadedCount: 100, hasMore: true) == .failed)
+    #expect(!load.isActive)
+    #expect(load.begin(loadedCount: 1, hasMore: false, loading: false) == .finished)
 }
 
 @Test @MainActor func televisionChannelChangeNoticeReplacesAndExpires() async throws {

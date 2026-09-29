@@ -3,6 +3,38 @@ import SwiftUI
 import Foundation
 import SabellaCatalogSupport
 @testable import Sabella
+#if os(macOS)
+import AppKit
+#endif
+
+#if os(macOS)
+@Test @MainActor func remainingControlsGrowWithHostTextScale() {
+    func fittedHeight<Content: View>(_ content: Content, scale: CGFloat) -> CGFloat {
+        let host = NSHostingView(rootView: content.environment(\.bleeckerTextScale, scale))
+        return host.fittingSize.height
+    }
+
+    let secure = BleeckerSecureField("Password", text: .constant("sample"))
+    let radio = BleeckerRadioGroup(selection: .constant("all"), options: [
+        BleeckerSelectOption(value: "all", label: "All"),
+        BleeckerSelectOption(value: "relevant", label: "Relevant")
+    ])
+    let stepper = BleeckerStepper("Minimum", value: .constant(2), in: 0...10)
+    let select = BleeckerSelect(selection: .constant("all"), options: [
+        BleeckerSelectOption(value: "all", label: "All"),
+        BleeckerSelectOption(value: "relevant", label: "Relevant")
+    ])
+
+    for control in [
+        ("Secure field", fittedHeight(secure, scale: 1), fittedHeight(secure, scale: 1.3)),
+        ("Radio group", fittedHeight(radio, scale: 1), fittedHeight(radio, scale: 1.3)),
+        ("Stepper", fittedHeight(stepper, scale: 1), fittedHeight(stepper, scale: 1.3)),
+        ("Select", fittedHeight(select, scale: 1), fittedHeight(select, scale: 1.3))
+    ] {
+        #expect(control.2 > control.1, "\(control.0) did not grow at the host's large text scale")
+    }
+}
+#endif
 
 @Test func tokensMatchBleeckerSource() {
     #expect(BleeckerSpacing.detail == 4)

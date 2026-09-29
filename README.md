@@ -72,8 +72,11 @@ License included beside the assets in `Sources/Sabella/Resources/Fonts`.
 
 Hosts can set `\.bleeckerTextScale` on a view hierarchy and use
 `bleeckerFont(_:size:weight:)` for text that follows the selected scale.
-Sabella buttons, text inputs, selectors, and compact or standard checkboxes
-use the same value. The default scale is 1.0.
+Sabella buttons, text inputs (including secure fields), selectors, radio
+groups, steppers, and compact or standard checkboxes use the same value.
+Control heights expand with larger text while keeping their normal minimum
+size at compact scale. The default scale is 1.0. The catalog's Text size
+fixture shows representative inputs and choices side by side.
 
 ## Component catalog
 

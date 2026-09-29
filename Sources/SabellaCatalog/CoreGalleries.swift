@@ -27,14 +27,21 @@ struct FoundationsGallery: View {
                 Text("UTILITY PILL").bleeckerPill()
             }
         }
-        CatalogSection("Text size", note: "The same fonts and controls at three host-selected scales.") {
+        CatalogSection("Text size", note: "Inputs, choices, and actions at three host-selected scales.") {
             HStack(alignment: .top, spacing: 24) {
                 ForEach([("Compact", 0.9), ("Standard", 1.0), ("Large", 1.25)], id: \.0) { label, scale in
                     VStack(alignment: .leading, spacing: 10) {
                         Text(label).bleeckerFont(.primary, size: 12, weight: .semibold)
                         Text("Live posts").bleeckerFont(.primary, size: 18, weight: .semibold)
+                        BleeckerSecureField("Password", text: .constant("example"))
+                        BleeckerRadioGroup(selection: .constant("all"), options: [
+                            BleeckerSelectOption(value: "all", label: "All"),
+                            BleeckerSelectOption(value: "relevant", label: "Relevant")
+                        ])
+                        BleeckerStepper("Minimum", value: .constant(2), in: 0...10)
                         Button("Send for processing") {}.buttonStyle(BleeckerButtonStyle(.secondary, size: .sm))
                     }
+                    .frame(minWidth: 210, alignment: .leading)
                     .environment(\.bleeckerTextScale, scale)
                 }
             }

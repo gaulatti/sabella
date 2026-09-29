@@ -73,6 +73,7 @@ public struct BleeckerTextField: View {
 
 public struct BleeckerSecureField: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.bleeckerTextScale) private var textScale
     @Binding var text: String
     let placeholder: String
     @State private var revealed = false
@@ -84,7 +85,10 @@ public struct BleeckerSecureField: View {
             else { SecureField(placeholder, text: $text).textFieldStyle(.plain) }
             Button { revealed.toggle() } label: { Image(systemName: revealed ? "eye.slash" : "eye") }.buttonStyle(.plain).foregroundStyle(p.textSecondary)
         }
-        .font(BleeckerTypography.primary(14)).padding(.horizontal, 14).frame(minHeight: 40).bleeckerSurface(radius: BleeckerRadius.ui)
+        .font(BleeckerTypography.primary(14 * textScale))
+        .padding(.horizontal, 14)
+        .frame(minHeight: 40 * max(1, textScale))
+        .bleeckerSurface(radius: BleeckerRadius.ui)
     }
 }
 
@@ -127,6 +131,7 @@ public struct BleeckerSelectOption<Value: Hashable>: Identifiable {
 public struct BleeckerSelect<Value: Hashable>: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.bleeckerTextScale) private var textScale
     @Binding var selection: Value
     let options: [BleeckerSelectOption<Value>]
     let placeholder: String
@@ -152,7 +157,8 @@ public struct BleeckerSelect<Value: Hashable>: View {
                 Spacer(minLength: 12)
                 Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold)).foregroundStyle(p.textSecondary)
             }
-            .bleeckerFont(.primary, size: 14).foregroundStyle(p.textPrimary).padding(.horizontal, 14).frame(minHeight: 40)
+            .bleeckerFont(.primary, size: 14).foregroundStyle(p.textPrimary).padding(.horizontal, 14)
+            .frame(minHeight: 40 * max(1, textScale))
             .background(p.card).clipShape(RoundedRectangle(cornerRadius: BleeckerRadius.ui))
             .overlay { RoundedRectangle(cornerRadius: BleeckerRadius.ui).strokeBorder(presented ? p.sea.opacity(0.75) : p.border) }
         }
@@ -164,7 +170,8 @@ public struct BleeckerSelect<Value: Hashable>: View {
                         Button { selection = option.value; presented = false } label: {
                             HStack { Text(option.label).lineLimit(1); Spacer(); if option.value == selection { Image(systemName: "checkmark").foregroundStyle(p.sea) } }
                                 .bleeckerFont(.primary, size: 14).foregroundStyle(option.value == selection ? p.sea : p.textPrimary)
-                                .padding(.horizontal, 12).frame(minHeight: 36).contentShape(Rectangle())
+                                .padding(.horizontal, 12)
+                                .frame(minHeight: 36 * max(1, textScale)).contentShape(Rectangle())
                         }.buttonStyle(.plain).disabled(option.disabled)
                     }
                 }.padding(4)
@@ -217,6 +224,8 @@ public struct BleeckerCheckbox: View {
 }
 
 public struct BleeckerRadioGroup<Value: Hashable>: View {
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.bleeckerTextScale) private var textScale
     @Binding var selection: Value
     let options: [BleeckerSelectOption<Value>]
     let orientation: BleeckerSelectionOrientation
@@ -228,9 +237,13 @@ public struct BleeckerRadioGroup<Value: Hashable>: View {
         }
     }
     @ViewBuilder private var items: some View {
+        let palette = BleeckerPalette.resolve(scheme)
         ForEach(options) { option in
             Button { selection = option.value } label: {
                 Label(option.label, systemImage: selection == option.value ? "largecircle.fill.circle" : "circle")
+                    .bleeckerFont(.primary, size: 14)
+                    .foregroundStyle(palette.textPrimary)
+                    .frame(minHeight: 28 * max(1, textScale))
             }.buttonStyle(.plain).disabled(option.disabled)
         }
     }
@@ -238,6 +251,7 @@ public struct BleeckerRadioGroup<Value: Hashable>: View {
 
 public struct BleeckerStepper: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.bleeckerTextScale) private var textScale
     let label: String
     @Binding var value: Int
     let range: ClosedRange<Int>
@@ -248,12 +262,15 @@ public struct BleeckerStepper: View {
     public var body: some View {
         let p = BleeckerPalette.resolve(scheme)
         HStack(spacing: 0) {
-            Text(label).font(BleeckerTypography.primary(13)).foregroundStyle(p.textSecondary).padding(.horizontal, 10).lineLimit(1)
-            Divider().frame(height: 24)
+            Text(label).bleeckerFont(.primary, size: 13)
+                .foregroundStyle(p.textSecondary).padding(.horizontal, 10).lineLimit(1)
+            Divider().frame(height: 24 * max(1, textScale))
             Button { value = max(range.lowerBound, value - step) } label: { Image(systemName: "minus") }.disabled(value <= range.lowerBound)
-            Text((value + displayOffset).formatted()).font(BleeckerTypography.mono(12, weight: .bold)).frame(minWidth: 34)
+            Text((value + displayOffset).formatted()).bleeckerFont(.mono, size: 12, weight: .bold)
+                .frame(minWidth: 34 * max(1, textScale))
             Button { value = min(range.upperBound, value + step) } label: { Image(systemName: "plus") }.disabled(value >= range.upperBound)
-        }.buttonStyle(.borderless).frame(height: 36).background(p.card).clipShape(RoundedRectangle(cornerRadius: BleeckerRadius.ui))
+        }.buttonStyle(.borderless).frame(minHeight: 36 * max(1, textScale))
+            .background(p.card).clipShape(RoundedRectangle(cornerRadius: BleeckerRadius.ui))
             .overlay { RoundedRectangle(cornerRadius: BleeckerRadius.ui).strokeBorder(p.border) }
     }
 }

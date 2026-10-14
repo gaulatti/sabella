@@ -132,6 +132,12 @@ struct ButtonsGallery: View {
                         BleeckerIconButton("star", accessibilityLabel: size.rawValue, size: size) { }
                     }
                 }
+                BleeckerButtonGroup {
+                    BleeckerIconButton("trash", accessibilityLabel: "Delete selected", size: .sm, role: .destructive) { }
+                    BleeckerIconButton("arrow.triangle.merge", accessibilityLabel: "Combine", size: .sm) { }
+                    BleeckerIconButton("calendar", accessibilityLabel: "Scheduling", size: .sm, loading: true) { }
+                    BleeckerIconButton("video", accessibilityLabel: "Video unavailable", size: .sm) { }.disabled(true).help("Select no more than three records")
+                }
                 HStack {
                     Button("Selected") { }.buttonStyle(BleeckerToggleStyle(selected: true))
                     Button("Unselected") { }.buttonStyle(BleeckerToggleStyle(selected: false, variant: .outline))

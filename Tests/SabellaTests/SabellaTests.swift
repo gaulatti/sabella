@@ -8,6 +8,20 @@ import AppKit
 #endif
 
 #if os(macOS)
+@Test @MainActor func joinedIconGroupsPreserveSquareTargetsAndBorderOverlap() {
+    let icon = NSHostingView(rootView: BleeckerIconButton("plus", accessibilityLabel: "Add", size: .sm) { })
+    #expect(abs(icon.fittingSize.width - 32) < 1)
+    #expect(abs(icon.fittingSize.height - 32) < 1)
+    let group = NSHostingView(rootView: BleeckerButtonGroup {
+        BleeckerIconButton("trash", accessibilityLabel: "Delete", size: .sm, role: .destructive) { }
+        BleeckerIconButton("plus", accessibilityLabel: "Add", size: .sm) { }
+        BleeckerIconButton("calendar", accessibilityLabel: "Schedule", size: .sm, loading: true) { }
+        BleeckerIconButton("video", accessibilityLabel: "Video", size: .sm) { }.disabled(true)
+    })
+    #expect(abs(group.fittingSize.width - 125) < 1)
+    #expect(abs(group.fittingSize.height - 32) < 1)
+}
+
 @Test @MainActor func remainingControlsGrowWithHostTextScale() {
     func fittedHeight<Content: View>(_ content: Content, scale: CGFloat) -> CGFloat {
         let host = NSHostingView(rootView: content.environment(\.bleeckerTextScale, scale))

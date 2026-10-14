@@ -217,10 +217,12 @@ public struct BleeckerSegmentedControl<Value: Hashable>: View {
                     .background(selection == option.value ? p.card : .clear)
                     .clipShape(RoundedRectangle(cornerRadius: BleeckerRadius.button))
                     .buttonStyle(.plain).disabled(option.disabled)
+                    .accessibilityAddTraits(selection == option.value ? .isSelected : [])
             }
         }
         .padding(4).background(p.muted.opacity(0.65))
         .clipShape(RoundedRectangle(cornerRadius: 9))
         .overlay { RoundedRectangle(cornerRadius: 9).strokeBorder(p.border) }
+        .accessibilityElement(children: .contain)
     }
 }

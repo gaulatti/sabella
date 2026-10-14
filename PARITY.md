@@ -62,3 +62,5 @@ and example support cannot become an accidental transitive requirement.
 ## Joined action groups
 
 `BleeckerButtonGroup` joins adjacent button borders and rounds the outside corners by default. Positive `spacing` retains separated controls for callers that explicitly request them. `BleeckerIconButton` has square 32/40/44-point sizes, optional `role`, and a `loading` state that preserves its accessible name and disables repeat activation. Destructive roles remain visible under the shared style. Joined controls remain stationary when pressed; reduced motion also disables press movement for separate controls. The catalog's Actions page includes destructive, pending, and disabled joined icons.
+
+Segmented controls expose a containing group while retaining each option's name and selected state. Applications can name the group (for example, Article status) without replacing all child button labels.

@@ -3,6 +3,38 @@ import SwiftUI
 import Foundation
 import SabellaCatalogSupport
 @testable import Sabella
+#if os(macOS)
+import AppKit
+#endif
+
+#if os(macOS)
+@Test @MainActor func remainingControlsGrowWithHostTextScale() {
+    func fittedHeight<Content: View>(_ content: Content, scale: CGFloat) -> CGFloat {
+        let host = NSHostingView(rootView: content.environment(\.bleeckerTextScale, scale))
+        return host.fittingSize.height
+    }
+
+    let secure = BleeckerSecureField("Password", text: .constant("sample"))
+    let radio = BleeckerRadioGroup(selection: .constant("all"), options: [
+        BleeckerSelectOption(value: "all", label: "All"),
+        BleeckerSelectOption(value: "relevant", label: "Relevant")
+    ])
+    let stepper = BleeckerStepper("Minimum", value: .constant(2), in: 0...10)
+    let select = BleeckerSelect(selection: .constant("all"), options: [
+        BleeckerSelectOption(value: "all", label: "All"),
+        BleeckerSelectOption(value: "relevant", label: "Relevant")
+    ])
+
+    for control in [
+        ("Secure field", fittedHeight(secure, scale: 1), fittedHeight(secure, scale: 1.3)),
+        ("Radio group", fittedHeight(radio, scale: 1), fittedHeight(radio, scale: 1.3)),
+        ("Stepper", fittedHeight(stepper, scale: 1), fittedHeight(stepper, scale: 1.3)),
+        ("Select", fittedHeight(select, scale: 1), fittedHeight(select, scale: 1.3))
+    ] {
+        #expect(control.2 > control.1, "\(control.0) did not grow at the host's large text scale")
+    }
+}
+#endif
 
 @Test func tokensMatchBleeckerSource() {
     #expect(BleeckerSpacing.detail == 4)
@@ -10,6 +42,34 @@ import SabellaCatalogSupport
     #expect(BleeckerRadius.button == 7)
     #expect(BleeckerRadius.card == 12)
     #expect(BleeckerDuration.control == 0.19)
+}
+
+@Test @MainActor func categoryLabelsOnCardsMeetSmallTextContrastAcrossHues() {
+    func luminance(_ rgb: (red: Double, green: Double, blue: Double)) -> Double {
+        let channels = [rgb.red, rgb.green, rgb.blue].map { value in
+            value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+    }
+
+    for scheme in [ColorScheme.light, .dark] {
+        let card: (red: Double, green: Double, blue: Double) = scheme == .dark
+            ? (24 / 255, 37 / 255, 51 / 255) : (1, 1, 1)
+        let cardLuminance = luminance(card)
+        var worst = (ratio: Double.infinity, hue: 0, intensity: 0)
+        for hue in 0..<360 {
+            for intensity in 0...10 {
+                let rgb = BleeckerAttentionSurface<EmptyView>.labelAccentComponents(
+                    hue: Double(hue), intensity: Double(intensity), scheme: scheme)
+                let labelLuminance = luminance(rgb)
+                let ratio = (max(cardLuminance, labelLuminance) + 0.05) /
+                            (min(cardLuminance, labelLuminance) + 0.05)
+                if ratio < worst.ratio { worst = (ratio, hue, intensity) }
+            }
+        }
+        #expect(worst.ratio >= 4.5,
+                "\(scheme) hue \(worst.hue) intensity \(worst.intensity): \(worst.ratio):1")
+    }
 }
 
 @Test func bundledBrandFontsRegisterWithoutSubstitution() {

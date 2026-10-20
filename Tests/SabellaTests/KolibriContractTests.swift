@@ -369,7 +369,7 @@ private func pinnedDocument() throws -> KolibriDocument {
     #expect(buttons.contains(".buttonStyle(BleeckerButtonStyle(variant, size: size))"))
     #expect(buttons.contains(".disabled(loading)"))
     #expect(buttons.contains("configuration.isPressed"))
-    #expect(buttons.contains(".font(BleeckerTypography.primary(fontSize, weight: .medium))"))
+    #expect(buttons.contains(".font(BleeckerTypography.primary(fontSize * textScale, weight: .medium))"))
     #expect(television.contains("public struct SabellaTVPrimaryButtonStyle: ButtonStyle"))
     #expect(television.contains("@Environment(\\.isFocused) private var focused"))
     #expect(television.contains("configuration.isPressed"))

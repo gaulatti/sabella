@@ -247,7 +247,8 @@ struct SurfacesGallery: View {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 12) {
                     ForEach([0.0, 5.0, 10.0], id: \.self) { intensity in
-                        BleeckerAttentionSurface(hue: 210, intensity: intensity) {
+                        BleeckerAttentionSurface(hue: 210, intensity: intensity,
+                                                 density: intensity == 0 ? .compact : .comfortable) {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("Attention \(Int(intensity))")
                                     .font(BleeckerTypography.primary(13, weight: .semibold))

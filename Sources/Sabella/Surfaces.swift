@@ -1,85 +1,87 @@
 import SwiftUI
 
-/// A bounded attention treatment for dense feeds. Hue identifies a category;
-/// intensity (0...10) moves the accent toward urgency without hiding content.
+public enum BleeckerAttentionDensity: String, CaseIterable, Sendable {
+    case compact, comfortable
+}
+
+/// The shared category/urgency surface; platform-native child controls retain
+/// their own focus and accessibility semantics.
 public struct BleeckerAttentionSurface<Content: View>: View {
-    @Environment(\.colorScheme) private var scheme
     let hue: Double
     let intensity: Double
+    let density: BleeckerAttentionDensity
     @ViewBuilder let content: Content
 
-    public init(hue: Double, intensity: Double, @ViewBuilder content: () -> Content) {
+    public init(hue: Double, intensity: Double, density: BleeckerAttentionDensity = .comfortable,
+                @ViewBuilder content: () -> Content) {
         self.hue = hue
         self.intensity = intensity
+        self.density = density
         self.content = content()
     }
 
     public var body: some View {
-        let p = BleeckerPalette.resolve(scheme)
-        let urgency = min(10, max(0, intensity.isFinite ? intensity : 0))
-        let accent = Self.accent(hue: hue, intensity: urgency)
-        let shape = RoundedRectangle(cornerRadius: BleeckerRadius.card, style: .continuous)
+        let style = BleeckerAttentionStyle(hue: hue, intensity: intensity)
+        let shape = RoundedRectangle(cornerRadius: 11)
+        let gradient = Gradient(stops: [
+            .init(color: style.stops[0].color, location: 0),
+            .init(color: style.stops[1].color, location: style.middleStop),
+            .init(color: style.stops[2].color, location: style.coverage)
+        ]).colorSpace(.perceptual)
         content
-            .padding(BleeckerSpacing.component)
+            .padding(density == .compact ? 16 : 20)
+            .padding(1) // CSS border occupies layout outside the content padding.
             .background {
-                shape.fill(p.card)
-                    .overlay {
-                        shape.fill(LinearGradient(
-                            colors: [accent.opacity(scheme == .dark ? 0.12 + urgency * 0.037 : 0.06 + urgency * 0.018), .clear],
-                            startPoint: .bottomLeading, endPoint: .topTrailing
-                        ))
+                GeometryReader { geometry in
+                    if geometry.size.width > 0 && geometry.size.height > 0 {
+                        // CSS's 45-degree line keeps its angle on nonsquare cards.
+                        let extent = (geometry.size.width + geometry.size.height - 4) / 4
+                        let start = UnitPoint(x: 0.5 - extent / geometry.size.width,
+                                              y: 0.5 + extent / geometry.size.height)
+                        let end = UnitPoint(x: 0.5 + extent / geometry.size.width,
+                                            y: 0.5 - extent / geometry.size.height)
+                        ZStack {
+                            if min(geometry.size.width, geometry.size.height) > 60 {
+                                // An outer CSS shadow never paints beneath the
+                                // translucent border box. Keep its blur canvas
+                                // outside the card and cut the card itself out.
+                                shape.inset(by: 30).fill(.black.opacity(0.92))
+                                    .blur(radius: 19).offset(y: 16)
+                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                                    .padding(80)
+                                    .mask {
+                                        Rectangle().fill(.white).overlay {
+                                            shape.fill(.white).frame(width: geometry.size.width, height: geometry.size.height)
+                                                .blendMode(.destinationOut)
+                                        }.compositingGroup()
+                                    }
+                                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                            }
+                            shape.fill(.linearGradient(gradient, startPoint: start, endPoint: end))
+                        }
                     }
+                }
             }
-            .clipShape(shape)
-            .overlay { shape.strokeBorder(accent.opacity(scheme == .dark ? 0.24 : 0.18), lineWidth: 1) }
+            .overlay { shape.strokeBorder(style.border.color, lineWidth: 1) }
     }
 
     public static func accent(hue: Double, intensity: Double) -> Color {
-        let rgb = accentComponents(hue: hue, intensity: intensity)
-        return Color(red: rgb.red, green: rgb.green, blue: rgb.blue)
+        BleeckerAttentionStyle(hue: hue, intensity: intensity).accent.color
     }
 
-    /// Use for small text on a Bleecker card. The surface accent itself is
-    /// intentionally quieter and should continue to color borders and fills.
+    /// A separate accessibility role for small text on the actual card paint.
+    /// It preserves the category accent whenever that paint already passes.
     public static func labelAccent(hue: Double, intensity: Double, scheme: ColorScheme) -> Color {
         let rgb = labelAccentComponents(hue: hue, intensity: intensity, scheme: scheme)
-        return Color(red: rgb.red, green: rgb.green, blue: rgb.blue)
+        return Color(.sRGB, red: rgb.red, green: rgb.green, blue: rgb.blue)
     }
 
     static func labelAccentComponents(hue: Double, intensity: Double,
                                       scheme: ColorScheme) -> (red: Double, green: Double, blue: Double) {
-        let source = accentComponents(hue: hue, intensity: intensity)
-        // The dark card is #182533 and the light card is white. These mixes
-        // keep category identity while meeting 4.5:1 against both surfaces
-        // throughout the 0...10 urgency range.
-        let amount = scheme == .dark ? 0.45 : 0.12
-        let destination = scheme == .dark ? 1.0 : 0.0
-        return (source.red * (1 - amount) + destination * amount,
-                source.green * (1 - amount) + destination * amount,
-                source.blue * (1 - amount) + destination * amount)
-    }
-
-    private static func accentComponents(hue: Double, intensity: Double)
-        -> (red: Double, green: Double, blue: Double) {
-        let normalized = ((hue.isFinite ? hue : 210).truncatingRemainder(dividingBy: 360) + 360)
-            .truncatingRemainder(dividingBy: 360) / 360
-        let urgency = min(1, max(0, (intensity.isFinite ? intensity : 0) / 10))
-        let segment = normalized * 6
-        let chroma = 0.66 * 0.52
-        let secondary = chroma * (1 - abs(segment.truncatingRemainder(dividingBy: 2) - 1))
-        let base = 0.52 - chroma
-        let rgb: (Double, Double, Double) = switch Int(segment) {
-        case 0: (chroma, secondary, 0)
-        case 1: (secondary, chroma, 0)
-        case 2: (0, chroma, secondary)
-        case 3: (0, secondary, chroma)
-        case 4: (secondary, 0, chroma)
-        default: (chroma, 0, secondary)
-        }
-        let red = (0.94, 0.25, 0.18)
-        return ((rgb.0 + base) * (1 - urgency) + red.0 * urgency,
-                (rgb.1 + base) * (1 - urgency) + red.1 * urgency,
-                (rgb.2 + base) * (1 - urgency) + red.2 * urgency)
+        let background = scheme == .dark ? BleeckerAttentionRGBA(red: 24 / 255, green: 37 / 255, blue: 51 / 255) :
+            BleeckerAttentionRGBA(red: 1, green: 1, blue: 1)
+        let label = BleeckerAttentionStyle(hue: hue, intensity: intensity).accent.label(on: background)
+        return (label.red, label.green, label.blue)
     }
 }
 

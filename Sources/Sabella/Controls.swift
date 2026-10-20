@@ -49,7 +49,7 @@ public struct BleeckerTextField: View {
 
     public var body: some View {
         let p = BleeckerPalette.resolve(scheme)
-        let resolvedFont = font ?? BleeckerTypography.primary((size == .sm ? 12 : 14) * textScale)
+        let resolvedFont = font ?? BleeckerTypography.primary(14 * textScale)
         HStack(spacing: 10) {
             if let systemImage { Image(systemName: systemImage).font(.system(size: 14, weight: .medium)).foregroundStyle(p.textSecondary) }
             TextField(placeholder, text: $text).textFieldStyle(.plain).font(resolvedFont).focused($focused)
@@ -58,7 +58,7 @@ public struct BleeckerTextField: View {
                     .buttonStyle(.plain).foregroundStyle(p.textSecondary).padding(4).background(p.muted).clipShape(RoundedRectangle(cornerRadius: 4))
             }
         }
-        .padding(.horizontal, horizontalPadding).frame(minHeight: height * textScale)
+        .padding(.horizontal, horizontalPadding).frame(minHeight: height * max(1, textScale))
         .background(isEnabled ? p.card : p.muted.opacity(0.65))
         .clipShape(RoundedRectangle(cornerRadius: BleeckerRadius.ui))
         .overlay { RoundedRectangle(cornerRadius: BleeckerRadius.ui).strokeBorder(error ? p.destructive : focused ? p.sea.opacity(0.75) : p.border, lineWidth: 1) }

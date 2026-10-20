@@ -8,6 +8,18 @@ import AppKit
 #endif
 
 #if os(macOS)
+@Test @MainActor func compactTextFieldsPreserveNativeMinimumAndLargeFieldsGrow() {
+    for size in [BleeckerControlSize.sm, .md, .lg] {
+        func fittedHeight(_ scale: CGFloat) -> CGFloat {
+            NSHostingView(rootView: BleeckerTextField(placeholder: "Story title", text: .constant("Sample"), size: size)
+                .environment(\.bleeckerTextScale, scale)).fittingSize.height
+        }
+        let normal = fittedHeight(1)
+        #expect(fittedHeight(0.9) >= normal, "Compact text must preserve the existing control minimum")
+        #expect(fittedHeight(1.3) > normal, "Larger text must grow the control")
+    }
+}
+
 @Test @MainActor func remainingControlsGrowWithHostTextScale() {
     func fittedHeight<Content: View>(_ content: Content, scale: CGFloat) -> CGFloat {
         let host = NSHostingView(rootView: content.environment(\.bleeckerTextScale, scale))

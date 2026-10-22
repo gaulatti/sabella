@@ -89,7 +89,7 @@ import AppKit
 
 
 #if os(macOS)
-@Test @MainActor func attentionNativeGradientMatchesBrowserAtBothAspectRatios() throws {
+@Test @MainActor func attentionNativeGradientAndStraightBordersMatchBrowserAtBothAspectRatios() throws {
     struct Fixture: Decodable {
         struct Producer: Decodable {
             struct Raster: Decodable { let file: String; let width: Int; let height: Int; let hue: Double; let intensity: Double }
@@ -111,9 +111,20 @@ import AppKit
         #expect(native.width == referenceImage.width && native.height == referenceImage.height)
         let actualPixels = try attentionSRGBPixels(native)
         let expectedPixels = try attentionSRGBPixels(referenceImage)
-        // Interior only: this checks actual gradient direction/interpolation.
         // One code value covers legacy alpha conversion, one native dithering.
-        // Border antialiasing and exterior blur remain separate visual checks.
+        // Rounded-corner antialiasing and exterior blur remain visual checks.
+        // Every straight border pixel must include the repeated padding-box
+        // background beneath its translucent border, as in the producer CSS.
+        let horizontalEdges = (11..<(sample.width - 11)).flatMap { x in [(x, 0), (x, sample.height - 1)] }
+        let verticalEdges = (11..<(sample.height - 11)).flatMap { y in [(0, y), (sample.width - 1, y)] }
+        for (x, y) in horizontalEdges + verticalEdges {
+            let offset = ((y + 80) * native.width + x + 80) * 4
+            let a = actualPixels[offset..<(offset + 3)]
+            let b = expectedPixels[offset..<(offset + 3)]
+            #expect(zip(a, b).allSatisfy { abs(Int($0) - Int($1)) <= 2 },
+                    "Browser border differs at \(sample.file) \(x),\(y): native=\(a), browser=\(b)")
+        }
+        // The interior checks gradient direction and interpolation separately.
         for y in stride(from: 12, to: sample.height - 12, by: 19) {
             for x in stride(from: 12, to: sample.width - 12, by: 19) {
                 let offset = ((y + 80) * native.width + x + 80) * 4

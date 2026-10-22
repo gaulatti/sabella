@@ -31,7 +31,9 @@ surfaces in each appearance. The one-point border occupies additional layout.
 
 Attention color math is pinned to Bleecker `cb891040bb40fa5668a7ccb851681396620b4d11`:
 CSS HSL category/danger inputs, premultiplied OKLab mixes, three gradient stops,
-24–96% coverage, and 11-point corner radius. Regenerate the browser reference
+24–96% coverage, and circular 11-point corners. The gradient originates in
+the padding box and repeats beneath the translucent one-point border, matching
+the producer CSS defaults ([background positioning and repetition](https://www.w3.org/TR/css-backgrounds-3/#background-origin)). Regenerate the browser reference
 with `python3 scripts/capture-attention-reference.py --bleecker-repository PATH
 --chrome-binary PATH --output Tests/SabellaTests/Snapshots/attention-color-cb89104.json`.
 The fixture records the producer and generator hashes and browser version.
@@ -40,9 +42,10 @@ components within 1e-5, and stop positions exactly. Only authored legacy
 `rgba()` alpha operands follow the pinned Chrome parser's eight-bit
 normalization (`.94` to `240/255`, `.06` to `15/255`); intermediate OKLab
 mixtures retain precision. Two browser PNG references additionally check native
-interior gradient rendering in landscape and portrait within two eight-bit code
-values for raster conversion/dithering. Exterior shadow blur, border
-antialiasing, and device interaction still require visual acceptance.
+interior gradient samples and every straight border pixel in landscape and
+portrait within two eight-bit code values for raster conversion/dithering.
+Rounded-corner antialiasing, exterior shadow blur, and device interaction still
+require visual acceptance.
 
 The bounded [Kolibri primary-button contract
 decision](docs/kolibri-primary-button-contract.md) pins the private neutral

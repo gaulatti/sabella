@@ -22,7 +22,8 @@ public struct BleeckerAttentionSurface<Content: View>: View {
 
     public var body: some View {
         let style = BleeckerAttentionStyle(hue: hue, intensity: intensity)
-        let shape = RoundedRectangle(cornerRadius: 11)
+        // Match the producer's CSS border-radius circular arcs.
+        let shape = RoundedRectangle(cornerRadius: 11, style: .circular)
         let gradient = Gradient(stops: [
             .init(color: style.stops[0].color, location: 0),
             .init(color: style.stops[1].color, location: style.middleStop),
@@ -33,13 +34,16 @@ public struct BleeckerAttentionSurface<Content: View>: View {
             .padding(1) // CSS border occupies layout outside the content padding.
             .background {
                 GeometryReader { geometry in
-                    if geometry.size.width > 0 && geometry.size.height > 0 {
-                        // CSS's 45-degree line keeps its angle on nonsquare cards.
-                        let extent = (geometry.size.width + geometry.size.height - 4) / 4
-                        let start = UnitPoint(x: 0.5 - extent / geometry.size.width,
-                                              y: 0.5 + extent / geometry.size.height)
-                        let end = UnitPoint(x: 0.5 + extent / geometry.size.width,
-                                            y: 0.5 - extent / geometry.size.height)
+                    if geometry.size.width > 2 && geometry.size.height > 2 {
+                        // CSS backgrounds originate in the padding box and
+                        // repeat into the translucent one-point border.
+                        let tileWidth = geometry.size.width - 2
+                        let tileHeight = geometry.size.height - 2
+                        let extent = (tileWidth + tileHeight) / 4
+                        let start = UnitPoint(x: 0.5 - extent / tileWidth,
+                                              y: 0.5 + extent / tileHeight)
+                        let end = UnitPoint(x: 0.5 + extent / tileWidth,
+                                            y: 0.5 - extent / tileHeight)
                         ZStack {
                             if min(geometry.size.width, geometry.size.height) > 60 {
                                 // An outer CSS shadow never paints beneath the
@@ -57,7 +61,17 @@ public struct BleeckerAttentionSurface<Content: View>: View {
                                     }
                                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
                             }
-                            shape.fill(.linearGradient(gradient, startPoint: start, endPoint: end))
+                            ZStack {
+                                ForEach(-1...1, id: \.self) { column in
+                                    ForEach(-1...1, id: \.self) { row in
+                                        Rectangle()
+                                            .fill(.linearGradient(gradient, startPoint: start, endPoint: end))
+                                            .frame(width: tileWidth, height: tileHeight)
+                                            .position(x: geometry.size.width / 2 + CGFloat(column) * tileWidth,
+                                                      y: geometry.size.height / 2 + CGFloat(row) * tileHeight)
+                                    }
+                                }
+                            }.mask(shape)
                         }
                     }
                 }

@@ -62,15 +62,18 @@ and example support cannot become an accidental transitive requirement.
 ## Attention surface reference
 
 The attention treatment follows Bleecker `cb891040` for CSS HSL/OKLab color
-math, coverage, stop positions, density padding, border occupancy, and radius.
+math, coverage, stop positions, density padding, border occupancy, and circular
+radius. The padding-box gradient repeats into the translucent border, as in
+the producer CSS.
 The catalog renders both densities at calm, moderate, and urgent intensities.
 Pinned Chrome fixtures and actual native layout measurements cover these
 numeric contracts. Two browser PNGs additionally exercise the macOS native
-interior gradient in portrait and landscape within two eight-bit code values. Small category text uses a separate accessible paint on
+interior gradient samples and every straight border pixel in portrait and
+landscape within two eight-bit code values. Small category text uses a separate accessible paint on
 `BleeckerCard`; this adaptation leaves the producer accent unchanged.
 
 The negative-spread shadow is clipped to the exterior of the border box;
 a mutation removing that knockout is rejected by the native/browser raster
-comparison. Exterior blur and border antialiasing still need native visual
+comparison. Exterior blur and rounded-corner antialiasing still need native visual
 acceptance; these raster fixtures do not establish device interaction or
 cross-platform pixel equivalence.

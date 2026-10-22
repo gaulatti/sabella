@@ -34,7 +34,7 @@ public struct BleeckerAttentionSurface<Content: View>: View {
             .overlay { shape.strokeBorder(accent.opacity(scheme == .dark ? 0.24 : 0.18), lineWidth: 1) }
     }
 
-    public static func accent(hue: Double, intensity: Double) -> Color {
+    private static func accent(hue: Double, intensity: Double) -> Color {
         let normalized = ((hue.isFinite ? hue : 210).truncatingRemainder(dividingBy: 360) + 360)
             .truncatingRemainder(dividingBy: 360) / 360
         let urgency = min(1, max(0, (intensity.isFinite ? intensity : 0) / 10))

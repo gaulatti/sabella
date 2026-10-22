@@ -22,6 +22,7 @@ Components keep the `Bleecker` prefix so product code reads identically across d
 `BleeckerAttentionSurface` carries the web feed's category hue and 0–10
 urgency treatment into native dense lists. The Sabella catalog shows calm,
 moderate, and urgent fixtures in both appearances.
+Its hue-to-accent calculation stays private; hosts supply hue and urgency to the surface.
 
 The bounded [Kolibri primary-button contract
 decision](docs/kolibri-primary-button-contract.md) pins the private neutral

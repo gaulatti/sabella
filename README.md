@@ -19,6 +19,34 @@ Button("Sync") { sync() }
 
 Components keep the `Bleecker` prefix so product code reads identically across design-system implementations while the module name (`Sabella`) identifies the platform library.
 
+`BleeckerAttentionSurface` carries the web feed's category hue and 0–10
+urgency treatment into native dense lists. The Sabella catalog shows calm,
+moderate, and urgent fixtures in both appearances. Use its `labelAccent` for
+small category text on a Bleecker card; it preserves a passing accent and
+otherwise adjusts it toward black or white to keep at least 4.5:1 contrast
+across all hues and urgency levels. `accent` preserves the producer color for
+dots, borders, and fills. The catalog shows three category-label hues and both
+`compact` (16-point padding) and default `comfortable` (20-point padding)
+surfaces in each appearance. The one-point border occupies additional layout.
+
+Attention color math is pinned to Bleecker `cb891040bb40fa5668a7ccb851681396620b4d11`:
+CSS HSL category/danger inputs, premultiplied OKLab mixes, three gradient stops,
+24–96% coverage, and circular 11-point corners. The gradient originates in
+the padding box and repeats beneath the translucent one-point border, matching
+the producer CSS defaults ([background positioning and repetition](https://www.w3.org/TR/css-backgrounds-3/#background-origin)). Regenerate the browser reference
+with `python3 scripts/capture-attention-reference.py --bleecker-repository PATH
+--chrome-binary PATH --output Tests/SabellaTests/Snapshots/attention-color-cb89104.json`.
+The fixture records the producer and generator hashes and browser version.
+Tests compare all 30 accent cases exactly at eight-bit precision, mixed paint
+components within 1e-5, and stop positions exactly. Only authored legacy
+`rgba()` alpha operands follow the pinned Chrome parser's eight-bit
+normalization (`.94` to `240/255`, `.06` to `15/255`); intermediate OKLab
+mixtures retain precision. Two browser PNG references additionally check native
+interior gradient samples and every straight border pixel in landscape and
+portrait within two eight-bit code values for raster conversion/dithering.
+Rounded-corner antialiasing, exterior shadow blur, and device interaction still
+require visual acceptance.
+
 The bounded [Kolibri primary-button contract
 decision](docs/kolibri-primary-button-contract.md) pins the private neutral
 0.1.0 bundle, validates its checksums and schema, and records deterministic
@@ -61,6 +89,17 @@ Franklin typefaces used by its typography tokens and registers them from the
 package resource bundle on first use. Consumers do not need to install fonts or
 add `UIAppFonts` entries. The font files are distributed under the SIL Open Font
 License included beside the assets in `Sources/Sabella/Resources/Fonts`.
+
+Hosts can set `\.bleeckerTextScale` on a view hierarchy and use
+`bleeckerFont(_:size:weight:)` for text that follows the selected scale.
+Sabella buttons, text inputs (including secure fields), selectors, radio
+groups, steppers, and compact or standard checkboxes use the same value.
+Control heights expand with larger text while keeping their normal minimum
+size at compact scale. The default scale is 1.0. The catalog's Text size
+fixture shows representative inputs and choices side by side.
+Text fields retain their existing 14-point default at standard scale for every
+control size. An explicitly supplied custom font remains independent of the
+host scale; the control still preserves its normal minimum height.
 
 ## Component catalog
 

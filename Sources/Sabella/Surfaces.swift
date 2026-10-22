@@ -30,6 +30,9 @@ public struct BleeckerAttentionSurface<Content: View>: View {
             .init(color: style.stops[2].color, location: style.coverage)
         ]).colorSpace(.perceptual)
         content
+            // Attention paint is dark in both host appearances. Supply a
+            // readable default while retaining explicit child foregrounds.
+            .foregroundStyle(BleeckerPalette.dark.textPrimary, BleeckerPalette.dark.textPrimary.opacity(0.9))
             .padding(density == .compact ? 16 : 20)
             .padding(1) // CSS border occupies layout outside the content padding.
             .background {

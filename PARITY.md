@@ -65,6 +65,11 @@ The attention treatment follows Bleecker `cb891040` for CSS HSL/OKLab color
 math, coverage, stop positions, density padding, border occupancy, and circular
 radius. The padding-box gradient repeats into the translucent border, as in
 the producer CSS.
+The native attention surface supplies light primary and secondary foregrounds
+because its paint remains dark in both host appearances. Explicit child colors
+still take precedence. Rendered text regressions check both host appearances,
+hierarchical secondary text and explicit child color preservation. Controls
+that supply their own foreground colors remain responsible for those colors.
 The catalog renders both densities at calm, moderate, and urgent intensities.
 Pinned Chrome fixtures and actual native layout measurements cover these
 numeric contracts. Two browser PNGs additionally exercise the macOS native

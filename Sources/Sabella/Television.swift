@@ -38,6 +38,7 @@ public struct SabellaTVChannelGroupBrowser: View {
     private let select: (SabellaTVChannelGroupSummary) -> Void
     @FocusState private var focusedID: String?
     @FocusState private var browseAllFocused: Bool
+    @State private var focusRestoration = SabellaTVGroupFocusRestoration()
 
     public init(
         groups: [SabellaTVChannelGroupSummary],
@@ -114,11 +115,14 @@ public struct SabellaTVChannelGroupBrowser: View {
                         .scrollIndicators(.hidden)
                         .scrollClipDisabled()
                         .task {
+                            defer { focusRestoration.finish() }
                             guard let focusedGroupID,
                                   featuredGroups.contains(where: { $0.id == focusedGroupID }) else { return }
+                            await Task.yield()
                             proxy.scrollTo(focusedGroupID, anchor: .center)
                             await Task.yield()
                             focusedID = focusedGroupID
+                            await Task.yield()
                         }
                     }
                 }
@@ -128,7 +132,7 @@ public struct SabellaTVChannelGroupBrowser: View {
         }
         .scrollIndicators(.hidden)
         .onChange(of: focusedID) { _, id in
-            if let id { focusedGroupID = id }
+            if let id = focusRestoration.accepted(id) { focusedGroupID = id }
         }
         .onChange(of: contentFocusRequested) { _, requested in
             guard requested else { return }
@@ -164,6 +168,7 @@ public struct SabellaTVChannelGroupDirectory: View {
     @Binding private var contentFocusRequested: Bool
     private let select: (SabellaTVChannelGroupSummary) -> Void
     @FocusState private var focusedID: String?
+    @State private var focusRestoration = SabellaTVGroupFocusRestoration()
 
     public init(
         groups: [SabellaTVChannelGroupSummary],
@@ -217,16 +222,19 @@ public struct SabellaTVChannelGroupDirectory: View {
             }
             .scrollIndicators(.hidden)
             .task {
+                defer { focusRestoration.finish() }
                 let target = focusedGroupID.flatMap { id in
-                    groups.contains(where: { $0.id == id }) ? id : nil
+                    groups.contains(where: { $0.id == id && $0.channelCount > 0 }) ? id : nil
                 } ?? groups.first(where: { $0.channelCount > 0 })?.id
                 guard let target else { return }
+                await Task.yield()
                 proxy.scrollTo(target, anchor: .center)
                 await Task.yield()
                 focusedID = target
+                await Task.yield()
             }
             .onChange(of: focusedID) { _, id in
-                guard let id else { return }
+                guard let id = focusRestoration.accepted(id) else { return }
                 focusedGroupID = id
                 withAnimation(.easeOut(duration: 0.24)) {
                     proxy.scrollTo(id, anchor: .center)
@@ -235,7 +243,7 @@ public struct SabellaTVChannelGroupDirectory: View {
             .onChange(of: contentFocusRequested) { _, requested in
                 guard requested else { return }
                 let target = focusedGroupID.flatMap { id in
-                    groups.contains(where: { $0.id == id }) ? id : nil
+                    groups.contains(where: { $0.id == id && $0.channelCount > 0 }) ? id : nil
                 } ?? groups.first(where: { $0.channelCount > 0 })?.id
                 focusedID = target
                 if let target {
@@ -265,6 +273,18 @@ public struct SabellaTVChannelGroupDirectory: View {
     private func requestHeaderFocus() {
         focusedID = nil
         headerFocusRequested = true
+    }
+}
+
+struct SabellaTVGroupFocusRestoration {
+    private(set) var isRestoring = true
+
+    func accepted(_ id: String?) -> String? {
+        isRestoring ? nil : id
+    }
+
+    mutating func finish() {
+        isRestoring = false
     }
 }
 
@@ -558,6 +578,8 @@ public struct SabellaTVChannelGuide: View {
     private let togglePlayback: (() -> Void)?
     private let toggleMute: (() -> Void)?
     @State private var highlightedID: String
+    @State private var loadToLast = SabellaTVChannelLoadToEnd()
+    @State private var wrapError: String?
     @FocusState private var focusedChannelID: String?
     @Namespace private var channelFocus
 
@@ -631,7 +653,7 @@ public struct SabellaTVChannelGuide: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView(.vertical) {
                         LazyVStack(alignment: .leading, spacing: 14) {
-                            ForEach(channels) { item in
+                            ForEach(SabellaTVChannelGuideOrder.rowsTopToBottom(channels)) { item in
                                 SabellaTVChannelRow(
                                     channel: item,
                                     medium: effectiveMedium(for: item),
@@ -641,18 +663,30 @@ public struct SabellaTVChannelGuide: View {
                                     select: { select(item) }
                                 )
                                 .focused($focusedChannelID, equals: item.id)
-                                .id(item.id)
-                                .onAppear {
-                                    if item.id == channels.last?.id, hasMoreChannels {
-                                        loadMoreChannels()
-                                    }
+                                .onMoveCommand { direction in
+                                    moveBeyondGuideEdge(direction, from: item.id, scrollProxy: scrollProxy)
                                 }
+                                .id(item.id)
                             }
-                            if loadingMoreChannels {
+                            if loadToLast.isActive {
+                                HStack(spacing: 12) {
+                                    ProgressView().tint(.white)
+                                    Text("Loading last channel…")
+                                        .font(BleeckerTypography.secondary(17))
+                                        .foregroundStyle(BleeckerPalette.dark.textPrimary)
+                                }
+                                .frame(width: 360, height: 86)
+                                .accessibilityLabel("Loading last channel")
+                            } else if loadingMoreChannels {
                                 ProgressView()
                                     .tint(.white)
                                     .frame(width: 230, height: 86)
                                     .accessibilityLabel("Loading more channels")
+                            } else if let wrapError {
+                                Text(wrapError)
+                                    .font(BleeckerTypography.secondary(17))
+                                    .foregroundStyle(BleeckerPalette.dark.textPrimary)
+                                    .frame(width: 360, height: 86)
                             }
                         }
                         .padding(.vertical, 320)
@@ -670,6 +704,25 @@ public struct SabellaTVChannelGuide: View {
                     .onChange(of: highlightedID) { _, id in
                         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.28)) {
                             scrollProxy.scrollTo(id, anchor: .center)
+                        }
+                        if SabellaTVChannelGuideOrder.shouldLoadNextPage(
+                            highlightedID: id,
+                            channels: channels,
+                            hasMore: hasMoreChannels,
+                            loading: loadingMoreChannels
+                        ) {
+                            loadMoreChannels()
+                        }
+                    }
+                    .onChange(of: channels.count) { _, _ in
+                        scrollProxy.scrollTo(highlightedID, anchor: .center)
+                    }
+                    .onChange(of: loadingMoreChannels) { _, loading in
+                        if !loading {
+                            performLoadToLast(loadToLast.observe(
+                                loadedCount: channels.count,
+                                hasMore: hasMoreChannels
+                            ), scrollProxy: scrollProxy)
                         }
                     }
                 }
@@ -765,6 +818,53 @@ public struct SabellaTVChannelGuide: View {
         channels.first { $0.id == highlightedID } ?? channels.first { $0.id == selection } ?? channels[0]
     }
 
+    private func moveBeyondGuideEdge(
+        _ direction: MoveCommandDirection,
+        from id: String,
+        scrollProxy: ScrollViewProxy
+    ) {
+        guard focusedChannelID == id else { return }
+        switch SabellaTVChannelGuideOrder.edgeMove(
+            direction: direction,
+            focusedID: id,
+            channels: channels,
+            hasMore: hasMoreChannels
+        ) {
+        case .lastChannel:
+            wrapError = nil
+            performLoadToLast(loadToLast.begin(
+                loadedCount: channels.count,
+                hasMore: hasMoreChannels,
+                loading: loadingMoreChannels
+            ), scrollProxy: scrollProxy)
+        case .firstChannel:
+            focusChannel(channels[0].id, scrollProxy: scrollProxy)
+        case .none:
+            break
+        }
+    }
+
+    private func performLoadToLast(_ action: SabellaTVChannelLoadToEnd.Action, scrollProxy: ScrollViewProxy) {
+        switch action {
+        case .none: break
+        case .loadMore: loadMoreChannels()
+        case .finished: focusChannel(channels[channels.count - 1].id, scrollProxy: scrollProxy)
+        case .failed: wrapError = "Could not load the last channel."
+        }
+    }
+
+    private func focusChannel(_ id: String, scrollProxy: ScrollViewProxy) {
+        withTransaction(Transaction(animation: nil)) {
+            scrollProxy.scrollTo(id, anchor: .center)
+        }
+        Task { @MainActor in
+            await Task.yield()
+            highlightedID = id
+            await Task.yield()
+            focusedChannelID = id
+        }
+    }
+
     private func effectiveMedium(for channel: SabellaTVChannel) -> SabellaTVChannelMedium {
         channel.medium == .automatic ? resolvedMedia[channel.id] ?? .automatic : channel.medium
     }
@@ -800,6 +900,38 @@ public struct SabellaTVChannelGuide: View {
         }
         .buttonStyle(SabellaTVChannelButtonStyle())
         .accessibilityLabel(label)
+    }
+}
+
+enum SabellaTVChannelGuideOrder {
+    enum EdgeMove: Equatable {
+        case none
+        case firstChannel
+        case lastChannel
+    }
+
+    static func rowsTopToBottom(_ channels: [SabellaTVChannel]) -> [SabellaTVChannel] {
+        Array(channels.reversed())
+    }
+
+    static func edgeMove(
+        direction: MoveCommandDirection,
+        focusedID: String,
+        channels: [SabellaTVChannel],
+        hasMore: Bool
+    ) -> EdgeMove {
+        if direction == .down, focusedID == channels.first?.id { return .lastChannel }
+        if direction == .up, focusedID == channels.last?.id, !hasMore { return .firstChannel }
+        return .none
+    }
+
+    static func shouldLoadNextPage(
+        highlightedID: String,
+        channels: [SabellaTVChannel],
+        hasMore: Bool,
+        loading: Bool
+    ) -> Bool {
+        hasMore && !loading && highlightedID == channels.last?.id
     }
 }
 

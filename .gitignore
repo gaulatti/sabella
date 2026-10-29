@@ -4,3 +4,6 @@ DerivedData/
 *.xcuserstate
 .DS_Store
 coverage/
+.clouseau-ci
+.clouseau-review
+.github/tests/node_modules

@@ -7,7 +7,7 @@ The goal is behavioral and visual convergence, not DOM emulation. Native platfor
 - Foundation: tokens, light/dark palettes, typography, spacing, radii, motion, surface modifier, all public contracts
 - Actions: Button, IconButton, ButtonGroup, Toggle style, ToggleGroup/SegmentedControl
 - Forms: Field, Input, SecureField, SearchInput, TextArea, Select, Checkbox, Switch, RadioGroup, Stepper
-- Surfaces: Card, Panel, Separator, Skeleton, BauhausBackground
+- Surfaces: AttentionSurface, Card, Panel, Separator, Skeleton, BauhausBackground
 - Feedback: Alert, StatusBadge, NotificationBadge, Progress, LoadingSpinner, LoadingOverlay, EmptyState
 - Navigation: BrandLockup, SidebarItem, PageHeader, SectionHeader, Breadcrumb, Tabs, Pagination, Accordion
 - Data display: Avatar, IconBadge, Metric, StatCard, DataList, Timeline, FilterChip, Kbd
@@ -58,3 +58,27 @@ The application-facing `Sabella` library has no dependency on
 release gate builds those development products independently, then compiles a
 temporary external-style consumer through only the library product so catalog
 and example support cannot become an accidental transitive requirement.
+
+## Attention surface reference
+
+The attention treatment follows Bleecker `cb891040` for CSS HSL/OKLab color
+math, coverage, stop positions, density padding, border occupancy, and circular
+radius. The padding-box gradient repeats into the translucent border, as in
+the producer CSS.
+The native attention surface supplies light primary and secondary foregrounds
+because its paint remains dark in both host appearances. Explicit child colors
+still take precedence. Rendered text regressions check both host appearances,
+hierarchical secondary text and explicit child color preservation. Controls
+that supply their own foreground colors remain responsible for those colors.
+The catalog renders both densities at calm, moderate, and urgent intensities.
+Pinned Chrome fixtures and actual native layout measurements cover these
+numeric contracts. Two browser PNGs additionally exercise the macOS native
+interior gradient samples and every straight border pixel in portrait and
+landscape within two eight-bit code values. Small category text uses a separate accessible paint on
+`BleeckerCard`; this adaptation leaves the producer accent unchanged.
+
+The negative-spread shadow is clipped to the exterior of the border box;
+a mutation removing that knockout is rejected by the native/browser raster
+comparison. Exterior blur and rounded-corner antialiasing still need native visual
+acceptance; these raster fixtures do not establish device interaction or
+cross-platform pixel equivalence.

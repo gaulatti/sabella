@@ -1,0 +1,1683 @@
+{
+  "producer": {
+    "repository": "gaulatti/bleecker",
+    "revision": "cb891040bb40fa5668a7ccb851681396620b4d11",
+    "path": "src/utils/attention-color.ts",
+    "source_sha256": "967280e82680e07604a5ac271c1dd21388b006c3e82ecb537e20ea6c5dd01fab",
+    "browser_version": "Google Chrome 155.0.8059.85",
+    "generator_sha256": "7fdfbb810348bcc3c922b35804079c0765801a7f6a8be1f50133e5cd0daaf878",
+    "component_path": "src/components/attention-surface.tsx",
+    "component_sha256": "59fb7ff2bb5459facc410a6fd204d5e977639ce093113b23d8fff8d86e7a8321",
+    "rasters": [
+      {
+        "file": "attention-landscape-cb89104.png",
+        "sha256": "e7164bcdd81b050187525ba4f5f7198bfd90e1825307773c25411301d8333234",
+        "width": 320,
+        "height": 160,
+        "hue": 210,
+        "intensity": 5
+      },
+      {
+        "file": "attention-portrait-cb89104.png",
+        "sha256": "5fcc3a91263e5fc147df4593022b25d2ae41fa845878fc3c3cb95d400d9b3fc2",
+        "width": 160,
+        "height": 320,
+        "hue": 105,
+        "intensity": 5
+      }
+    ],
+    "meaning": "Actual pinned producer; only TypeScript signature annotations removed. Numeric CSS colors and isolated component paint rasters; no device interaction acceptance."
+  },
+  "cases": [
+    {
+      "input": {
+        "hue": 0,
+        "intensity": 0
+      },
+      "accent": "color-mix(in oklab, hsl(0 66% 52%) 100%, hsl(6 78% 56%) 0%)",
+      "coverage": 24,
+      "intensity": 0,
+      "redMix": 0,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 100%, hsl(6 78% 56%) 0%) 10%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 100%, hsl(6 78% 56%) 0%) 7%, rgba(17, 30, 41, 0.94)) 13.9%, rgba(17, 30, 41, 0.94) 24.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 100%, hsl(6 78% 56%) 0%) 12%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        213,
+        52,
+        52,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.150856,
+            0.139662,
+            0.172516,
+            0.947059
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.127034,
+            0.1334,
+            0.169162,
+            0.945294
+          ],
+          "location": 0.139
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.24
+        }
+      ],
+      "borderSrgb": [
+        0.914949,
+        0.480146,
+        0.44445,
+        0.171765
+      ]
+    },
+    {
+      "input": {
+        "hue": 0,
+        "intensity": 2.25
+      },
+      "accent": "color-mix(in oklab, hsl(0 66% 52%) 77%, hsl(6 78% 56%) 23%)",
+      "coverage": 40.2,
+      "intensity": 2.25,
+      "redMix": 23,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 77%, hsl(6 78% 56%) 23%) 24%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 77%, hsl(6 78% 56%) 23%) 16%, rgba(17, 30, 41, 0.94)) 23.3%, rgba(17, 30, 41, 0.94) 40.2%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 77%, hsl(6 78% 56%) 23%) 17%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        217,
+        57,
+        53,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.260236,
+            0.168409,
+            0.187718,
+            0.955294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.198805,
+            0.153404,
+            0.179795,
+            0.950588
+          ],
+          "location": 0.233
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.402
+        }
+      ],
+      "borderSrgb": [
+        0.908281,
+        0.429229,
+        0.38761,
+        0.218824
+      ]
+    },
+    {
+      "input": {
+        "hue": 0,
+        "intensity": 5
+      },
+      "accent": "color-mix(in oklab, hsl(0 66% 52%) 50%, hsl(6 78% 56%) 50%)",
+      "coverage": 60,
+      "intensity": 5,
+      "redMix": 50,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 50%, hsl(6 78% 56%) 50%) 41%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 50%, hsl(6 78% 56%) 50%) 27%, rgba(17, 30, 41, 0.94)) 34.8%, rgba(17, 30, 41, 0.94) 60.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 50%, hsl(6 78% 56%) 50%) 24%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        222,
+        63,
+        54,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.396454,
+            0.201118,
+            0.203592,
+            0.965294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.286896,
+            0.177758,
+            0.192262,
+            0.957059
+          ],
+          "location": 0.348
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.6
+        }
+      ],
+      "borderSrgb": [
+        0.90761,
+        0.390359,
+        0.340382,
+        0.284706
+      ]
+    },
+    {
+      "input": {
+        "hue": 0,
+        "intensity": 10
+      },
+      "accent": "color-mix(in oklab, hsl(0 66% 52%) 0%, hsl(6 78% 56%) 100%)",
+      "coverage": 96,
+      "intensity": 10,
+      "redMix": 100,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 0%, hsl(6 78% 56%) 100%) 72%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 0%, hsl(6 78% 56%) 100%) 48%, rgba(17, 30, 41, 0.94)) 55.7%, rgba(17, 30, 41, 0.94) 96.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 0%, hsl(6 78% 56%) 100%) 36%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        230,
+        73,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.665506,
+            0.260188,
+            0.222514,
+            0.983529
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.465439,
+            0.225768,
+            0.213212,
+            0.969412
+          ],
+          "location": 0.557
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.96
+        }
+      ],
+      "borderSrgb": [
+        0.922968,
+        0.369499,
+        0.298389,
+        0.397647
+      ]
+    },
+    {
+      "input": {
+        "hue": 15,
+        "intensity": 0
+      },
+      "accent": "color-mix(in oklab, hsl(15 66% 52%) 100%, hsl(6 78% 56%) 0%)",
+      "coverage": 24,
+      "intensity": 0,
+      "redMix": 0,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 100%, hsl(6 78% 56%) 0%) 10%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 100%, hsl(6 78% 56%) 0%) 7%, rgba(17, 30, 41, 0.94)) 13.9%, rgba(17, 30, 41, 0.94) 24.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 100%, hsl(6 78% 56%) 0%) 12%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        213,
+        92,
+        52,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.14665,
+            0.14818,
+            0.17473,
+            0.947059
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.123585,
+            0.139244,
+            0.170756,
+            0.945294
+          ],
+          "location": 0.139
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.24
+        }
+      ],
+      "borderSrgb": [
+        0.905095,
+        0.563325,
+        0.454424,
+        0.171765
+      ]
+    },
+    {
+      "input": {
+        "hue": 15,
+        "intensity": 2.25
+      },
+      "accent": "color-mix(in oklab, hsl(15 66% 52%) 77%, hsl(6 78% 56%) 23%)",
+      "coverage": 40.2,
+      "intensity": 2.25,
+      "redMix": 23,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 77%, hsl(6 78% 56%) 23%) 24%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 77%, hsl(6 78% 56%) 23%) 16%, rgba(17, 30, 41, 0.94)) 23.3%, rgba(17, 30, 41, 0.94) 40.2%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 77%, hsl(6 78% 56%) 23%) 17%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        217,
+        88,
+        53,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.255929,
+            0.185792,
+            0.191257,
+            0.955294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.1949,
+            0.164361,
+            0.182364,
+            0.950588
+          ],
+          "location": 0.233
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.402
+        }
+      ],
+      "borderSrgb": [
+        0.902369,
+        0.503574,
+        0.394729,
+        0.218824
+      ]
+    },
+    {
+      "input": {
+        "hue": 15,
+        "intensity": 5
+      },
+      "accent": "color-mix(in oklab, hsl(15 66% 52%) 50%, hsl(6 78% 56%) 50%)",
+      "coverage": 60,
+      "intensity": 5,
+      "redMix": 50,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 50%, hsl(6 78% 56%) 50%) 41%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 50%, hsl(6 78% 56%) 50%) 27%, rgba(17, 30, 41, 0.94)) 34.8%, rgba(17, 30, 41, 0.94) 60.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 50%, hsl(6 78% 56%) 50%) 24%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        222,
+        83,
+        54,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.393861,
+            0.222998,
+            0.206754,
+            0.965294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.284136,
+            0.190794,
+            0.194756,
+            0.957059
+          ],
+          "location": 0.348
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.6
+        }
+      ],
+      "borderSrgb": [
+        0.904954,
+        0.44569,
+        0.344354,
+        0.284706
+      ]
+    },
+    {
+      "input": {
+        "hue": 15,
+        "intensity": 10
+      },
+      "accent": "color-mix(in oklab, hsl(15 66% 52%) 0%, hsl(6 78% 56%) 100%)",
+      "coverage": 96,
+      "intensity": 10,
+      "redMix": 100,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 0%, hsl(6 78% 56%) 100%) 72%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 0%, hsl(6 78% 56%) 100%) 48%, rgba(17, 30, 41, 0.94)) 55.7%, rgba(17, 30, 41, 0.94) 96.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(15 66% 52%) 0%, hsl(6 78% 56%) 100%) 36%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        230,
+        73,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.665506,
+            0.260188,
+            0.222514,
+            0.983529
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.465439,
+            0.225768,
+            0.213212,
+            0.969412
+          ],
+          "location": 0.557
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.96
+        }
+      ],
+      "borderSrgb": [
+        0.922968,
+        0.369499,
+        0.298389,
+        0.397647
+      ]
+    },
+    {
+      "input": {
+        "hue": 60,
+        "intensity": 0
+      },
+      "accent": "color-mix(in oklab, hsl(60 66% 52%) 100%, hsl(6 78% 56%) 0%)",
+      "coverage": 24,
+      "intensity": 0,
+      "redMix": 0,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 100%, hsl(6 78% 56%) 0%) 10%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 100%, hsl(6 78% 56%) 0%) 7%, rgba(17, 30, 41, 0.94)) 13.9%, rgba(17, 30, 41, 0.94) 24.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 100%, hsl(6 78% 56%) 0%) 12%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        213,
+        213,
+        52,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.133438,
+            0.184766,
+            0.186907,
+            0.947059
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.112941,
+            0.164521,
+            0.179521,
+            0.945294
+          ],
+          "location": 0.139
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.24
+        }
+      ],
+      "borderSrgb": [
+        0.882636,
+        0.889852,
+        0.513473,
+        0.171765
+      ]
+    },
+    {
+      "input": {
+        "hue": 60,
+        "intensity": 2.25
+      },
+      "accent": "color-mix(in oklab, hsl(60 66% 52%) 77%, hsl(6 78% 56%) 23%)",
+      "coverage": 40.2,
+      "intensity": 2.25,
+      "redMix": 23,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 77%, hsl(6 78% 56%) 23%) 24%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 77%, hsl(6 78% 56%) 23%) 16%, rgba(17, 30, 41, 0.94)) 23.3%, rgba(17, 30, 41, 0.94) 40.2%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 77%, hsl(6 78% 56%) 23%) 17%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        223,
+        185,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.245217,
+            0.257996,
+            0.211072,
+            0.955294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.184295,
+            0.21084,
+            0.19663,
+            0.950588
+          ],
+          "location": 0.233
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.402
+        }
+      ],
+      "borderSrgb": [
+        0.901565,
+        0.78814,
+        0.439399,
+        0.218824
+      ]
+    },
+    {
+      "input": {
+        "hue": 60,
+        "intensity": 5
+      },
+      "accent": "color-mix(in oklab, hsl(60 66% 52%) 50%, hsl(6 78% 56%) 50%)",
+      "coverage": 60,
+      "intensity": 5,
+      "redMix": 50,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 50%, hsl(6 78% 56%) 50%) 41%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 50%, hsl(6 78% 56%) 50%) 27%, rgba(17, 30, 41, 0.94)) 34.8%, rgba(17, 30, 41, 0.94) 60.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 50%, hsl(6 78% 56%) 50%) 24%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        229,
+        150,
+        56,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.393984,
+            0.310433,
+            0.225505,
+            0.965294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.280218,
+            0.2449,
+            0.209014,
+            0.957059
+          ],
+          "location": 0.348
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.6
+        }
+      ],
+      "borderSrgb": [
+        0.918346,
+        0.654268,
+        0.372323,
+        0.284706
+      ]
+    },
+    {
+      "input": {
+        "hue": 60,
+        "intensity": 10
+      },
+      "accent": "color-mix(in oklab, hsl(60 66% 52%) 0%, hsl(6 78% 56%) 100%)",
+      "coverage": 96,
+      "intensity": 10,
+      "redMix": 100,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 0%, hsl(6 78% 56%) 100%) 72%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 0%, hsl(6 78% 56%) 100%) 48%, rgba(17, 30, 41, 0.94)) 55.7%, rgba(17, 30, 41, 0.94) 96.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(60 66% 52%) 0%, hsl(6 78% 56%) 100%) 36%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        230,
+        73,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.665506,
+            0.260188,
+            0.222514,
+            0.983529
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.465439,
+            0.225768,
+            0.213212,
+            0.969412
+          ],
+          "location": 0.557
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.96
+        }
+      ],
+      "borderSrgb": [
+        0.922968,
+        0.369499,
+        0.298389,
+        0.397647
+      ]
+    },
+    {
+      "input": {
+        "hue": 105,
+        "intensity": 0
+      },
+      "accent": "color-mix(in oklab, hsl(105 66% 52%) 100%, hsl(6 78% 56%) 0%)",
+      "coverage": 24,
+      "intensity": 0,
+      "redMix": 0,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 100%, hsl(6 78% 56%) 0%) 10%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 100%, hsl(6 78% 56%) 0%) 7%, rgba(17, 30, 41, 0.94)) 13.9%, rgba(17, 30, 41, 0.94) 24.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 100%, hsl(6 78% 56%) 0%) 12%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        92,
+        213,
+        52,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.0929315,
+            0.184602,
+            0.18371,
+            0.947059
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.0849108,
+            0.164403,
+            0.17722,
+            0.945294
+          ],
+          "location": 0.139
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.24
+        }
+      ],
+      "borderSrgb": [
+        0.579837,
+        0.892729,
+        0.497564,
+        0.171765
+      ]
+    },
+    {
+      "input": {
+        "hue": 105,
+        "intensity": 2.25
+      },
+      "accent": "color-mix(in oklab, hsl(105 66% 52%) 77%, hsl(6 78% 56%) 23%)",
+      "coverage": 40.2,
+      "intensity": 2.25,
+      "redMix": 23,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 77%, hsl(6 78% 56%) 23%) 24%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 77%, hsl(6 78% 56%) 23%) 16%, rgba(17, 30, 41, 0.94)) 23.3%, rgba(17, 30, 41, 0.94) 40.2%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 77%, hsl(6 78% 56%) 23%) 17%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        150,
+        187,
+        54,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.178739,
+            0.258826,
+            0.20584,
+            0.955294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.139618,
+            0.211184,
+            0.192873,
+            0.950588
+          ],
+          "location": 0.233
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.402
+        }
+      ],
+      "borderSrgb": [
+        0.675821,
+        0.796088,
+        0.427159,
+        0.218824
+      ]
+    },
+    {
+      "input": {
+        "hue": 105,
+        "intensity": 5
+      },
+      "accent": "color-mix(in oklab, hsl(105 66% 52%) 50%, hsl(6 78% 56%) 50%)",
+      "coverage": 60,
+      "intensity": 5,
+      "redMix": 50,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 50%, hsl(6 78% 56%) 50%) 41%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 50%, hsl(6 78% 56%) 50%) 27%, rgba(17, 30, 41, 0.94)) 34.8%, rgba(17, 30, 41, 0.94) 60.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 50%, hsl(6 78% 56%) 50%) 24%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        188,
+        154,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.330021,
+            0.314496,
+            0.220466,
+            0.965294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.237657,
+            0.246797,
+            0.205225,
+            0.957059
+          ],
+          "location": 0.348
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.6
+        }
+      ],
+      "borderSrgb": [
+        0.77927,
+        0.667203,
+        0.364439,
+        0.284706
+      ]
+    },
+    {
+      "input": {
+        "hue": 105,
+        "intensity": 10
+      },
+      "accent": "color-mix(in oklab, hsl(105 66% 52%) 0%, hsl(6 78% 56%) 100%)",
+      "coverage": 96,
+      "intensity": 10,
+      "redMix": 100,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 0%, hsl(6 78% 56%) 100%) 72%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 0%, hsl(6 78% 56%) 100%) 48%, rgba(17, 30, 41, 0.94)) 55.7%, rgba(17, 30, 41, 0.94) 96.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(105 66% 52%) 0%, hsl(6 78% 56%) 100%) 36%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        230,
+        73,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.665506,
+            0.260188,
+            0.222514,
+            0.983529
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.465439,
+            0.225768,
+            0.213212,
+            0.969412
+          ],
+          "location": 0.557
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.96
+        }
+      ],
+      "borderSrgb": [
+        0.922968,
+        0.369499,
+        0.298389,
+        0.397647
+      ]
+    },
+    {
+      "input": {
+        "hue": 210,
+        "intensity": 0
+      },
+      "accent": "color-mix(in oklab, hsl(210 66% 52%) 100%, hsl(6 78% 56%) 0%)",
+      "coverage": 24,
+      "intensity": 0,
+      "redMix": 0,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 100%, hsl(6 78% 56%) 0%) 10%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 100%, hsl(6 78% 56%) 0%) 7%, rgba(17, 30, 41, 0.94)) 13.9%, rgba(17, 30, 41, 0.94) 24.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 100%, hsl(6 78% 56%) 0%) 12%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        52,
+        133,
+        213,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.0824074,
+            0.15576,
+            0.222898,
+            0.947059
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.077753,
+            0.144245,
+            0.204046,
+            0.945294
+          ],
+          "location": 0.139
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.24
+        }
+      ],
+      "borderSrgb": [
+        0.460426,
+        0.667309,
+        0.894411,
+        0.171765
+      ]
+    },
+    {
+      "input": {
+        "hue": 210,
+        "intensity": 2.25
+      },
+      "accent": "color-mix(in oklab, hsl(210 66% 52%) 77%, hsl(6 78% 56%) 23%)",
+      "coverage": 40.2,
+      "intensity": 2.25,
+      "redMix": 23,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 77%, hsl(6 78% 56%) 23%) 24%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 77%, hsl(6 78% 56%) 23%) 16%, rgba(17, 30, 41, 0.94)) 23.3%, rgba(17, 30, 41, 0.94) 40.2%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 77%, hsl(6 78% 56%) 23%) 17%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        114,
+        128,
+        182,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.153372,
+            0.20578,
+            0.286275,
+            0.955294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.12399,
+            0.175935,
+            0.243621,
+            0.950588
+          ],
+          "location": 0.233
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.402
+        }
+      ],
+      "borderSrgb": [
+        0.562912,
+        0.609799,
+        0.779509,
+        0.218824
+      ]
+    },
+    {
+      "input": {
+        "hue": 210,
+        "intensity": 5
+      },
+      "accent": "color-mix(in oklab, hsl(210 66% 52%) 50%, hsl(6 78% 56%) 50%)",
+      "coverage": 60,
+      "intensity": 5,
+      "redMix": 50,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 50%, hsl(6 78% 56%) 50%) 41%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 50%, hsl(6 78% 56%) 50%) 27%, rgba(17, 30, 41, 0.94)) 34.8%, rgba(17, 30, 41, 0.94) 60.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 50%, hsl(6 78% 56%) 50%) 24%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        161,
+        117,
+        144,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.293644,
+            0.2566,
+            0.322363,
+            0.965294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.215932,
+            0.208772,
+            0.266298,
+            0.957059
+          ],
+          "location": 0.348
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.6
+        }
+      ],
+      "borderSrgb": [
+        0.68951,
+        0.541202,
+        0.629401,
+        0.284706
+      ]
+    },
+    {
+      "input": {
+        "hue": 210,
+        "intensity": 10
+      },
+      "accent": "color-mix(in oklab, hsl(210 66% 52%) 0%, hsl(6 78% 56%) 100%)",
+      "coverage": 96,
+      "intensity": 10,
+      "redMix": 100,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 0%, hsl(6 78% 56%) 100%) 72%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 0%, hsl(6 78% 56%) 100%) 48%, rgba(17, 30, 41, 0.94)) 55.7%, rgba(17, 30, 41, 0.94) 96.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(210 66% 52%) 0%, hsl(6 78% 56%) 100%) 36%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        230,
+        73,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.665506,
+            0.260188,
+            0.222514,
+            0.983529
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.465439,
+            0.225768,
+            0.213212,
+            0.969412
+          ],
+          "location": 0.557
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.96
+        }
+      ],
+      "borderSrgb": [
+        0.922968,
+        0.369499,
+        0.298389,
+        0.397647
+      ]
+    },
+    {
+      "input": {
+        "hue": 285,
+        "intensity": 0
+      },
+      "accent": "color-mix(in oklab, hsl(285 66% 52%) 100%, hsl(6 78% 56%) 0%)",
+      "coverage": 24,
+      "intensity": 0,
+      "redMix": 0,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 100%, hsl(6 78% 56%) 0%) 10%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 100%, hsl(6 78% 56%) 0%) 7%, rgba(17, 30, 41, 0.94)) 13.9%, rgba(17, 30, 41, 0.94) 24.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 100%, hsl(6 78% 56%) 0%) 12%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        173,
+        52,
+        213,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.131454,
+            0.136617,
+            0.22337,
+            0.947059
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.11273,
+            0.13118,
+            0.204406,
+            0.945294
+          ],
+          "location": 0.139
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.24
+        }
+      ],
+      "borderSrgb": [
+        0.781806,
+        0.482532,
+        0.898159,
+        0.171765
+      ]
+    },
+    {
+      "input": {
+        "hue": 285,
+        "intensity": 2.25
+      },
+      "accent": "color-mix(in oklab, hsl(285 66% 52%) 77%, hsl(6 78% 56%) 23%)",
+      "coverage": 40.2,
+      "intensity": 2.25,
+      "redMix": 23,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 77%, hsl(6 78% 56%) 23%) 24%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 77%, hsl(6 78% 56%) 23%) 16%, rgba(17, 30, 41, 0.94)) 23.3%, rgba(17, 30, 41, 0.94) 40.2%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 77%, hsl(6 78% 56%) 23%) 17%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        185,
+        67,
+        183,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.22781,
+            0.165879,
+            0.287282,
+            0.955294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.17617,
+            0.150903,
+            0.244321,
+            0.950588
+          ],
+          "location": 0.233
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.402
+        }
+      ],
+      "borderSrgb": [
+        0.796183,
+        0.443928,
+        0.78425,
+        0.218824
+      ]
+    },
+    {
+      "input": {
+        "hue": 285,
+        "intensity": 5
+      },
+      "accent": "color-mix(in oklab, hsl(285 66% 52%) 50%, hsl(6 78% 56%) 50%)",
+      "coverage": 60,
+      "intensity": 5,
+      "redMix": 50,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 50%, hsl(6 78% 56%) 50%) 41%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 50%, hsl(6 78% 56%) 50%) 27%, rgba(17, 30, 41, 0.94)) 34.8%, rgba(17, 30, 41, 0.94) 60.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 50%, hsl(6 78% 56%) 50%) 24%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        200,
+        75,
+        145,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.36083,
+            0.205144,
+            0.324381,
+            0.965294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.262918,
+            0.178094,
+            0.2675,
+            0.957059
+          ],
+          "location": 0.348
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.6
+        }
+      ],
+      "borderSrgb": [
+        0.828796,
+        0.414025,
+        0.635236,
+        0.284706
+      ]
+    },
+    {
+      "input": {
+        "hue": 285,
+        "intensity": 10
+      },
+      "accent": "color-mix(in oklab, hsl(285 66% 52%) 0%, hsl(6 78% 56%) 100%)",
+      "coverage": 96,
+      "intensity": 10,
+      "redMix": 100,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 0%, hsl(6 78% 56%) 100%) 72%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 0%, hsl(6 78% 56%) 100%) 48%, rgba(17, 30, 41, 0.94)) 55.7%, rgba(17, 30, 41, 0.94) 96.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(285 66% 52%) 0%, hsl(6 78% 56%) 100%) 36%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        230,
+        73,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.665506,
+            0.260188,
+            0.222514,
+            0.983529
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.465439,
+            0.225768,
+            0.213212,
+            0.969412
+          ],
+          "location": 0.557
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.96
+        }
+      ],
+      "borderSrgb": [
+        0.922968,
+        0.369499,
+        0.298389,
+        0.397647
+      ]
+    },
+    {
+      "input": {
+        "hue": 359,
+        "intensity": 0
+      },
+      "accent": "color-mix(in oklab, hsl(359 66% 52%) 100%, hsl(6 78% 56%) 0%)",
+      "coverage": 24,
+      "intensity": 0,
+      "redMix": 0,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 100%, hsl(6 78% 56%) 0%) 10%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 100%, hsl(6 78% 56%) 0%) 7%, rgba(17, 30, 41, 0.94)) 13.9%, rgba(17, 30, 41, 0.94) 24.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 100%, hsl(6 78% 56%) 0%) 12%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        213,
+        52,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.15087,
+            0.13961,
+            0.173071,
+            0.947059
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.127045,
+            0.133362,
+            0.169544,
+            0.945294
+          ],
+          "location": 0.139
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.24
+        }
+      ],
+      "borderSrgb": [
+        0.914949,
+        0.479995,
+        0.450121,
+        0.171765
+      ]
+    },
+    {
+      "input": {
+        "hue": 359,
+        "intensity": 2.25
+      },
+      "accent": "color-mix(in oklab, hsl(359 66% 52%) 77%, hsl(6 78% 56%) 23%)",
+      "coverage": 40.2,
+      "intensity": 2.25,
+      "redMix": 23,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 77%, hsl(6 78% 56%) 23%) 24%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 77%, hsl(6 78% 56%) 23%) 16%, rgba(17, 30, 41, 0.94)) 23.3%, rgba(17, 30, 41, 0.94) 40.2%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 77%, hsl(6 78% 56%) 23%) 17%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        217,
+        57,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.260248,
+            0.168336,
+            0.18884,
+            0.955294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.198816,
+            0.153347,
+            0.180506,
+            0.950588
+          ],
+          "location": 0.233
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.402
+        }
+      ],
+      "borderSrgb": [
+        0.908278,
+        0.42913,
+        0.392674,
+        0.218824
+      ]
+    },
+    {
+      "input": {
+        "hue": 359,
+        "intensity": 5
+      },
+      "accent": "color-mix(in oklab, hsl(359 66% 52%) 50%, hsl(6 78% 56%) 50%)",
+      "coverage": 60,
+      "intensity": 5,
+      "redMix": 50,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 50%, hsl(6 78% 56%) 50%) 41%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 50%, hsl(6 78% 56%) 50%) 27%, rgba(17, 30, 41, 0.94)) 34.8%, rgba(17, 30, 41, 0.94) 60.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 50%, hsl(6 78% 56%) 50%) 24%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        222,
+        63,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.396459,
+            0.201062,
+            0.204997,
+            0.965294
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.286902,
+            0.177709,
+            0.193103,
+            0.957059
+          ],
+          "location": 0.348
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.6
+        }
+      ],
+      "borderSrgb": [
+        0.907606,
+        0.390312,
+        0.344157,
+        0.284706
+      ]
+    },
+    {
+      "input": {
+        "hue": 359,
+        "intensity": 10
+      },
+      "accent": "color-mix(in oklab, hsl(359 66% 52%) 0%, hsl(6 78% 56%) 100%)",
+      "coverage": 96,
+      "intensity": 10,
+      "redMix": 100,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 0%, hsl(6 78% 56%) 100%) 72%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 0%, hsl(6 78% 56%) 100%) 48%, rgba(17, 30, 41, 0.94)) 55.7%, rgba(17, 30, 41, 0.94) 96.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(359 66% 52%) 0%, hsl(6 78% 56%) 100%) 36%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        230,
+        73,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.665506,
+            0.260188,
+            0.222514,
+            0.983529
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.465439,
+            0.225768,
+            0.213212,
+            0.969412
+          ],
+          "location": 0.557
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.96
+        }
+      ],
+      "borderSrgb": [
+        0.922968,
+        0.369499,
+        0.298389,
+        0.397647
+      ]
+    },
+    {
+      "input": {
+        "hue": -0.5,
+        "intensity": -1
+      },
+      "accent": "color-mix(in oklab, hsl(0 66% 52%) 100%, hsl(6 78% 56%) 0%)",
+      "coverage": 24,
+      "intensity": 0,
+      "redMix": 0,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 100%, hsl(6 78% 56%) 0%) 10%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 100%, hsl(6 78% 56%) 0%) 7%, rgba(17, 30, 41, 0.94)) 13.9%, rgba(17, 30, 41, 0.94) 24.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(0 66% 52%) 100%, hsl(6 78% 56%) 0%) 12%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        213,
+        52,
+        52,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.150856,
+            0.139662,
+            0.172516,
+            0.947059
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.127034,
+            0.1334,
+            0.169162,
+            0.945294
+          ],
+          "location": 0.139
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.24
+        }
+      ],
+      "borderSrgb": [
+        0.914949,
+        0.480146,
+        0.44445,
+        0.171765
+      ]
+    },
+    {
+      "input": {
+        "hue": 720.6,
+        "intensity": 11
+      },
+      "accent": "color-mix(in oklab, hsl(1 66% 52%) 0%, hsl(6 78% 56%) 100%)",
+      "coverage": 96,
+      "intensity": 10,
+      "redMix": 100,
+      "style": {
+        "background": "linear-gradient(45deg, color-mix(in oklab, color-mix(in oklab, hsl(1 66% 52%) 0%, hsl(6 78% 56%) 100%) 72%, rgba(17, 30, 41, 0.94)) 0%, color-mix(in oklab, color-mix(in oklab, hsl(1 66% 52%) 0%, hsl(6 78% 56%) 100%) 48%, rgba(17, 30, 41, 0.94)) 55.7%, rgba(17, 30, 41, 0.94) 96.0%)",
+        "borderColor": "color-mix(in oklab, color-mix(in oklab, hsl(1 66% 52%) 0%, hsl(6 78% 56%) 100%) 36%, rgba(255, 255, 255, 0.06))"
+      },
+      "accentRgba": [
+        230,
+        73,
+        55,
+        255
+      ],
+      "backgroundStops": [
+        {
+          "color": [
+            0.665506,
+            0.260188,
+            0.222514,
+            0.983529
+          ],
+          "location": 0
+        },
+        {
+          "color": [
+            0.465439,
+            0.225768,
+            0.213212,
+            0.969412
+          ],
+          "location": 0.557
+        },
+        {
+          "color": [
+            0.0666667,
+            0.117647,
+            0.160784,
+            0.941176
+          ],
+          "location": 0.96
+        }
+      ],
+      "borderSrgb": [
+        0.922968,
+        0.369499,
+        0.298389,
+        0.397647
+      ]
+    }
+  ]
+}

@@ -181,6 +181,6 @@ test('the actual wait step uses fresh PR verification, reports pending work and 
 });
 
 test('strict owner-only automatic merge is selected and backed by repository-wide ownership', () => {
-  assert.equal(config.merge_mode, "manual");
+  assert.equal(config.merge_mode, "automatic");
   assert.equal(readFileSync(new URL('../CODEOWNERS', import.meta.url), 'utf8'), '* @gaulatti\n');
 });

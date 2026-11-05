@@ -7,7 +7,7 @@ The goal is behavioral and visual convergence, not DOM emulation. Native platfor
 - Foundation: tokens, light/dark palettes, typography, spacing, radii, motion, surface modifier, all public contracts
 - Actions: Button, IconButton, ButtonGroup, Toggle style, ToggleGroup/SegmentedControl
 - Forms: Field, Input, SecureField, SearchInput, TextArea, Select, Checkbox, Switch, RadioGroup, Stepper
-- Surfaces: Card, Panel, Separator, Skeleton, BauhausBackground
+- Surfaces: AttentionSurface, Card, Panel, Separator, Skeleton, BauhausBackground
 - Feedback: Alert, StatusBadge, NotificationBadge, Progress, LoadingSpinner, LoadingOverlay, EmptyState
 - Navigation: BrandLockup, SidebarItem, PageHeader, SectionHeader, Breadcrumb, Tabs, Pagination, Accordion
 - Data display: Avatar, IconBadge, Metric, StatCard, DataList, Timeline, FilterChip, Kbd

@@ -36,5 +36,7 @@ The package and Kolibri contract validation, the build, `swift test`, the
 catalog and example builds and the local release-consumer validation remain
 mandatory. The shared coverage gate cannot measure Swift: the LLVM export of
 SwiftPM carries no branch regions, and the gate requires measured branches.
-Local line coverage is recorded honestly for review, the policy selects
-`manual` merge mode, and the owner merges every pull request.
+Local line coverage is recorded honestly for review and the policy selects
+`automatic` merge mode. Because the shared gate cannot measure Swift branch
+coverage, a pull request that does not reach it stays pending and the owner
+merges it.

@@ -11,7 +11,7 @@ case "$mode" in
     dependency=".package(name: \"Sabella\", path: \"$repository_root\")"
     ;;
   --remote)
-    release_version="${SABELLA_RELEASE_VERSION:-0.2.0}"
+    release_version="${SABELLA_RELEASE_VERSION:-0.2.1}"
     if ! printf '%s\n' "$release_version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
       echo "SABELLA_RELEASE_VERSION must be a semantic version." >&2
       exit 64

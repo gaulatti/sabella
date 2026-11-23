@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "base_branch": "main",
+  "readme": "README.md",
+  "repository_policy": "AGENTS.md",
+  "verification": [
+    [
+      "swift",
+      "test",
+      "--enable-code-coverage"
+    ],
+    [
+      "scripts/clouseau-coverage.sh"
+    ]
+  ],
+  "coverage": {
+    "format": "llvm",
+    "report": "coverage/llvm.json",
+    "source_directory": "Sources"
+  }
+}

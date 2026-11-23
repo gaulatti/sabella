@@ -9,7 +9,7 @@ cd "$repository_root"
 
 scripts/validate-package-contract.py
 scripts/validate-kolibri-contract.sh
-scripts/create-release-archive.sh 0.2.0 HEAD "$release_archive_root"
+scripts/create-release-archive.sh 0.2.1 HEAD "$release_archive_root"
 if command -v sha256sum >/dev/null 2>&1; then
   (cd "$release_archive_root" && sha256sum -c SHA256SUMS)
 else

@@ -49,7 +49,7 @@ public struct BleeckerTextField: View {
 
     public var body: some View {
         let p = BleeckerPalette.resolve(scheme)
-        let resolvedFont = font ?? BleeckerTypography.primary(14 * textScale)
+        let resolvedFont = font ?? BleeckerTypography.primary((size == .sm ? 12 : 14) * textScale)
         HStack(spacing: 10) {
             if let systemImage { Image(systemName: systemImage).font(.system(size: 14, weight: .medium)).foregroundStyle(p.textSecondary) }
             TextField(placeholder, text: $text).textFieldStyle(.plain).font(resolvedFont).focused($focused)

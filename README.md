@@ -97,8 +97,8 @@ groups, steppers, and compact or standard checkboxes use the same value.
 Control heights expand with larger text while keeping their normal minimum
 size at compact scale. The default scale is 1.0. The catalog's Text size
 fixture shows representative inputs and choices side by side.
-Text fields retain their existing 14-point default at standard scale for every
-control size. An explicitly supplied custom font remains independent of the
+Text fields keep their default size at standard scale (12 points for `.sm`,
+14 points otherwise). An explicitly supplied custom font remains independent of the
 host scale; the control still preserves its normal minimum height.
 
 ## Component catalog

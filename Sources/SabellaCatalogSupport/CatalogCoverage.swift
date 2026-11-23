@@ -49,6 +49,7 @@ public enum SabellaCatalogCoverage {
         "BleeckerActivityItem",
         "BleeckerAlert",
         "BleeckerAdminShell",
+        "BleeckerAttentionSurface",
         "BleeckerAppTabBar",
         "BleeckerAppShell",
         "BleeckerAvatar",

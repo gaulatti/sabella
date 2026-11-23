@@ -75,6 +75,45 @@ public enum BleeckerTypography {
     }
 }
 
+private struct BleeckerTextScaleKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 1
+}
+
+public extension EnvironmentValues {
+    var bleeckerTextScale: CGFloat {
+        get { self[BleeckerTextScaleKey.self] }
+        set { self[BleeckerTextScaleKey.self] = newValue }
+    }
+}
+
+public enum BleeckerFontFamily: Sendable {
+    case primary, secondary, mono
+}
+
+private struct BleeckerScaledFont: ViewModifier {
+    @Environment(\.bleeckerTextScale) private var scale
+    let family: BleeckerFontFamily
+    let size: CGFloat
+    let weight: Font.Weight
+
+    func body(content: Content) -> some View {
+        let scaledSize = size * scale
+        let font: Font = switch family {
+        case .primary: BleeckerTypography.primary(scaledSize, weight: weight)
+        case .secondary: BleeckerTypography.secondary(scaledSize, weight: weight)
+        case .mono: BleeckerTypography.mono(scaledSize, weight: weight)
+        }
+        content.font(font)
+    }
+}
+
+public extension View {
+    func bleeckerFont(_ family: BleeckerFontFamily, size: CGFloat,
+                      weight: Font.Weight = .regular) -> some View {
+        modifier(BleeckerScaledFont(family: family, size: size, weight: weight))
+    }
+}
+
 public struct BleeckerPalette: Sendable {
     public let sand, desert, terracotta, sea, deepSea, lightSand, darkSand, sunset: Color
     public let accentGold, accentBlue, accentOxblood, accentBronze, accentRed, accentYellow: Color

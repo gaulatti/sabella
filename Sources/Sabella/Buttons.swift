@@ -3,6 +3,7 @@ import SwiftUI
 public struct BleeckerButtonStyle: ButtonStyle {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.bleeckerTextScale) private var textScale
     public let variant: BleeckerButtonVariant
     public let size: BleeckerButtonSize
 
@@ -14,7 +15,7 @@ public struct BleeckerButtonStyle: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         let palette = BleeckerPalette.resolve(scheme)
         configuration.label
-            .font(BleeckerTypography.primary(fontSize, weight: .medium))
+            .font(BleeckerTypography.primary(fontSize * textScale, weight: .medium))
             .foregroundStyle(foreground(palette))
             .padding(.horizontal, horizontalPadding)
             .frame(minHeight: variant == .link ? nil : height)
@@ -152,7 +153,7 @@ public struct BleeckerSegmentedControl<Value: Hashable>: View {
         HStack(spacing: 2) {
             ForEach(options) { option in
                 Button(option.label) { selection = option.value }
-                    .font(BleeckerTypography.primary(13, weight: .medium))
+                    .bleeckerFont(.primary, size: 13, weight: .medium)
                     .foregroundStyle(selection == option.value ? p.sea : p.textSecondary)
                     .padding(.horizontal, 12).frame(minHeight: 32)
                     .background(selection == option.value ? p.card : .clear)

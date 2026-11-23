@@ -27,14 +27,21 @@ struct FoundationsGallery: View {
                 Text("UTILITY PILL").bleeckerPill()
             }
         }
-        CatalogSection("Text size", note: "The same fonts and controls at three host-selected scales.") {
+        CatalogSection("Text size", note: "Inputs, choices, and actions at three host-selected scales.") {
             HStack(alignment: .top, spacing: 24) {
                 ForEach([("Compact", 0.9), ("Standard", 1.0), ("Large", 1.25)], id: \.0) { label, scale in
                     VStack(alignment: .leading, spacing: 10) {
                         Text(label).bleeckerFont(.primary, size: 12, weight: .semibold)
                         Text("Live posts").bleeckerFont(.primary, size: 18, weight: .semibold)
+                        BleeckerSecureField("Password", text: .constant("example"))
+                        BleeckerRadioGroup(selection: .constant("all"), options: [
+                            BleeckerSelectOption(value: "all", label: "All"),
+                            BleeckerSelectOption(value: "relevant", label: "Relevant")
+                        ])
+                        BleeckerStepper("Minimum", value: .constant(2), in: 0...10)
                         Button("Send for processing") {}.buttonStyle(BleeckerButtonStyle(.secondary, size: .sm))
                     }
+                    .frame(minWidth: 210, alignment: .leading)
                     .environment(\.bleeckerTextScale, scale)
                 }
             }
@@ -226,6 +233,8 @@ struct FeedbackGallery: View {
 }
 
 struct SurfacesGallery: View {
+    @Environment(\.colorScheme) private var scheme
+
     var body: some View {
         CatalogSection("Card variants") {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 180))], spacing: 16) {
@@ -238,7 +247,8 @@ struct SurfacesGallery: View {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 12) {
                     ForEach([0.0, 5.0, 10.0], id: \.self) { intensity in
-                        BleeckerAttentionSurface(hue: 210, intensity: intensity) {
+                        BleeckerAttentionSurface(hue: 210, intensity: intensity,
+                                                 density: intensity == 0 ? .compact : .comfortable) {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("Attention \(Int(intensity))")
                                     .font(BleeckerTypography.primary(13, weight: .semibold))
@@ -249,6 +259,18 @@ struct SurfacesGallery: View {
                         }
                     }
                 }
+                HStack(spacing: 18) {
+                    ForEach([15.0, 105.0, 285.0], id: \.self) { hue in
+                        Text(hue == 15 ? "Current Event" : hue == 105 ? "World" : "Relevant")
+                            .font(BleeckerTypography.primary(11, weight: .semibold))
+                            .foregroundStyle(BleeckerAttentionSurface<EmptyView>.labelAccent(
+                                hue: hue, intensity: 0, scheme: scheme))
+                    }
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(BleeckerPalette.resolve(scheme).card,
+                            in: RoundedRectangle(cornerRadius: BleeckerRadius.card))
                 BleeckerPanel(title: "Panel") { Text("Panels provide a titled card composition.") }
                 BleeckerSeparator()
                 BleeckerSkeleton().frame(height: 18)

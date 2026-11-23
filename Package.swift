@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/kingslay/KSPlayer.git",
-            revision: "10a40a1c0001d75307ad5922d1d1bc0cb01c89b4"
+            exact: "2.3.4"
         ),
     ],
     targets: [
